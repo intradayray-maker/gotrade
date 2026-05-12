@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import ApiKeyModal from "@/components/ApiKeyModal";
-import type { Tables } from "@/types/supabase";
+import type { Tables } from "@/types";
 import { createClient } from "@/utils/supabase/client";
 
 export default function BrokerClient() {
