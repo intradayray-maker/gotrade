@@ -88,14 +88,17 @@ export interface Database {
         Row: {
           user_id: string;
           allocation: number | null;
+          performance_fee_rate: number | null;
         };
         Insert: {
           user_id: string;
           allocation?: number | null;
+          performance_fee_rate?: number | null;
         };
         Update: {
           user_id?: string;
           allocation?: number | null;
+          performance_fee_rate?: number | null;
         };
       };
 
