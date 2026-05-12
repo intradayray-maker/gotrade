@@ -39,6 +39,31 @@ export async function executeMasterTrade(params: {
 
     const masterFillPrice = masterOrder?.filled_avg_price ?? null;
 
+    // ⭐ NEW STEP: Insert master trade into master_trades
+    console.log("📝 INSERTING MASTER TRADE INTO master_trades...");
+
+    const { data: masterTradeRow, error: masterInsertErr } = await supabase
+      .from("master_trades")
+      .insert({
+        id: masterOrder.id,
+        symbol,
+        side,
+        qty,
+        status: masterOrder.status,
+        limit_price: masterOrder.limit_price,
+        filled_avg_price: masterFillPrice,
+        created_at: masterOrder.created_at,
+      })
+      .select()
+      .single();
+
+    if (masterInsertErr) {
+      console.error("❌ MASTER TRADE INSERT ERROR:", masterInsertErr);
+      throw masterInsertErr;
+    }
+
+    console.log("✅ MASTER TRADE INSERTED:", masterTradeRow);
+
     // 2. Load followers for THIS master trader
     console.log("🔍 LOADING FOLLOWERS FOR TRADER:", masterTraderId);
 
@@ -75,7 +100,7 @@ export async function executeMasterTrade(params: {
           symbol,
           side,
           qty: followerQty,
-          master_trade_id: masterOrder?.id ?? null,
+          master_trade_id: masterOrder.id, // now valid
         });
 
       if (insertErr) {
