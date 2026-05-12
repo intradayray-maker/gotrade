@@ -13,13 +13,14 @@ export async function placeOrder(params: {
     keyId: process.env.ALPACA_KEY!,
     secretKey: process.env.ALPACA_SECRET!,
     paper: true,
+    usePolygon: false,   // ⭐ enables Alpaca data API
   });
 
   // ⭐ Correct quote API for your SDK
-  const quote = await alpaca.getLatestQuoteV2(symbol);
+  const quote = await alpaca.getLatestQuote(symbol);
 
   const limitPrice =
-    side === "buy" ? quote.AskPrice : quote.BidPrice;
+    side === "buy" ? quote.askprice : quote.bidprice;
 
   const order = await alpaca.createOrder({
     symbol,
