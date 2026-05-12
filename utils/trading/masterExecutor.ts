@@ -8,6 +8,11 @@ export async function executeMasterTrade(params: {
 }) {
   const { symbol, side, qty } = params;
 
+  // 🔥 Your actual master trader UUID
+  const masterTraderId = "cab941c3-df75-4e54-9f27-384952525fb1";
+
+  console.log("MASTER TRADER ID USED:", masterTraderId);
+
   const supabase = await createServerClient();
 
   try {
@@ -21,48 +26,56 @@ export async function executeMasterTrade(params: {
 
     const masterFillPrice = masterOrder.filled_avg_price ?? null;
 
-    // 2. (REMOVED) Notification system disabled for webhooks
-    // await sendNotification({
-    //   userId: null,
-    //   type: "master_trade_executed",
-    //   title: "Master Trade Executed",
-    //   message: `${side.toUpperCase()} ${qty} ${symbol} executed.`,
-    //   sendEmail: true,
-    // });
-
-    // 3. Load followers
-    const { data: rawFollowers } = await supabase
+    // 2. Load followers for THIS master trader
+    const { data: rawFollowers, error: followerErr } = await supabase
       .from("copy_trading_settings")
-      .select("user_id, allocation");
+      .select("user_id, allocation")
+      .eq("trader_id", masterTraderId)
+      .eq("enabled", true);
 
-    const followers = (rawFollowers?.filter(
-      (f: any) => typeof f.user_id === "string" && typeof f.allocation === "number"
-    ) ?? []) as { user_id: string; allocation: number }[];
+    if (followerErr) {
+      console.error("Follower load error:", followerErr);
+    }
 
-    // 4. Enqueue follower trades
+    console.log("RAW FOLLOWERS:", rawFollowers);
+
+    const followers =
+      rawFollowers?.filter(
+        (f: any) =>
+          typeof f.user_id === "string" &&
+          typeof f.allocation === "number"
+      ) ?? [];
+
+    console.log("FILTERED FOLLOWERS:", followers);
+
+    // 3. Enqueue follower trades
     for (const follower of followers) {
-      const followerQty = qty * follower.allocation;
+      // ⭐ Fix TypeScript null warning
+      const followerQty = qty * (follower.allocation ?? 1);
 
-      await supabase.from("trade_queue").insert({
-        follower_user_id: follower.user_id,
-        symbol,
-        side,
-        qty: followerQty,
-      } as any);
+      const { error: insertErr } = await supabase
+        .from("trade_queue")
+        .insert({
+          follower_user_id: follower.user_id,
+          symbol,
+          side,
+          qty: followerQty,
+          master_trade_id: masterOrder.id ?? null,
+        });
+
+      if (insertErr) {
+        console.error("Follower queue insert error:", insertErr);
+      } else {
+        console.log("Queued follower trade:", {
+          follower_user_id: follower.user_id,
+          qty: followerQty,
+        });
+      }
     }
 
     return { masterOrder, followers };
-
   } catch (err) {
-    // (REMOVED) Notification system disabled for webhooks
-    // await sendNotification({
-    //   userId: null,
-    //   type: "system_warning",
-    //   title: "Master Trade Failed",
-    //   message: `Master trade failed for ${symbol}.`,
-    //   sendEmail: true,
-    // });
-
+    console.error("MASTER TRADE ERROR:", err);
     throw err;
   }
 }
