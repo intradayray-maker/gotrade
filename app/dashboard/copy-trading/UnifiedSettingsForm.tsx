@@ -22,9 +22,11 @@ export default function UnifiedSettingsForm({
 
   // State
   const [enabled, setEnabled] = useState<boolean>(safe.enabled ?? false);
-  const [allocationModel, setAllocationModel] = useState<"percentage" | "fixed">(
-    safe.allocation_model ?? "percentage"
-  );
+  const [allocationModel, setAllocationModel] =
+    useState<"percentage" | "fixed">(
+      (safe.allocation_model as "percentage" | "fixed") ?? "percentage"
+    );
+
   const [allocationValue, setAllocationValue] = useState<number>(
     safe.allocation_value ?? 10
   );
