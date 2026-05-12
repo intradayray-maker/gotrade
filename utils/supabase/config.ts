@@ -1,0 +1,19 @@
+function getRequiredEnv(
+  name: "NEXT_PUBLIC_SUPABASE_URL" | "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+): string {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+
+  return value;
+}
+
+export function getSupabaseUrl() {
+  return getRequiredEnv("NEXT_PUBLIC_SUPABASE_URL");
+}
+
+export function getSupabaseAnonKey() {
+  return getRequiredEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+}
