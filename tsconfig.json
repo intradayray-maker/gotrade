@@ -16,19 +16,20 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "ignoreDeprecations": "6.0"
   },
-"include": [
-  "next-env.d.ts",
-  "app",
-  "components",
-  "utils",
-  "**/*.ts",
-  "**/*.tsx",
-  "app/globals.css"
-]
-,
+  "include": [
+    "next-env.d.ts",
+    "app",
+    "components",
+    "utils",
+    "**/*.ts",
+    "**/*.tsx",
+    "app/globals.css"
+  ],
   "exclude": ["node_modules"]
 }
