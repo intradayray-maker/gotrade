@@ -3,34 +3,27 @@ import { createRouteHandlerClient } from "@/utils/supabase/route";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "");
 
 export const runtime = "nodejs";
 
+// Store Stripe event ID to prevent duplicate processing
 async function storeEvent(eventId: string) {
   const supabase = await createRouteHandlerClient();
   const table = supabase.from("stripe_events" as never) as any;
 
   const { data, error } = await table.select("id").eq("id", eventId).maybeSingle();
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  if (data) {
-    return false;
-  }
+  if (error) throw new Error(error.message);
+  if (data) return false;
 
   const { error: insertError } = await table.insert({ id: eventId });
-
-  if (insertError) {
-    throw new Error(insertError.message);
-  }
+  if (insertError) throw new Error(insertError.message);
 
   return true;
 }
 
+// Create a notification for the user
 async function createNotification(userId: string, title: string, message: string, type: string) {
   const supabase = await createRouteHandlerClient();
   const { error } = await supabase.from("notifications").insert({
@@ -41,26 +34,25 @@ async function createNotification(userId: string, title: string, message: string
     read: false,
   });
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 }
 
+// Find user by Stripe customer ID
 async function findUserIdByCustomerId(customerId: string) {
   const supabase = await createRouteHandlerClient();
   const query = supabase.from("profiles") as any;
+
   const { data, error } = await query
     .select("id")
     .eq("stripe_customer_id", customerId)
     .maybeSingle();
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
   return (data?.id as string | undefined) ?? null;
 }
 
+// Update billing status in profiles table
 async function updateBillingStatus(userId: string, billingStatus: string) {
   const supabase = await createRouteHandlerClient();
   const { error } = await supabase
@@ -68,9 +60,7 @@ async function updateBillingStatus(userId: string, billingStatus: string) {
     .update({ billing_status: billingStatus } as never)
     .eq("id", userId);
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 }
 
 export async function POST(request: Request) {
@@ -88,7 +78,8 @@ export async function POST(request: Request) {
 
   const payload = await request.text();
 
-  let event: Stripe.Event;
+  // Stripe v12+ — event type is no longer Stripe.Event
+  let event: any;
 
   try {
     event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
@@ -97,16 +88,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
+  // Idempotency check
   const inserted = await storeEvent(event.id);
-
   if (!inserted) {
     return NextResponse.json({ received: true, duplicate: true });
   }
 
+  // Handle invoice events
   if (event.type === "invoice.paid" || event.type === "invoice.payment_failed") {
-    const invoice = event.data.object as Stripe.Invoice;
+    const invoice = event.data.object as any;
+
+
     const customerId =
-      typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id ?? null;
+      typeof invoice.customer === "string"
+        ? invoice.customer
+        : invoice.customer?.id ?? null;
 
     if (customerId) {
       const userId = await findUserIdByCustomerId(customerId);
@@ -135,5 +131,3 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ received: true });
 }
-
-

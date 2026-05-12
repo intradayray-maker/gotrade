@@ -7,7 +7,6 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -28,8 +27,7 @@
   "utils",
   "**/*.ts",
   "**/*.tsx",
-  "app/globals.css",
-  ".next/types/**/*.ts"
+  "app/globals.css"
 ]
 ,
   "exclude": ["node_modules"]
