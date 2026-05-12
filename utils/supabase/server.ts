@@ -7,7 +7,7 @@ export function createServerClient() {
 
   return createSupabaseServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,   // ✅ FIXED
     {
       cookies: {
         get(name: string) {
