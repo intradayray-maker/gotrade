@@ -164,7 +164,7 @@ export default function TradingAdminClient() {
           .eq("status", "queued"),
         supabase.from("trade_errors").select("*"),
         supabase
-          .from("executor_logs")
+          .from("sync_logs")
           .select("*")
           .order("created_at", { ascending: false })
           .limit(50),
