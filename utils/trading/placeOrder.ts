@@ -21,6 +21,7 @@ export async function placeOrder(params: {
     side,
     type: "market",
     time_in_force: "gtc",
+    extended_hours: true,   // ⭐ allows trading until 8 PM ET
   });
 
   return order;
