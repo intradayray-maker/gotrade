@@ -1,47 +1,147 @@
-import { createServerClient } from "@/utils/supabase/server";
-import { notifyUser } from "@/utils/email/notifyUser";
-import type { NotificationType } from "@/utils/notifications/types"; // adjust path if needed
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json }
+  | Json[];
 
-export async function sendNotification(options: {
-  userId: string | null;
-  type: NotificationType;
-  title: string;
-  message: string;
-  sendEmail?: boolean;
-}) {
-  const supabase = await createServerClient();
+export interface Database {
+  public: {
+    Tables: {
+      broker_connections: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          broker: string;
+          api_key_id: string;
+          api_secret_encrypted: string;
+          paper_trading: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          broker: string;
+          api_key_id: string;
+          api_secret_encrypted: string;
+          paper_trading?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          broker?: string;
+          api_key_id?: string;
+          api_secret_encrypted?: string;
+          paper_trading?: boolean;
+          created_at?: string;
+        };
+      };
 
-  const { data: notif, error } = await supabase
-    .from("notifications")
-    .insert({
-      user_id: options.userId,
-      type: options.type,
-      title: options.title,
-      message: options.message,
-    })
-    .select("*")
-    .single();
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          type: string;
+          title: string;
+          message: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          type: string;
+          title: string;
+          message: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          type?: string;
+          title?: string;
+          message?: string;
+          created_at?: string;
+        };
+      };
 
-  if (error) {
-    console.error("Failed to insert notification", error);
-    return;
-  }
+      profiles: {
+        Row: {
+          id: string;
+          email: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          email?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string | null;
+          created_at?: string;
+        };
+      };
 
-  // Only send email if userId exists
-  if (options.sendEmail && options.userId) {
-    const { data: userData, error: userError } =
-      await supabase.auth.admin.getUserById(options.userId);
+      copy_trading_settings: {
+        Row: {
+          user_id: string;
+          allocation: number | null;
+        };
+        Insert: {
+          user_id: string;
+          allocation?: number | null;
+        };
+        Update: {
+          user_id?: string;
+          allocation?: number | null;
+        };
+      };
 
-    if (userError) {
-      console.error("Failed to fetch user email:", userError);
-    }
+      trade_queue: {
+        Row: {
+          id: string;
+          follower_user_id: string;
+          symbol: string;
+          side: "buy" | "sell";
+          qty: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          follower_user_id: string;
+          symbol: string;
+          side: "buy" | "sell";
+          qty: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          follower_user_id?: string;
+          symbol?: string;
+          side?: "buy" | "sell";
+          qty?: number;
+          created_at?: string;
+        };
+      };
+    };
 
-    const email = userData?.user?.email;
-
-    if (email) {
-      await notifyUser();
-    }
-  }
-
-  return notif;
+    Enums: {};
+  };
 }
+
+export type Tables<
+  T extends keyof Database["public"]["Tables"]
+> = Database["public"]["Tables"][T]["Row"];
+
+export type TablesInsert<
+  T extends keyof Database["public"]["Tables"]
+> = Database["public"]["Tables"][T]["Insert"];
+
+export type TablesUpdate<
+  T extends keyof Database["public"]["Tables"]
+> = Database["public"]["Tables"][T]["Update"];
+
+export type Enums<T extends keyof Database["public"]["Enums"]> =
+  Database["public"]["Enums"][T];

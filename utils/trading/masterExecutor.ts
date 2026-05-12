@@ -36,22 +36,20 @@ export async function executeMasterTrade(params: {
       .from("copy_trading_settings")
       .select("user_id, allocation");
 
-    const followers =
-      rawFollowers?.filter(
-        (f): f is { user_id: string; allocation: number | null } =>
-          typeof f.user_id === "string"
-      ) ?? [];
+    const followers = (rawFollowers?.filter(
+      (f: any) => typeof f.user_id === "string" && typeof f.allocation === "number"
+    ) ?? []) as { user_id: string; allocation: number }[];
 
     // 4. Enqueue follower trades
     for (const follower of followers) {
-      const followerQty = qty * (follower.allocation ?? 1);
+      const followerQty = qty * follower.allocation;
 
       await supabase.from("trade_queue").insert({
         follower_user_id: follower.user_id,
         symbol,
         side,
         qty: followerQty,
-      });
+      } as any);
     }
 
     return { masterOrder, followers };

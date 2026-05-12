@@ -1,28 +1,17 @@
 import { cookies } from "next/headers";
 import { createServerClient as createSupabaseServerClient } from "@supabase/ssr";
+import type { Database } from "@/types";
 
-import type { Database } from "@/types/supabase";
-import { readAllCookies, writeAllCookies } from "@/utils/supabase/cookies";
-import { getSupabaseAnonKey, getSupabaseUrl } from "@/utils/supabase/config";
-
-/**
- * Server-side Supabase client for API routes, server components, and cron jobs.
- * Uses async cookies() and the custom cookie adapter to ensure compatibility
- * with Next.js 16 and Supabase SSR v7.
- */
-export async function createServerClient() {
-  const cookieStore = await cookies();
+export function createServerClient() {
+  const cookieStore = cookies();
 
   return createSupabaseServerClient<Database>(
-    getSupabaseUrl(),
-    getSupabaseAnonKey(),
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return readAllCookies(cookieStore);
-        },
-        setAll(cookiesToSet) {
-          writeAllCookies(cookieStore, cookiesToSet);
+        get(name: string) {
+          return cookieStore.get(name)?.value;
         },
       },
     }

@@ -23,12 +23,14 @@ export async function sendNotification(options: {
   // Insert in-app notification
   const { data: notif, error } = await supabase
     .from("notifications")
-    .insert({
-      user_id: options.userId ?? null,   // ✅ always valid
-      type: options.type,
-      title: options.title,
-      message: options.message,
-    })
+    .insert([
+      {
+        user_id: options.userId ?? null,   // ✅ always valid
+        type: options.type,
+        title: options.title,
+        message: options.message,
+      },
+    ] as any)
     .select("*")
     .single();
 
