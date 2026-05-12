@@ -6,38 +6,50 @@ export async function executeMasterTrade(params: {
   side: "buy" | "sell";
   qty: number;
 }) {
+  console.log("🚀 MASTER EXECUTOR STARTED");
+
   const { symbol, side, qty } = params;
 
   // 🔥 Your actual master trader UUID
   const masterTraderId = "cab941c3-df75-4e54-9f27-384952525fb1";
 
   console.log("MASTER TRADER ID USED:", masterTraderId);
+  console.log("MASTER TRADE PARAMS:", { symbol, side, qty });
 
   const supabase = await createServerClient();
 
   try {
     // 1. Execute master trade
-    const masterOrder = await placeOrder({
-      symbol,
-      side,
-      qty,
-      accountType: "master",
-    });
+    console.log("📡 PLACING MASTER ORDER...");
+    let masterOrder;
 
-    const masterFillPrice = masterOrder.filled_avg_price ?? null;
+    try {
+      masterOrder = await placeOrder({
+        symbol,
+        side,
+        qty,
+        accountType: "master",
+      });
+    } catch (err) {
+      console.error("❌ MASTER ORDER FAILED:", err);
+      throw err;
+    }
+
+    console.log("✅ MASTER ORDER RESULT:", masterOrder);
+
+    const masterFillPrice = masterOrder?.filled_avg_price ?? null;
 
     // 2. Load followers for THIS master trader
+    console.log("🔍 LOADING FOLLOWERS FOR TRADER:", masterTraderId);
+
     const { data: rawFollowers, error: followerErr } = await supabase
       .from("copy_trading_settings")
       .select("user_id, allocation")
       .eq("trader_id", masterTraderId)
       .eq("enabled", true);
 
-    if (followerErr) {
-      console.error("Follower load error:", followerErr);
-    }
-
-    console.log("RAW FOLLOWERS:", rawFollowers);
+    console.log("📊 RAW FOLLOWERS:", rawFollowers);
+    console.log("❗ FOLLOWER QUERY ERROR:", followerErr);
 
     const followers =
       rawFollowers?.filter(
@@ -46,11 +58,14 @@ export async function executeMasterTrade(params: {
           typeof f.allocation === "number"
       ) ?? [];
 
-    console.log("FILTERED FOLLOWERS:", followers);
+    console.log("📌 FILTERED FOLLOWERS:", followers);
 
     // 3. Enqueue follower trades
+    console.log("🧵 STARTING FOLLOWER QUEUE INSERT LOOP...");
+
     for (const follower of followers) {
-      // ⭐ Fix TypeScript null warning
+      console.log("➡️ INSERTING QUEUE JOB FOR FOLLOWER:", follower.user_id);
+
       const followerQty = qty * (follower.allocation ?? 1);
 
       const { error: insertErr } = await supabase
@@ -60,22 +75,24 @@ export async function executeMasterTrade(params: {
           symbol,
           side,
           qty: followerQty,
-          master_trade_id: masterOrder.id ?? null,
+          master_trade_id: masterOrder?.id ?? null,
         });
 
       if (insertErr) {
-        console.error("Follower queue insert error:", insertErr);
+        console.error("❌ FOLLOWER QUEUE INSERT ERROR:", insertErr);
       } else {
-        console.log("Queued follower trade:", {
+        console.log("✅ QUEUED FOLLOWER TRADE:", {
           follower_user_id: follower.user_id,
           qty: followerQty,
         });
       }
     }
 
+    console.log("🎉 MASTER EXECUTOR FINISHED SUCCESSFULLY");
+
     return { masterOrder, followers };
   } catch (err) {
-    console.error("MASTER TRADE ERROR:", err);
+    console.error("🔥 MASTER TRADE ERROR:", err);
     throw err;
   }
 }
