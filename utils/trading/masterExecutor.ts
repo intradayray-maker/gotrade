@@ -22,9 +22,9 @@ export async function executeMasterTrade(params: {
 
     const masterFillPrice = masterOrder.filled_avg_price ?? null;
 
-    // 2. Notify master
+    // 2. Notify master (system-level)
     await sendNotification({
-      userId: "master",
+      userId: null,   // ✅ FIXED
       type: "master_trade_executed",
       title: "Master Trade Executed",
       message: `${side.toUpperCase()} ${qty} ${symbol} executed.`,
@@ -58,7 +58,7 @@ export async function executeMasterTrade(params: {
 
   } catch (err) {
     await sendNotification({
-      userId: "admin",
+      userId: null,   // ✅ FIXED
       type: "system_warning",
       title: "Master Trade Failed",
       message: `Master trade failed for ${symbol}.`,
