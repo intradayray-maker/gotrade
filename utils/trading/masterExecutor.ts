@@ -39,20 +39,19 @@ export async function executeMasterTrade(params: {
 
     const masterFillPrice = masterOrder?.filled_avg_price ?? null;
 
-    // ⭐ NEW STEP: Insert master trade into master_trades
+    // ⭐ Insert master trade into master_trades (type-safe)
     console.log("📝 INSERTING MASTER TRADE INTO master_trades...");
 
     const { data: masterTradeRow, error: masterInsertErr } = await supabase
       .from("master_trades")
       .insert({
-        id: masterOrder.id,
+        order_id: masterOrder.id, // Alpaca order ID
         symbol,
         side,
         qty,
         status: masterOrder.status,
-        limit_price: masterOrder.limit_price,
         filled_avg_price: masterFillPrice,
-        created_at: masterOrder.created_at,
+        filled_qty: masterOrder.filled_qty ?? null,
       })
       .select()
       .single();
@@ -64,7 +63,7 @@ export async function executeMasterTrade(params: {
 
     console.log("✅ MASTER TRADE INSERTED:", masterTradeRow);
 
-    // 2. Load followers for THIS master trader
+    // 2. Load followers
     console.log("🔍 LOADING FOLLOWERS FOR TRADER:", masterTraderId);
 
     const { data: rawFollowers, error: followerErr } = await supabase
@@ -100,7 +99,7 @@ export async function executeMasterTrade(params: {
           symbol,
           side,
           qty: followerQty,
-          master_trade_id: masterOrder.id, // now valid
+          master_trade_id: masterTradeRow.id, // VALID FK
         });
 
       if (insertErr) {
