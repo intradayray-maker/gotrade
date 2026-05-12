@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@/types";
 
-export async function createRouteHandlerClient() {
-  const cookieStore = await cookies(); // Next.js 13+ async cookies()
+export function createRouteHandlerClient() {
+  const cookieStore = cookies(); // ❗ NOT async
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,10 +14,16 @@ export async function createRouteHandlerClient() {
           return cookieStore.get(name)?.value;
         },
         set(name, value, options) {
-          cookieStore.set({ name, value, ...options });
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch {
+            // Route Handlers cannot always write cookies (GET, HEAD, DELETE)
+          }
         },
         remove(name, options) {
-          cookieStore.set({ name, value: "", ...options });
+          try {
+            cookieStore.set({ name, value: "", ...options });
+          } catch {}
         },
       },
     }
