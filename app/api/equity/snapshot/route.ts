@@ -1,25 +1,9 @@
-import { cookies } from "next/headers";
-import { createServerClient as createSupabaseServerClient } from "@supabase/ssr";
+import { NextResponse } from "next/server";
+import { createServerClient } from "@/utils/supabase/server";
 
-import type { Database } from "@/types/supabase";
-import { readAllCookies, writeAllCookies } from "@/utils/supabase/cookies";
-import { getSupabaseAnonKey, getSupabaseUrl } from "@/utils/supabase/config";
+export async function GET() {
+  const supabase = await createServerClient();
 
-export async function createServerClient() {
-  const cookieStore = await cookies();
-
-  return createSupabaseServerClient<Database>(
-    getSupabaseUrl(),
-    getSupabaseAnonKey(),
-    {
-      cookies: {
-        getAll() {
-          return readAllCookies(cookieStore);
-        },
-        setAll(cookiesToSet) {
-          writeAllCookies(cookieStore, cookiesToSet);
-        },
-      },
-    }
-  );
+  // your logic here
+  return NextResponse.json({ ok: true });
 }
