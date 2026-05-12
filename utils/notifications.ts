@@ -12,7 +12,7 @@ export type NotificationType =
   | "follower_trade_failed";
 
 export async function sendNotification(options: {
-  userId: string;
+  userId: string | null;
   type: NotificationType;
   title: string;
   message: string;
@@ -24,7 +24,7 @@ export async function sendNotification(options: {
   const { data: notif, error } = await supabase
     .from("notifications")
     .insert({
-      user_id: options.userId,
+      user_id: options.userId ?? null,   // ✅ always valid
       type: options.type,
       title: options.title,
       message: options.message,
@@ -37,8 +37,8 @@ export async function sendNotification(options: {
     return;
   }
 
-  // Optional email
-  if (options.sendEmail) {
+  // Optional email — ONLY if userId is a real UUID
+  if (options.sendEmail && options.userId) {
     const { data: userData, error: userError } =
       await supabase.auth.admin.getUserById(options.userId);
 
@@ -49,8 +49,7 @@ export async function sendNotification(options: {
     const email = userData?.user?.email;
 
     if (email) {
-      // Your patched notifyUser() takes NO arguments
-      await notifyUser();
+      await notifyUser(); // your patched version takes no args
     }
   }
 
