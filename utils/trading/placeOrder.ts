@@ -15,19 +15,20 @@ export async function placeOrder(params: {
     paper: true,
   });
 
-  // Get last quote to build a limit price
-  const quote = await alpaca.getLatestQuote(symbol);
+  // ⭐ Correct quote API for your SDK
+  const quote = await alpaca.getLatestQuoteV2(symbol);
+
   const limitPrice =
-    side === "buy" ? quote.askprice : quote.bidprice;
+    side === "buy" ? quote.AskPrice : quote.BidPrice;
 
   const order = await alpaca.createOrder({
     symbol,
     qty,
     side,
-    type: "limit",          // ⭐ required for extended hours
+    type: "limit",          // required for extended hours
     limit_price: limitPrice,
-    time_in_force: "day",   // ⭐ required for extended hours
-    extended_hours: true,   // ⭐ now valid
+    time_in_force: "day",   // required for extended hours
+    extended_hours: true,
   });
 
   return order;
