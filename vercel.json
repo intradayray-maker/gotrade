@@ -1,10 +1,6 @@
 {
   "crons": [
     {
-      "path": "/api/cron/equity-snapshot",
-      "schedule": "*/15 * * * *"
-    },
-    {
       "path": "/api/cron/crystallize",
       "schedule": "0 0 1 * *"
     }
