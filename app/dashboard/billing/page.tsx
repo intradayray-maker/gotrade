@@ -62,9 +62,10 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
       )
       ?.sort(
         (a, b) =>
-          new Date(b.current_period_end).getTime() -
-          new Date(a.current_period_end).getTime()
+          new Date(b.current_period_end ?? 0).getTime() -
+          new Date(a.current_period_end ?? 0).getTime()
       )[0] ?? null;
+
 
   // -----------------------------
   // 4. Fetch saved card from Stripe
