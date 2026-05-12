@@ -13,22 +13,33 @@ export async function placeOrder(params: {
     keyId: process.env.ALPACA_KEY!,
     secretKey: process.env.ALPACA_SECRET!,
     paper: true,
-    usePolygon: false,   // ⭐ enables Alpaca data API
   });
 
-  // ⭐ Correct quote API for your SDK
-  const quote = await alpaca.getLatestQuote(symbol);
+  // ⭐ Fetch quote using Alpaca REST API (reliable)
+  const quoteRes = await fetch(
+    `https://data.alpaca.markets/v2/stocks/${symbol}/quotes/latest`,
+    {
+      headers: {
+        "APCA-API-KEY-ID": process.env.ALPACA_KEY!,
+        "APCA-API-SECRET-KEY": process.env.ALPACA_SECRET!,
+      },
+    }
+  );
+
+  const quoteJson = await quoteRes.json();
+  const quote = quoteJson.quote;
 
   const limitPrice =
-    side === "buy" ? quote.askprice : quote.bidprice;
+    side === "buy" ? quote.ap : quote.bp; // ask price / bid price
 
+  // ⭐ Valid extended-hours order
   const order = await alpaca.createOrder({
     symbol,
     qty,
     side,
-    type: "limit",          // required for extended hours
+    type: "limit",
     limit_price: limitPrice,
-    time_in_force: "day",   // required for extended hours
+    time_in_force: "day",
     extended_hours: true,
   });
 
