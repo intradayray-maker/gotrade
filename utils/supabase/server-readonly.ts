@@ -1,1 +1,1 @@
-export { createServerClient as createReadonlyClient } from "@/utils/supabase/server";
+export { createSupabaseServerClient as createReadonlyClient } from "@/utils/supabase/server";

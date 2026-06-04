@@ -1,5 +1,6 @@
 "use client";
 
+import GTCard from "@/components/ui/GTCard";
 import { useEffect, useState } from "react";
 
 type RealizedTrade = {
@@ -160,7 +161,7 @@ export default function PerformanceMetrics() {
     });
 
   return (
-    <div className=" p-2">
+    <GTCard className="!p-2">
       <div className="mb-1 flex items-center justify-between">
       </div>
 
@@ -225,6 +226,6 @@ export default function PerformanceMetrics() {
         </div>
 
       </div>
-    </div>
+    </GTCard>
   );
 }

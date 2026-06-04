@@ -7,297 +7,32 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
-      alpaca_keys: {
+      gotrade_preorders: {
         Row: {
-          environment: string
-          key_id: string
-          secret_key: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          environment?: string
-          key_id: string
-          secret_key: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          environment?: string
-          key_id?: string
-          secret_key?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      broker_connections: {
-        Row: {
-          api_key_id: string | null
-          api_secret_encrypted: string | null
-          broker: string | null
+          capital: number | null
           created_at: string | null
+          email: string | null
           id: string
-          paper_trading: boolean | null
-          updated_at: string | null
-          user_id: string | null
+          name: string | null
         }
         Insert: {
-          api_key_id?: string | null
-          api_secret_encrypted?: string | null
-          broker?: string | null
+          capital?: number | null
           created_at?: string | null
+          email?: string | null
           id?: string
-          paper_trading?: boolean | null
-          updated_at?: string | null
-          user_id?: string | null
+          name?: string | null
         }
         Update: {
-          api_key_id?: string | null
-          api_secret_encrypted?: string | null
-          broker?: string | null
+          capital?: number | null
           created_at?: string | null
+          email?: string | null
           id?: string
-          paper_trading?: boolean | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      copy_trading_settings: {
-        Row: {
-          allocation: number | null
-          allocation_model: string | null
-          allocation_value: number | null
-          created_at: string | null
-          enabled: boolean | null
-          high_water_mark: number | null
-          id: string
-          max_daily_loss: number | null
-          max_position_size: number | null
-          performance_fee_rate: number | null
-          risk_multiplier: number | null
-          stripe_customer_id: string | null
-          trader_id: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          allocation?: number | null
-          allocation_model?: string | null
-          allocation_value?: number | null
-          created_at?: string | null
-          enabled?: boolean | null
-          high_water_mark?: number | null
-          id?: string
-          max_daily_loss?: number | null
-          max_position_size?: number | null
-          performance_fee_rate?: number | null
-          risk_multiplier?: number | null
-          stripe_customer_id?: string | null
-          trader_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          allocation?: number | null
-          allocation_model?: string | null
-          allocation_value?: number | null
-          created_at?: string | null
-          enabled?: boolean | null
-          high_water_mark?: number | null
-          id?: string
-          max_daily_loss?: number | null
-          max_position_size?: number | null
-          performance_fee_rate?: number | null
-          risk_multiplier?: number | null
-          stripe_customer_id?: string | null
-          trader_id?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      follower_allocation_settings: {
-        Row: {
-          user_id: string
-          mode: string
-          value: number
-          max_allocation_pct: number | null
-          enabled: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          user_id: string
-          mode: string
-          value: number
-          max_allocation_pct?: number | null
-          enabled: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          user_id?: string
-          mode?: string
-          value?: number
-          max_allocation_pct?: number | null
-          enabled?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      follower_equity: {
-        Row: {
-          equity: number
-          follower_user_id: string
-          high_water_mark: number
-          updated_at: string | null
-        }
-        Insert: {
-          equity?: number
-          follower_user_id: string
-          high_water_mark?: number
-          updated_at?: string | null
-        }
-        Update: {
-          equity?: number
-          follower_user_id?: string
-          high_water_mark?: number
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      follower_equity_history: {
-        Row: {
-          equity: number
-          id: number
-          timestamp: string | null
-          user_id: string | null
-        }
-        Insert: {
-          equity: number
-          id?: never
-          timestamp?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          equity?: number
-          id?: never
-          timestamp?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      follower_positions: {
-        Row: {
-          avg_price: number | null
-          follower_user_id: string | null
-          id: string
-          qty: number
-          symbol: string
-          updated_at: string | null
-        }
-        Insert: {
-          avg_price?: number | null
-          follower_user_id?: string | null
-          id?: string
-          qty: number
-          symbol: string
-          updated_at?: string | null
-        }
-        Update: {
-          avg_price?: number | null
-          follower_user_id?: string | null
-          id?: string
-          qty?: number
-          symbol?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      follower_trades: {
-        Row: {
-          created_at: string | null
-          error_message: string | null
-          filled_avg_price: number | null
-          filled_qty: number | null
-          follower_user_id: string | null
-          id: string
-          master_trade_id: string | null
-          order_id: string | null
-          qty: number
-          side: string
-          status: string
-          symbol: string
-        }
-        Insert: {
-          created_at?: string | null
-          error_message?: string | null
-          filled_avg_price?: number | null
-          filled_qty?: number | null
-          follower_user_id?: string | null
-          id?: string
-          master_trade_id?: string | null
-          order_id?: string | null
-          qty: number
-          side: string
-          status?: string
-          symbol: string
-        }
-        Update: {
-          created_at?: string | null
-          error_message?: string | null
-          filled_avg_price?: number | null
-          filled_qty?: number | null
-          follower_user_id?: string | null
-          id?: string
-          master_trade_id?: string | null
-          order_id?: string | null
-          qty?: number
-          side?: string
-          status?: string
-          symbol?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "follower_trades_master_trade_id_fkey"
-            columns: ["master_trade_id"]
-            isOneToOne: false
-            referencedRelation: "master_trades"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      hwm_history: {
-        Row: {
-          created_at: string | null
-          hwm: number
-          id: string
-          timestamp: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          hwm: number
-          id?: string
-          timestamp?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          hwm?: number
-          id?: string
-          timestamp?: string | null
-          user_id?: string | null
+          name?: string | null
         }
         Relationships: []
       }
@@ -337,56 +72,6 @@ export type Database = {
         }
         Relationships: []
       }
-      master_trades: {
-        Row: {
-          created_at: string | null
-          error_message: string | null
-          filled_avg_price: number | null
-          filled_qty: number | null
-          id: string
-          order_id: string | null
-          qty: number
-          side: string
-          signal_id: string | null
-          status: string
-          symbol: string
-        }
-        Insert: {
-          created_at?: string | null
-          error_message?: string | null
-          filled_avg_price?: number | null
-          filled_qty?: number | null
-          id?: string
-          order_id?: string | null
-          qty: number
-          side: string
-          signal_id?: string | null
-          status?: string
-          symbol: string
-        }
-        Update: {
-          created_at?: string | null
-          error_message?: string | null
-          filled_avg_price?: number | null
-          filled_qty?: number | null
-          id?: string
-          order_id?: string | null
-          qty?: number
-          side?: string
-          signal_id?: string | null
-          status?: string
-          symbol?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "master_trades_signal_id_fkey"
-            columns: ["signal_id"]
-            isOneToOne: false
-            referencedRelation: "master_signals"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       notifications: {
         Row: {
           created_at: string | null
@@ -417,79 +102,15 @@ export type Database = {
         }
         Relationships: []
       }
-      performance_fee_charges: {
-        Row: {
-          created_at: string | null
-          fee_amount: number
-          fee_rate_used: number
-          id: number
-          period_end: string
-          period_start: string
-          profit: number
-          status: string | null
-          stripe_invoice_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          fee_amount: number
-          fee_rate_used: number
-          id?: never
-          period_end: string
-          period_start: string
-          profit: number
-          status?: string | null
-          stripe_invoice_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          fee_amount?: number
-          fee_rate_used?: number
-          id?: never
-          period_end?: string
-          period_start?: string
-          profit?: number
-          status?: string | null
-          stripe_invoice_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      performance_fees: {
-        Row: {
-          amount: number
-          crystallized_at: string | null
-          follower_user_id: string
-          id: string
-          period_end: string
-          period_start: string
-        }
-        Insert: {
-          amount: number
-          crystallized_at?: string | null
-          follower_user_id: string
-          id?: string
-          period_end: string
-          period_start: string
-        }
-        Update: {
-          amount?: number
-          crystallized_at?: string | null
-          follower_user_id?: string
-          id?: string
-          period_end?: string
-          period_start?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           billing_status: string | null
           current_period_end: string | null
+          email: string | null
           email_notifications: boolean | null
           first_name: string | null
           id: string
+          is_admin: boolean | null
           last_name: string | null
           nextbillingdate: number | null
           planname: string | null
@@ -504,9 +125,11 @@ export type Database = {
         Insert: {
           billing_status?: string | null
           current_period_end?: string | null
+          email?: string | null
           email_notifications?: boolean | null
           first_name?: string | null
           id: string
+          is_admin?: boolean | null
           last_name?: string | null
           nextbillingdate?: number | null
           planname?: string | null
@@ -521,9 +144,11 @@ export type Database = {
         Update: {
           billing_status?: string | null
           current_period_end?: string | null
+          email?: string | null
           email_notifications?: boolean | null
           first_name?: string | null
           id?: string
+          is_admin?: boolean | null
           last_name?: string | null
           nextbillingdate?: number | null
           planname?: string | null
@@ -588,153 +213,12 @@ export type Database = {
         }
         Relationships: []
       }
-      sync_logs: {
-        Row: {
-          correction_qty: number | null
-          created_at: string | null
-          error_message: string | null
-          follower_qty: number | null
-          follower_user_id: string | null
-          id: string
-          master_qty: number | null
-          status: string
-          symbol: string
-        }
-        Insert: {
-          correction_qty?: number | null
-          created_at?: string | null
-          error_message?: string | null
-          follower_qty?: number | null
-          follower_user_id?: string | null
-          id?: string
-          master_qty?: number | null
-          status: string
-          symbol: string
-        }
-        Update: {
-          correction_qty?: number | null
-          created_at?: string | null
-          error_message?: string | null
-          follower_qty?: number | null
-          follower_user_id?: string | null
-          id?: string
-          master_qty?: number | null
-          status?: string
-          symbol?: string
-        }
-        Relationships: []
-      }
-      trade_errors: {
-        Row: {
-          context: string
-          created_at: string | null
-          error_message: string
-          follower_trade_id: string | null
-          id: string
-          master_trade_id: string | null
-          payload: Json | null
-          user_id: string | null
-        }
-        Insert: {
-          context: string
-          created_at?: string | null
-          error_message: string
-          follower_trade_id?: string | null
-          id?: string
-          master_trade_id?: string | null
-          payload?: Json | null
-          user_id?: string | null
-        }
-        Update: {
-          context?: string
-          created_at?: string | null
-          error_message?: string
-          follower_trade_id?: string | null
-          id?: string
-          master_trade_id?: string | null
-          payload?: Json | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trade_errors_follower_trade_id_fkey"
-            columns: ["follower_trade_id"]
-            isOneToOne: false
-            referencedRelation: "follower_trades"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "trade_errors_master_trade_id_fkey"
-            columns: ["master_trade_id"]
-            isOneToOne: false
-            referencedRelation: "master_trades"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      trade_queue: {
-        Row: {
-          attempts: number | null
-          created_at: string | null
-          follower_user_id: string | null
-          id: string
-          last_error: string | null
-          master_trade_id: string | null
-          max_attempts: number | null
-          qty: number
-          side: string
-          status: string
-          symbol: string
-        }
-        Insert: {
-          attempts?: number | null
-          created_at?: string | null
-          follower_user_id?: string | null
-          id?: string
-          last_error?: string | null
-          master_trade_id?: string | null
-          max_attempts?: number | null
-          qty: number
-          side: string
-          status?: string
-          symbol: string
-        }
-        Update: {
-          attempts?: number | null
-          created_at?: string | null
-          follower_user_id?: string | null
-          id?: string
-          last_error?: string | null
-          master_trade_id?: string | null
-          max_attempts?: number | null
-          qty?: number
-          side?: string
-          status?: string
-          symbol?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trade_queue_master_trade_id_fkey"
-            columns: ["master_trade_id"]
-            isOneToOne: false
-            referencedRelation: "master_trades"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      get_latest_equity: { Args: { uid: string }; Returns: number }
-      get_monthly_equity: {
-        Args: { end_ts: string; start_ts: string; uid: string }
-        Returns: {
-          equity: number
-          snapshot_ts: string
-        }[]
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

@@ -1,5 +1,6 @@
 "use client";
 
+import GTCard from "@/components/ui/GTCard";
 import { Line } from "react-chartjs-2";
 
 type GoalProjectionChartProps = {
@@ -41,11 +42,11 @@ export default function GoalProjectionChart({
   };
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-[#0b0b12] p-4">
+    <GTCard className="!p-4">
       <h2 className="text-sm font-medium text-slate-200 mb-2">
-        Time‑to‑Goal Projection
+        Time-to-Goal Projection
       </h2>
       <Line data={data} />
-    </div>
+    </GTCard>
   );
 }

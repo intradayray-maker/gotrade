@@ -2,7 +2,7 @@ import { createRouteHandlerClient } from "@/utils/supabase/route";
 
 export async function GET() {
   try {
-    const supabase = createRouteHandlerClient();
+    const supabase = await createRouteHandlerClient();
     const { data, error } = await supabase.auth.getUser();
 
     console.log("USER:", data);

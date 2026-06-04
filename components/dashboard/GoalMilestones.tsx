@@ -1,5 +1,6 @@
 "use client";
 
+import GTCard from "@/components/ui/GTCard";
 import { motion } from "framer-motion";
 
 type GoalMilestonesProps = {
@@ -20,7 +21,7 @@ export default function GoalMilestones({
   ];
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-[#0b0b12] p-4">
+    <GTCard className="!p-4">
       <h2 className="text-sm font-medium text-slate-200 mb-3">
         Goal Milestones
       </h2>
@@ -49,6 +50,6 @@ export default function GoalMilestones({
           );
         })}
       </div>
-    </div>
+    </GTCard>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import GTCard from "@/components/ui/GTCard";
+
 type CalculatorCard = {
   currentBalance: number;
   expectedMonthlyReturnPct: number;
@@ -26,7 +28,7 @@ export default function CalculatorCard({
   });
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-[#0b0b12] p-4">
+    <GTCard className="!p-4">
       <h2 className="text-sm font-medium text-slate-200 mb-2">
         Bigger Account Simulator
       </h2>
@@ -44,6 +46,6 @@ export default function CalculatorCard({
           <span>{s.months.toFixed(1)} months</span>
         </div>
       ))}
-    </div>
+    </GTCard>
   );
 }

@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/utils/supabase/server"
 import ProfileClient from "./ProfileClient"
 import type { User } from "@supabase/supabase-js"
+import GTCard from "@/components/ui/GTCard"
 
 export const dynamic = "force-dynamic"
 
@@ -12,7 +13,11 @@ export default async function ProfilePage() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return <div className="text-white p-6">Not logged in</div>
+    return (
+      <GTCard className="text-white">
+        Not logged in
+      </GTCard>
+    )
   }
 
   // Fetch profile INCLUDING id

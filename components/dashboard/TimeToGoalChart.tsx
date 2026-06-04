@@ -1,5 +1,6 @@
 "use client";
 
+import GTCard from "@/components/ui/GTCard";
 import {
   Area,
   AreaChart,
@@ -68,7 +69,7 @@ export function TimeToGoalChart({
   const goal = requiredBalance > 0 ? requiredBalance : 0;
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <GTCard className="flex h-full flex-col gap-4">
       {/* Header */}
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
         Time-to-Goal Projection
@@ -144,6 +145,6 @@ export function TimeToGoalChart({
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </GTCard>
   );
 }

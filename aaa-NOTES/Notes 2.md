@@ -1,0 +1,1 @@
+the outer card borders look great but i need the inner boarders to be very thin

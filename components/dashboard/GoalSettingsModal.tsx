@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import GTCard from "@/components/ui/GTCard";
 import { useEffect, useMemo, useState } from "react";
 
 type GoalSettingsModalProps = {
@@ -29,7 +30,13 @@ export default function GoalSettingsModal({
 
   useEffect(() => {
     if (!open) return;
-    setMonthlyInput(String(Number.isFinite(initialMonthlyIncomeGoal) ? initialMonthlyIncomeGoal : 0));
+    setMonthlyInput(
+      String(
+        Number.isFinite(initialMonthlyIncomeGoal)
+          ? initialMonthlyIncomeGoal
+          : 0
+      )
+    );
   }, [open, initialMonthlyIncomeGoal]);
 
   const monthlyIncomeGoal = useMemo(() => toNumber(monthlyInput), [monthlyInput]);
@@ -47,7 +54,7 @@ export default function GoalSettingsModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-xl border border-slate-800 bg-[#0b0b12] p-6 shadow-xl">
+      <GTCard className="w-full max-w-md shadow-xl">
         <h2 className="mb-4 text-lg font-semibold text-slate-200">Edit Goals</h2>
 
         <div className="space-y-4 text-sm">
@@ -98,7 +105,7 @@ export default function GoalSettingsModal({
             {saving ? "Saving..." : "Save Goals"}
           </button>
         </div>
-      </div>
+      </GTCard>
     </div>
   );
 }

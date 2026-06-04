@@ -1,3 +1,5 @@
+import GTCard from "@/components/ui/GTCard";
+
 export default function BestWorstTrades({
   best,
   worst,
@@ -21,7 +23,7 @@ export default function BestWorstTrades({
 
   return (
     <div className="grid grid-cols-2 gap-4 mt-6">
-      <div className="rounded-xl p-5 bg-white/5 backdrop-blur-xl border border-white/10">
+      <GTCard className="!p-5">
         <p className="text-sm text-white/60">Best Trade</p>
         {bestTrade ? (
           <div className="mt-2">
@@ -34,9 +36,9 @@ export default function BestWorstTrades({
         ) : (
           <p className="text-white/40 mt-2">No trades yet</p>
         )}
-      </div>
+      </GTCard>
 
-      <div className="rounded-xl p-5 bg-white/5 backdrop-blur-xl border border-white/10">
+      <GTCard className="!p-5">
         <p className="text-sm text-white/60">Worst Trade</p>
         {worstTrade ? (
           <div className="mt-2">
@@ -49,7 +51,7 @@ export default function BestWorstTrades({
         ) : (
           <p className="text-white/40 mt-2">No trades yet</p>
         )}
-      </div>
+      </GTCard>
     </div>
   );
 }

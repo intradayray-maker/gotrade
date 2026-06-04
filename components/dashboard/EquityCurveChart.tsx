@@ -1,5 +1,6 @@
 "use client";
 
+import GTCard from "@/components/ui/GTCard";
 import { useMemo, useState } from "react";
 
 export type EquityPoint = {
@@ -30,21 +31,29 @@ export default function EquityAreaChart({ equityHistory }: Props) {
 
     const sorted = [...equityHistory].sort(
       (a, b) =>
-        new Date(a.created_at).getTime() -
-        new Date(b.created_at).getTime()
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
 
-    // timeframe filtering
     if (timeframe !== "ALL") {
       const latest = new Date(sorted[sorted.length - 1].created_at);
       const from = new Date(latest);
 
       switch (timeframe) {
-        case "1D": from.setDate(from.getDate() - 1); break;
-        case "1W": from.setDate(from.getDate() - 7); break;
-        case "1M": from.setMonth(from.getMonth() - 1); break;
-        case "3M": from.setMonth(from.getMonth() - 3); break;
-        case "1Y": from.setFullYear(from.getFullYear() - 1); break;
+        case "1D":
+          from.setDate(from.getDate() - 1);
+          break;
+        case "1W":
+          from.setDate(from.getDate() - 7);
+          break;
+        case "1M":
+          from.setMonth(from.getMonth() - 1);
+          break;
+        case "3M":
+          from.setMonth(from.getMonth() - 3);
+          break;
+        case "1Y":
+          from.setFullYear(from.getFullYear() - 1);
+          break;
       }
 
       const filtered = sorted.filter(
@@ -61,7 +70,6 @@ export default function EquityAreaChart({ equityHistory }: Props) {
 
   const latestEquity = points.length ? points[points.length - 1].equity : 0;
 
-  // Build SVG path
   const { path, fillPath } = useMemo(() => {
     if (points.length < 2) return { path: "", fillPath: "" };
 
@@ -85,14 +93,13 @@ export default function EquityAreaChart({ equityHistory }: Props) {
       .join(" ");
 
     const fillPath =
-      path +
-      ` L ${coords[coords.length - 1][0]},${height} L 0,${height} Z`;
+      path + ` L ${coords[coords.length - 1][0]},${height} L 0,${height} Z`;
 
     return { path, fillPath };
   }, [points]);
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-[#05060B] p-4 flex flex-col gap-4 min-w-0">
+    <GTCard className="flex flex-col gap-4 min-w-0">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
@@ -120,7 +127,6 @@ export default function EquityAreaChart({ equityHistory }: Props) {
         </div>
       </div>
 
-      {/* AREA CHART */}
       <div className="relative w-full h-56 overflow-hidden min-w-0">
         {points.length < 2 ? (
           <div className="text-xs text-slate-500 italic mx-auto mt-20">
@@ -155,39 +161,36 @@ export default function EquityAreaChart({ equityHistory }: Props) {
           </svg>
         )}
 
-{/* TIMELINE (Fancy Glow) */}
-{points.length > 1 && (
-  <div className="absolute bottom-1 left-0 right-0 flex justify-between px-3 pointer-events-none select-none">
-    {Array.from(
-      new Set([
-        0,
-        Math.floor(points.length / 2),
-        points.length - 1,
-      ])
-    ).map((i) => {
-      const date = new Date(points[i].created_at).toLocaleDateString(
-        undefined,
-        { month: "short", day: "numeric" }
-      );
+        {points.length > 1 && (
+          <div className="absolute bottom-1 left-0 right-0 flex justify-between px-3 pointer-events-none select-none">
+            {Array.from(
+              new Set([0, Math.floor(points.length / 2), points.length - 1])
+            ).map((i) => {
+              const date = new Date(points[i].created_at).toLocaleDateString(
+                undefined,
+                { month: "short", day: "numeric" }
+              );
 
-      return (
-        <div key={`tl-${i}`} className="flex flex-col items-center animate-fadeIn">
-          <div className="w-[1px] h-3 bg-emerald-500/20 mb-1" />
-          <span className="text-[10px] text-emerald-300/70 drop-shadow-[0_0_4px_rgba(16,185,129,0.6)]">
-            {date}
-          </span>
-        </div>
-      );
-    })}
-  </div>
-)}
-
+              return (
+                <div
+                  key={`tl-${i}`}
+                  className="flex flex-col items-center animate-fadeIn"
+                >
+                  <div className="w-[1px] h-3 bg-emerald-500/20 mb-1" />
+                  <span className="text-[10px] text-emerald-300/70 drop-shadow-[0_0_4px_rgba(16,185,129,0.6)]">
+                    {date}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="text-[10px] text-slate-500 flex justify-between">
         <span className="italic">Smoothed equity curve over time.</span>
-        <span>Auto‑scaled to timeframe.</span>
+        <span>Autoâ€‘scaled to timeframe.</span>
       </div>
-    </div>
+    </GTCard>
   );
 }

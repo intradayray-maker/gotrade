@@ -1,3 +1,5 @@
+import GTCard from "@/components/ui/GTCard";
+
 const cards = [
   {
     label: 'Total Balance',
@@ -29,10 +31,7 @@ export default function AccountSummaryGrid() {
   return (
     <>
       {cards.map((c) => (
-        <div
-          key={c.label}
-          className="rounded-xl border border-slate-800 bg-[#0b0b12] p-4"
-        >
+        <GTCard key={c.label} className="!p-4">
           <div className="text-xs text-slate-400">{c.label}</div>
           <div className="mt-1 text-lg font-semibold text-slate-100">
             {c.value}
@@ -49,7 +48,7 @@ export default function AccountSummaryGrid() {
           >
             {c.sub}
           </div>
-        </div>
+        </GTCard>
       ))}
     </>
   );

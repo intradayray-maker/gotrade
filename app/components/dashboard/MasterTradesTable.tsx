@@ -1,6 +1,8 @@
+import GTCard from "@/components/ui/GTCard";
+
 export default function MasterTradesTable({ trades }: { trades: any[] }) {
   return (
-    <div className="rounded-xl p-6 bg-white/5 backdrop-blur-xl border border-white/10 mt-6">
+    <GTCard className="mt-6">
       <h2 className="text-lg font-semibold mb-4">Master Trades</h2>
 
       <table className="w-full text-sm">
@@ -30,6 +32,6 @@ export default function MasterTradesTable({ trades }: { trades: any[] }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </GTCard>
   );
 }

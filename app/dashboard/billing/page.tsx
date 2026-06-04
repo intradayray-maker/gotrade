@@ -3,20 +3,23 @@ import Stripe from "stripe";
 
 import BillingClient, {
   type BillingProfile,
+  type InvoiceItem,
   type SavedCard,
 } from "./BillingClient";
 
 import { createSupabaseServerClient } from "@/utils/supabase/server";
+import { syncInvoices } from "@/utils/billing/syncInvoices";
 
 export const dynamic = "force-dynamic";
 
 type BillingPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     update?: string;
-  };
+  }>;
 };
 
 export default async function BillingPage({ searchParams }: BillingPageProps) {
+  const params = (await searchParams) ?? {};
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -99,14 +102,20 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
   };
 
   // -----------------------------
-  // 6. Render client component
+  // 6. Fetch invoices from Stripe
+  // -----------------------------
+  const invoices: InvoiceItem[] = await syncInvoices(user.id);
+
+  // -----------------------------
+  // 7. Render client component
   // -----------------------------
   return (
     <BillingClient
       profile={billingProfile}
       savedCard={savedCard}
       subscriptionId={subscription?.stripe_subscription_id ?? null}
-      showPaymentForm={!savedCard || searchParams?.update === "1"}
+      invoices={invoices}
+      showPaymentForm={!savedCard || params.update === "1"}
     />
   );
 }

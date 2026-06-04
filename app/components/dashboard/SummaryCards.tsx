@@ -1,3 +1,5 @@
+import GTCard from "@/components/ui/GTCard";
+
 export default function SummaryCards({
   equity,
   hwm,
@@ -19,13 +21,10 @@ export default function SummaryCards({
   return (
     <div className="grid grid-cols-4 gap-4">
       {items.map((item) => (
-        <div
-          key={item.label}
-          className="rounded-xl p-5 bg-white/5 backdrop-blur-xl border border-white/10"
-        >
+        <GTCard key={item.label} className="!p-5">
           <p className="text-sm text-white/60">{item.label}</p>
           <p className="text-xl font-semibold mt-1">{item.value}</p>
-        </div>
+        </GTCard>
       ))}
     </div>
   );

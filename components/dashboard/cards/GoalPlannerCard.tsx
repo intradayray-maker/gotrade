@@ -1,5 +1,6 @@
 "use client";
 
+import GTCard from "@/components/ui/GTCard";
 import { useState } from "react";
 import { CircularProgress } from "@/components/dashboard/CircularProgress";
 import { calculateGoalData, GoalDataResult } from "@/utils/calculateGoalData";
@@ -29,16 +30,14 @@ export function GoalPlanner({
   const { requiredBalance, progressPct, monthsToGoal, scenarios } = goalData;
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-[#0b0b12] p-4">
+    <GTCard className="!p-4">
       <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
         Income Goal Planner
       </p>
 
       <div className="mt-4 flex items-center gap-8">
-        {/* Progress Ring */}
         <CircularProgress value={progressPct} label="Progress" size={130} />
 
-        {/* Monthly Goal Slider */}
         <div className="flex-1">
           <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
             Monthly Goal
@@ -66,16 +65,13 @@ export function GoalPlanner({
         </div>
       </div>
 
-      {/* Required Account Size + Time to Goal */}
       <div className="mt-6 grid grid-cols-2 gap-4 text-sm text-slate-200">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
             Required Account Size
           </p>
           <p className="mt-1 text-lg font-semibold text-emerald-400">
-            {requiredBalance > 0
-              ? `$${requiredBalance.toLocaleString()}`
-              : "—"}
+            {requiredBalance > 0 ? `$${requiredBalance.toLocaleString()}` : "—"}
           </p>
         </div>
 
@@ -89,7 +85,6 @@ export function GoalPlanner({
         </div>
       </div>
 
-      {/* Scenarios */}
       <div className="mt-6">
         <p className="mb-2 text-xs uppercase tracking-[0.18em] text-slate-400">
           Scenarios
@@ -97,20 +92,17 @@ export function GoalPlanner({
 
         <div className="grid gap-2 sm:grid-cols-3">
           {scenarios.map((s) => (
-            <div
-              key={s.balance}
-              className="rounded-xl border border-slate-800 bg-[#0f0f17] px-3 py-2 text-xs"
-            >
+            <GTCard key={s.balance} className="!p-4">
               <p className="text-[11px] text-slate-400">
                 ${s.balance.toLocaleString()}
               </p>
               <p className="mt-1 text-sm font-semibold text-slate-50">
                 {s.months > 0 ? `${s.months.toFixed(1)} mo` : "—"}
               </p>
-            </div>
+            </GTCard>
           ))}
         </div>
       </div>
-    </div>
+    </GTCard>
   );
 }

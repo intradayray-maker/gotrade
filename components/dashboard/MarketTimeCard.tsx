@@ -1,5 +1,6 @@
 "use client";
 
+import GTCard from "@/components/ui/GTCard";
 import { useEffect, useState } from "react";
 
 export default function LocalTimeCard() {
@@ -10,18 +11,12 @@ export default function LocalTimeCard() {
     return () => clearInterval(id);
   }, []);
 
-  // -----------------------------
-  //   LOCAL DATE (Thu, May 14)
-  // -----------------------------
   const dateStr = now.toLocaleDateString("en-US", {
     weekday: "short",
     month: "long",
     day: "numeric",
   });
 
-  // -----------------------------
-  //   LOCAL TIME (no seconds)
-  // -----------------------------
   const rawTime = now.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -36,9 +31,6 @@ export default function LocalTimeCard() {
   const timeMain = match ? match[1] : "";
   const timeSuffix = match ? match[2] : "";
 
-  // -----------------------------
-  //   NYSE HOLIDAY CHECK
-  // -----------------------------
   function isNYSEHoliday(date: Date) {
     const y = date.getFullYear();
 
@@ -69,17 +61,16 @@ export default function LocalTimeCard() {
 
     const holidays = [
       observed(newYears),
-      nthWeekday(3, 1, 0), // MLK
-      nthWeekday(3, 1, 1), // Presidents
-      lastWeekday(1, 4), // Memorial Day
+      nthWeekday(3, 1, 0),
+      nthWeekday(3, 1, 1),
+      lastWeekday(1, 4),
       observed(juneteenth),
       observed(independence),
-      nthWeekday(1, 1, 8), // Labor Day
-      nthWeekday(4, 4, 10), // Thanksgiving
+      nthWeekday(1, 1, 8),
+      nthWeekday(4, 4, 10),
       observed(christmas),
     ];
 
-    // Good Friday
     const easter = getEaster(y);
     const goodFriday = new Date(easter);
     goodFriday.setDate(goodFriday.getDate() - 2);
@@ -106,9 +97,6 @@ export default function LocalTimeCard() {
     return new Date(year, month - 1, day);
   }
 
-  // -----------------------------
-  //   NYSE MARKET STATUS
-  // -----------------------------
   const nyNow = new Date(
     now.toLocaleString("en-US", { timeZone: "America/New_York" })
   );
@@ -131,25 +119,19 @@ export default function LocalTimeCard() {
   const isWeekend = nyNow.getDay() === 0 || nyNow.getDay() === 6;
   const isHoliday = isNYSEHoliday(nyNow);
 
-  // -----------------------------
-  //   FIX: Weekend / Holiday override
-  // -----------------------------
   if (!isWeekend && !isHoliday) {
     if (nyNow >= preMarketStart && nyNow < marketOpen) {
-      status = "PRE‑MARKET";
+      status = "PREâ€‘MARKET";
       statusColor = "text-amber-300";
     } else if (nyNow >= marketOpen && nyNow < marketClose) {
       status = "MARKET OPEN";
       statusColor = "text-emerald-400";
     } else if (nyNow >= marketClose && nyNow < afterHoursEnd) {
-      status = "AFTER‑HOURS";
+      status = "AFTERâ€‘HOURS";
       statusColor = "text-blue-300";
     }
   }
 
-  // -----------------------------
-  //   COUNTDOWN TO NEXT OPEN
-  // -----------------------------
   let nextOpen = new Date(marketOpen);
 
   if (nyNow >= marketOpen) {
@@ -169,21 +151,15 @@ export default function LocalTimeCard() {
   const diffM = Math.floor((diffMs / (1000 * 60)) % 60);
   const countdown = `${diffH}h ${diffM}m`;
 
-  // -----------------------------
-  //   RENDER
-  // -----------------------------
   return (
-    <div className="flex flex-col gap-4 w-full">
-
-      {/* DATE */}
-      <div className="w-full rounded-lg bg-[#0f0f17] border border-slate-800/40 p-3 text-center">
-        <div className="text-[15px] bold text-slate-400 tracking-wide">
+    <GTCard className="flex flex-col gap-4 w-full !p-4">
+      <div className="w-full rounded-lg bg-transparent border border-emerald-500/20 p-3 text-center">
+        <div className="text-[15px] font-bold text-slate-400 tracking-wide">
           {dateStr}
         </div>
       </div>
 
-      {/* TIME */}
-      <div className="w-full rounded-lg bg-[#0f0f17] border border-slate-800/40 p-4 flex flex-col items-center justify-center">
+      <div className="w-full rounded-lg bg-transparent border border-emerald-500/20 p-4 flex flex-col items-center justify-center">
         <div className="flex items-end gap-1 text-slate-50 font-semibold tracking-tight">
           <span className="text-[40px] text-slate-300 leading-none">
             {timeMain}
@@ -194,8 +170,7 @@ export default function LocalTimeCard() {
         </div>
       </div>
 
-      {/* STATUS */}
-      <div className="w-full rounded-lg bg-[#0f0f17] border border-slate-800/40 p-3 text-center">
+      <div className="w-full rounded-lg bg-transparent border border-emerald-500/20 p-3 text-center">
         <div className={`text-sm font-medium ${statusColor}`}>{status}</div>
 
         {status !== "MARKET OPEN" && (
@@ -204,6 +179,6 @@ export default function LocalTimeCard() {
           </div>
         )}
       </div>
-    </div>
+    </GTCard>
   );
 }

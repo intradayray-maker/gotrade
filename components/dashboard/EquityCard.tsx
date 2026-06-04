@@ -1,5 +1,6 @@
 "use client";
 
+import GTCard from "@/components/ui/GTCard";
 import { useEffect, useState } from "react";
 
 type EquityResponse = {
@@ -26,9 +27,13 @@ export default function EquityCard() {
   }, []);
 
   return (
-    <div>
-      <div>{data.equity}</div>
-      <div>{data.updated_at}</div>
-    </div>
+    <GTCard className="!p-4">
+      <div className="text-slate-100 text-lg font-semibold">
+        {data.equity ?? "—"}
+      </div>
+      <div className="text-xs text-slate-400 mt-1">
+        {data.updated_at ?? "No update yet"}
+      </div>
+    </GTCard>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
+import GTCard from "@/components/ui/GTCard";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
 
 export default function NotificationsPageClient() {
@@ -138,14 +138,10 @@ export default function NotificationsPageClient() {
         "
       >
         {notifications.map((n) => (
-          <motion.div
+          <GTCard
             key={n.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className={`p-4 rounded-xl border transition cursor-pointer ${
-              n.read
-                ? "bg-white/5 border-white/10"
-                : "bg-blue-500/10 border-blue-500/20"
+            className={`transition cursor-pointer ${
+              n.read ? "opacity-80" : "border-emerald-500/70"
             }`}
             onClick={() => markRead(n.id)}
           >
@@ -168,7 +164,7 @@ export default function NotificationsPageClient() {
             <p className="text-white/40 text-xs mt-2">
               {new Date(n.created_at).toLocaleString()}
             </p>
-          </motion.div>
+          </GTCard>
         ))}
       </div>
     </div>

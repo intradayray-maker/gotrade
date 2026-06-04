@@ -1,5 +1,6 @@
-﻿"use client";
+"use client";
 
+import GTCard from "@/components/ui/GTCard";
 import { useMemo, useState } from "react";
 
 interface GoalPlannerProps {
@@ -22,12 +23,9 @@ export function GoalPlanner({
   const [monthlyDeposit, setMonthlyDeposit] = useState(1000);
 
   const annualGoal = monthlyGoal * 12;
-
   const requiredBalance = roiPct > 0 ? monthlyGoal / (roiPct / 100) : 0;
-
   const remaining =
     requiredBalance > currentEquity ? requiredBalance - currentEquity : 0;
-
   const monthsToGoal =
     remaining > 0 && monthlyDeposit > 0
       ? Math.ceil(remaining / monthlyDeposit)
@@ -37,9 +35,7 @@ export function GoalPlanner({
   const biWeeklyDeposit = monthlyDeposit / 2;
 
   const progressToRequired =
-    requiredBalance > 0
-      ? Math.min(currentEquity / requiredBalance, 1)
-      : 0;
+    requiredBalance > 0 ? Math.min(currentEquity / requiredBalance, 1) : 0;
 
   const formatCompactCurrency = (value: number) => {
     if (value <= 0 || !isFinite(value)) return "—";
@@ -54,24 +50,22 @@ export function GoalPlanner({
     return baseHeights.map((h) => h * intensity);
   }, [progressToRequired]);
 
-  // Track fill updater
-  const updateSliderFill = (e: React.ChangeEvent<HTMLInputElement>, min: number, max: number) => {
+  const updateSliderFill = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    min: number,
+    max: number
+  ) => {
     const v = Number(e.target.value);
     const percent = ((v - min) / (max - min)) * 100;
     e.target.style.setProperty("--value", `${percent}%`);
   };
 
   return (
-<div className="space-y-6">
-<div className="grid place-items-center space-y-2">
-<p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400 text-center">
+    <GTCard className="space-y-6">
+      <div className="grid place-items-center space-y-2">
+        <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400 text-center" />
+      </div>
 
-</p>
-
-</div>
-
-
-      {/* MONTHLY GOAL */}
       <div className="space-y-3">
         <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
           SET YOUR MONTHLY GOAL
@@ -86,7 +80,6 @@ export function GoalPlanner({
           </p>
         </div>
 
-        {/* SLIDER */}
         <input
           type="range"
           min={2000}
@@ -110,7 +103,6 @@ export function GoalPlanner({
         </div>
       </div>
 
-      {/* ROI */}
       <div className="space-y-3">
         <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
           SET YOUR MONTHLY ROI %
@@ -120,7 +112,6 @@ export function GoalPlanner({
           {roiPct.toFixed(1)}%
         </p>
 
-        {/* SLIDER */}
         <input
           type="range"
           min={3}
@@ -145,7 +136,6 @@ export function GoalPlanner({
 
       <div className="border-t border-slate-800" />
 
-      {/* DEPOSITS */}
       <div className="space-y-4">
         <div>
           <p className="text-[14px] text-slate-500">
@@ -155,7 +145,6 @@ export function GoalPlanner({
             ${monthlyDeposit.toLocaleString()}
           </p>
 
-          {/* SLIDER */}
           <input
             type="range"
             min={250}
@@ -178,40 +167,38 @@ export function GoalPlanner({
           </div>
         </div>
 
-        {/* WEEKLY / BI-WEEKLY / MONTHLY */}
         <div className="grid grid-cols-3 gap-3 text-xs text-center">
-          <div className="rounded-lg border border-slate-800 bg-[#080910] p-2">
+          <GTCard className="!p-3">
             <p className="text-[10px] uppercase tracking-[0.16em] text-slate-500 text-center">
               WEEKLY
             </p>
             <p className="mt-1 text-sm font-semibold text-slate-50 text-center">
               ${weeklyDeposit.toFixed(0)}
             </p>
-          </div>
+          </GTCard>
 
-          <div className="rounded-lg border border-slate-800 bg-[#080910] p-2">
+          <GTCard className="!p-3">
             <p className="text-[10px] uppercase tracking-[0.16em] text-slate-500 text-center">
               BI-WEEKLY
             </p>
             <p className="mt-1 text-sm font-semibold text-slate-50 text-center">
               ${biWeeklyDeposit.toFixed(0)}
             </p>
-          </div>
+          </GTCard>
 
-          <div className="rounded-lg border border-slate-800 bg-[#080910] p-2">
+          <GTCard className="!p-3">
             <p className="text-[10px] uppercase tracking-[0.16em] text-slate-500 text-center">
               MONTHLY
             </p>
             <p className="mt-1 text-sm font-semibold text-slate-50 text-center">
               ${monthlyDeposit.toFixed(0)}
             </p>
-          </div>
+          </GTCard>
         </div>
       </div>
 
       <div className="border-t border-slate-800" />
 
-      {/* REQUIRED BALANCE + GRAPH */}
       <div className="grid grid-cols-[1fr_auto_1fr] gap-6 items-center text-center">
         <div className="space-y-2 flex flex-col items-center justify-center">
           <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
@@ -259,7 +246,6 @@ export function GoalPlanner({
 
       <div className="border-t border-slate-800" />
 
-      {/* TIME TO GOAL */}
       <div className="space-y-3">
         <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
           YOU WILL HIT YOUR GOAL IN
@@ -280,8 +266,8 @@ export function GoalPlanner({
             </p>
 
             <p className="mt-1 text-[11px] text-slate-500">
-              Based on your monthly deposits reaching the required
-              account balance.
+              Based on your monthly deposits reaching the required account
+              balance.
             </p>
           </div>
 
@@ -299,6 +285,6 @@ export function GoalPlanner({
           </div>
         </div>
       </div>
-    </div>
+    </GTCard>
   );
 }

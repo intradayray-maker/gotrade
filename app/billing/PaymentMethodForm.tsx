@@ -19,7 +19,7 @@ function InnerForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -37,11 +37,10 @@ function InnerForm() {
       return;
     }
 
-    const { paymentMethod, error: pmError } =
-      await stripe.createPaymentMethod({
-        type: "card",
-        card,
-      });
+    const { paymentMethod, error: pmError } = await stripe.createPaymentMethod({
+      type: "card",
+      card,
+    });
 
     if (pmError) {
       setError(pmError.message || "Payment method error");
@@ -49,7 +48,6 @@ function InnerForm() {
       return;
     }
 
-    // ⭐ FIXED: send correct field name + correct headers
     const res = await fetch("/api/billing/payment-method", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -70,8 +68,8 @@ function InnerForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-      <div className="p-4 bg-white/5 border border-white/10 rounded-lg min-h-[60px]">
+    <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+      <div className="min-h-[60px] rounded-xl border border-white/10 bg-white/5 p-4">
         <CardElement
           options={{
             style: {
@@ -89,12 +87,31 @@ function InnerForm() {
       <button
         type="submit"
         disabled={!stripe || loading}
-        className="px-4 py-2 bg-white text-black rounded-lg"
+        className="
+          relative
+          flex
+          items-center
+          justify-center
+          rounded-[6px]
+          border-[5px]
+          border-white
+          bg-white
+          px-[30px]
+          py-[14px]
+          text-[14px]
+          font-semibold
+          text-black
+          shadow-[0_0_24px_rgba(255,255,255,0.2)]
+          transition
+          hover:bg-slate-200
+          disabled:cursor-not-allowed
+          disabled:opacity-60
+        "
       >
-        {loading ? "Processing…" : "Add Payment Method"}
+        {loading ? "Processing..." : "Add Payment Method"}
       </button>
 
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {error && <p className="text-sm text-red-400">{error}</p>}
     </form>
   );
 }
