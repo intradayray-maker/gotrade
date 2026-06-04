@@ -6,3 +6,5 @@ export async function GET(
 
   return Response.json({ userId })
 }
+
+//test
