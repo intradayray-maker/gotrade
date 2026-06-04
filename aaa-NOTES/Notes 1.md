@@ -8,3 +8,5 @@ i already uploaded the project to vercel but it was flowtrade..vercel has not se
 what now
 
 prj_ZteAPiAGZ7zg4dazm9IlWjmbP75r
+
+this note is ongoing
