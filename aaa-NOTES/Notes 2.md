@@ -59,3 +59,5 @@ if ticker is EURUSD and im short my previous bar high=1.16226 but my stop loss i
 that's how i visually set my cushion.. the other a pairs are higher cushion
 
 i need the "Required Margin: $0.00" to have the same left right big font style like : app\dashboard\tools\TradeOutput.tsx
+
+my 2nd test 3 is ongoing
