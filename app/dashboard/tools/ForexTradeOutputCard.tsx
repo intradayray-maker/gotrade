@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
 
 type Trade = {
@@ -22,15 +22,31 @@ export default function TradeOutput() {
     stop: 0,
   });
 
-  // 🔥 Poll the API every 1 second
   useEffect(() => {
-    const interval = setInterval(async () => {
-      const res = await fetch("/api/trade");
-      const json = await res.json();
-      if (json) setData(json);
-    }, 1000);
+    let active = true;
 
-    return () => clearInterval(interval);
+    const pollTrade = async () => {
+      const res = await fetch("/api/trade", { cache: "no-store" });
+      const json = await res.json();
+
+      if (
+        active &&
+        json &&
+        typeof json === "object" &&
+        typeof json.ticker === "string" &&
+        typeof json.side === "string"
+      ) {
+        setData(json);
+      }
+    };
+
+    pollTrade();
+    const interval = setInterval(pollTrade, 1000);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const getSideColor = () => {
