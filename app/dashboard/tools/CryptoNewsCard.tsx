@@ -12,7 +12,7 @@ export default function DailyAllocationCard() {
   )
 
   // ==========================
-  // DYNAMIC SESSION DETECTION (EST)
+  // DYNAMIC SESSION DETECTION (EST) ///test
   // ==========================
   const [session, setSession] = useState("Asian")
 
