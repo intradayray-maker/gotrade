@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/utils/supabase/route";
 
 export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   const supabase = await createRouteHandlerClient();
-  const followerId = params.id;
+  const { id: followerId } = await context.params;
 
   try {
     // 1. Load equity + HWM

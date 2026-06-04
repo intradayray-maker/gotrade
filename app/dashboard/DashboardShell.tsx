@@ -6,7 +6,7 @@ export default function DashboardShell() {
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-neutral-400 mt-1">
-          Your trading overview and system insights.
+          Your trading overview and system insights111.
         </p>
       </div>
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/utils/supabase/route";
-import { getAlpacaEquity } from "@/utils/alpaca/getEquity";
+import { getAlpacaEquity } from "@/lib/brokers/alpaca/getEquity";
 
 export const dynamic = "force-dynamic";
 

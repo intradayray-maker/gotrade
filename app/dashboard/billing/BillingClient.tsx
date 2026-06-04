@@ -7,6 +7,9 @@ import PaymentMethodForm from "@/app/billing/PaymentMethodForm";
 import RemoveCardButton from "@/app/billing/RemoveCardButton";
 import UpdateCardButton from "@/app/billing/UpdateCardButton";
 
+import GTCard from "@/components/ui/GTCard";
+import Link from "next/link";
+
 export type SavedCard = {
   brand: string;
   last4: string;
@@ -50,7 +53,6 @@ type BillingClientProps = {
   showPaymentForm: boolean;
 };
 
-
 const statusMap: Record<string, string> = {
   payment_method_attached: "Payment Method Added",
   inactive: "Inactive",
@@ -64,8 +66,6 @@ export default function BillingClient({
   subscriptionId,
   showPaymentForm,
 }: BillingClientProps) {
-  console.log("[BillingClient] profile", profile);
-  console.log("[BillingClient] subscriptionId", subscriptionId);
 
   const [loading, setLoading] = useState(true);
   const [billing, setBilling] = useState<BillingHistoryResponse | null>(null);
@@ -78,7 +78,7 @@ export default function BillingClient({
     {
       id: "pro",
       name: "Pro",
-      description: "Full access to FlowTrade with higher limits.",
+      description: "Full access to GoTrade with higher limits.",
       priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO!,
     },
     {
@@ -149,313 +149,696 @@ export default function BillingClient({
   const nextBilling =
     profile.nextBillingDate &&
     new Date(profile.nextBillingDate * 1000).toLocaleDateString();
+
   const canRenderSubscriptionControls =
     Boolean(profile.stripeCustomerId) && Boolean(subscriptionId);
+
   const isCancelling = profile.billingStatus === "cancelling";
   const isCancelEnabled = profile.billingStatus === "active";
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
-      {/* HEADER CARD */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-[0_0_50px_rgba(0,0,0,0.4)] backdrop-blur-xl"
-      >
-        <p className="text-sm uppercase tracking-[0.2em] text-white/45">
-          Billing
-        </p>
 
-        <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-white">
-              Subscription & Payment Methods
+    <div
+    className="
+    mx-auto
+    flex
+    w-full
+    max-w-6xl
+    flex-col
+    gap-10
+    px-4
+    py-8
+    sm:px-6
+    lg:px-8
+    "
+    >
+
+      {/* -------------------------
+         TF PAGE HEADER
+      -------------------------- */}
+      <div
+      className="
+      w-full
+      px-1
+      md:px-6
+      lg:px-2
+      space-y-4
+      max-w-5xl
+      "
+      >
+
+        <div
+        className="
+        flex
+        items-center
+        gap-2
+        text-[13px]
+        text-white/40
+        pt-3
+        animate-fadeIn
+        "
+        >
+          <Link
+          href="/dashboard"
+          className="
+          hover:text-white/70
+          transition-colors
+          cursor-pointer
+          "
+          >
+            Dashboard
+          </Link>
+
+          <span className="text-white/30">/</span>
+
+          <span className="text-white/60">
+            Billing
+          </span>
+        </div>
+
+        <div
+        className="
+        animate-fadeIn
+        [animation-duration:0.6s]
+        "
+        >
+
+          <div
+          className="
+          flex
+          items-center
+          gap-3
+          "
+          >
+
+            <svg
+            className="
+            w-7
+            h-7
+            text-emerald-400
+            drop-shadow-[0_0_6px_rgba(0,255,180,0.35)]
+            "
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            >
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="M3 10h18" />
+              <path d="M7 15h2" />
+              <path d="M11 15h4" />
+            </svg>
+
+            <h1
+            className="
+            text-3xl
+            font-bold
+            tracking-tight
+            text-white/90
+            drop-shadow-[0_0_10px_rgba(0,255,180,0.25)]
+            "
+            >
+              Billing
             </h1>
 
-            <p className="mt-2 max-w-2xl text-sm text-white/60">
-              Manage your payment method, review invoices, and keep your
-              FlowTrade subscription in good standing.
-            </p>
-
-            {/* PLAN NAME + NEXT BILLING DATE */}
-            {profile.planName && (
-              <p className="mt-3 text-white/70 text-sm">
-                <span className="font-medium text-white">{profile.planName}</span>
-                {nextBilling && <> • Next billing date: {nextBilling}</>}
-                {profile.billingStatus === "cancelling" && nextBilling && (
-                  <span className="text-amber-300 ml-2">
-                    (Cancels on {nextBilling})
-                  </span>
-                )}
-              </p>
-            )}
           </div>
 
-          <span
-            className={`px-3 py-1 rounded-full text-sm border ${statusColor}`}
+          <p
+          className="
+          text-white/50
+          text-sm
+          mt-2
+          tracking-wide
+          max-w-md
+          "
           >
-            {billingStatus}
-          </span>
+            Manage your subscription, payment method, and billing history.
+          </p>
 
-          {canRenderSubscriptionControls && (
-            <div className="flex gap-3">
+          <div
+          className="
+          mt-5
+          h-[2px]
+          w-24
+          bg-gradient-to-r
+          from-emerald-400/80
+          to-emerald-700/80
+          rounded-full
+          shadow-[0_0_12px_rgba(0,255,180,0.35)]
+          animate-fadeIn
+          [animation-delay:0.2s]
+          "
+          ></div>
 
-
-
-
-
-<form
-  action="/api/billing-portal"
-  method="POST"
-  onSubmit={(e) => {
-    // Prevent Next.js from intercepting the POST
-    e.stopPropagation();
-    e.nativeEvent.stopImmediatePropagation();
-  }}
->
-  <button
-    type="submit"
-    className="rounded-md bg-gray-800 px-4 py-2 text-white hover:bg-gray-700"
-  >
-    Manage
-  </button>
-</form>
-
-
-
-
-
-
-              <button
-                onClick={() => setShowUpgradeModal(true)}
-                className="rounded-xl bg-emerald-500/20 px-4 py-2.5 text-sm font-semibold text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 transition"
-              >
-                Upgrade
-              </button>
-
-              <button
-                disabled={!isCancelEnabled}
-                onClick={() => setShowCancelModal(true)}
-                className={`rounded-xl px-4 py-2.5 text-sm font-semibold border transition ${
-                  isCancelling
-                    ? "bg-white/10 text-white/40 border-white/20 cursor-not-allowed"
-                    : "bg-red-500/20 text-red-300 border-red-500/30 hover:bg-red-500/30"
-                }`}
-              >
-                {isCancelling
-                  ? "Cancelling..."
-                  : "Cancel"}
-              </button>
-            </div>
-          )}
         </div>
-      </motion.div>
 
-      {/* CANCEL SUBSCRIPTION MODAL */}
-      <AnimatePresence>
-        {showCancelModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      </div>
+
+
+
+      {/* -------------------------
+         TOP ROW — 3 CARDS
+      -------------------------- */}
+      <div
+      className="
+      grid
+      grid-cols-1
+      md:grid-cols-2
+      lg:grid-cols-3
+      gap-6
+      "
+      >
+
+{/* -------------------------
+    BILLING OVERVIEW CARD (STACKED 3‑CELL VERSION)
+-------------------------- */}
+<GTCard>
+
+  {/* CENTERED TITLE */}
+  <div
+  className="
+  w-full
+  text-center
+  "
+  >
+    <p
+    className="
+    text-sm
+    uppercase
+    tracking-[0.2em]
+    text-white/45
+    "
+    >
+      Billing Overview
+    </p>
+  </div>
+
+
+  {/* STACKED GRID */}
+  <div
+  className="
+  mt-6
+  grid
+  grid-cols-1
+  gap-4
+  "
+  >
+
+
+    {/* -------------------------
+        CELL 1 — PLAN + NEXT BILLING
+    -------------------------- */}
+    <div
+    className="
+    rounded-xl
+    p-5
+    bg-[#0b0b12]
+    border
+    border-white/10
+    "
+    >
+      <p
+      className="
+      text-white/90
+      text-[17px]
+      font-semibold
+      "
+      >
+        {profile.planName ?? "No active plan"}
+      </p>
+
+      {nextBilling && (
+        <p
+        className="
+        mt-1
+        text-white/60
+        text-sm
+        "
+        >
+          Next billing date: {nextBilling}
+        </p>
+      )}
+
+      {profile.billingStatus === "cancelling" && nextBilling && (
+        <p
+        className="
+        mt-1
+        text-amber-300
+        text-sm
+        "
+        >
+          Cancels on {nextBilling}
+        </p>
+      )}
+    </div>
+
+
+
+    {/* -------------------------
+        CELL 2 — STATUS + GLOW DOT
+    -------------------------- */}
+    <div
+    className="
+    rounded-xl
+    p-5
+    bg-[#0b0b12]
+    border
+    border-white/10
+    flex
+    items-center
+    justify-center
+    gap-3
+    "
+    >
+
+      {/* GLOW DOT */}
+      <div
+      className={`
+      h-3.5
+      w-3.5
+      rounded-full
+      ${
+        profile.billingStatus === "active"
+          ? "bg-emerald-400 shadow-[0_0_10px_rgba(0,255,180,0.9)]"
+          : "bg-red-400 shadow-[0_0_10px_rgba(255,0,0,0.7)]"
+      }
+      `}
+      ></div>
+
+      {/* STATUS TEXT */}
+      <span
+      className="
+      text-white/80
+      text-[15px]
+      font-medium
+      "
+      >
+        {billingStatus}
+      </span>
+
+    </div>
+
+
+
+    {/* -------------------------
+        CELL 3 — BUTTON ROW (CENTERED)
+    -------------------------- */}
+    <div
+    className="
+    rounded-xl
+    p-5
+    bg-[#0b0b12]
+    border
+    border-white/10
+    flex
+    items-center
+    justify-center
+    gap-4
+    "
+    >
+
+      {/* UPGRADE BUTTON */}
+      <button
+      onClick={() => setShowUpgradeModal(true)}
+      className="
+      relative
+      flex
+      items-center
+      justify-center
+      px-[30px]
+      py-[14px]
+      rounded-[6px]
+      text-[14px]
+      font-semibold
+      text-[rgb(225,254,234)]
+      bg-[rgb(3,82,65)]
+      shadow-[0_0_34px_rgba(3,82,65,0.45)]
+      border-[5px]
+      border-[rgb(3,82,65)]
+      bg-clip-padding
+      hover:bg-[rgb(4,100,80)]
+      transition
+      "
+      >
+        Upgrade
+      </button>
+
+      {/* CANCEL BUTTON */}
+      <button
+      disabled={!isCancelEnabled}
+      onClick={() => setShowCancelModal(true)}
+      className={`
+      relative
+      flex
+      items-center
+      justify-center
+      px-[30px]
+      py-[14px]
+      rounded-[6px]
+      text-[14px]
+      font-semibold
+      text-[rgb(225,254,234)]
+      shadow-[0_0_34px_rgba(84,33,33,0.45)]
+      border-[5px]
+      bg-clip-padding
+      transition
+      ${
+        isCancelling
+          ? "bg-white/10 text-white/40 border-white/20 cursor-not-allowed"
+          : "bg-[rgb(84,33,33)] border-[rgb(84,33,33)] hover:bg-[rgb(100,40,40)]"
+      }
+      `}
+      >
+        {isCancelling ? "Cancelling..." : "Cancel"}
+      </button>
+
+    </div>
+
+  </div>
+
+</GTCard>
+
+
+
+
+{/* -------------------------
+    PAYMENT METHOD CARD
+-------------------------- */}
+<GTCard>
+
+{/* CENTERED TITLE (MATCHES BILLING OVERVIEW) */}
+<div
+className="
+w-full
+text-center
+"
+>
+  <p
+  className="
+  text-sm
+  uppercase
+  tracking-[0.2em]
+  text-white/45
+  "
+  >
+    Payment Method
+  </p>
+</div>
+
+
+  <div className="mt-13">
+
+    <AnimatePresence mode="wait">
+
+      {savedCard && !showPaymentForm && (
+        <motion.div
+          key="saved-card"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 12 }}
+          className="
+          space-y-5
+          "
+        >
+
+          {/* CARD ON FILE BOX */}
+          <div
+            className="
+            rounded-xl
+            p-6
+            bg-[#0b0b12]
+            border
+            border-emerald-500/20
+            shadow-[0_0_20px_rgba(0,255,180,0.08)]
+            "
           >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="rounded-2xl bg-white/10 border border-white/20 p-8 max-w-md w-full backdrop-blur-xl shadow-xl"
+            <p
+              className="
+              text-xs
+              uppercase
+              tracking-[0.2em]
+              text-white/45
+              "
             >
-              <h2 className="text-xl font-semibold text-white">
-                Cancel Subscription
-              </h2>
-              <p className="mt-2 text-white/70 text-sm">
-                Your subscription will remain active until the end of your
-                current billing period. You will not be charged again.
-              </p>
+              Card on file
+            </p>
 
-              <div className="mt-6 flex gap-3">
-                <button
-                  onClick={() => setShowCancelModal(false)}
-                  className="flex-1 rounded-xl border border-white/20 bg-white/10 py-2 text-white hover:bg-white/20 transition"
-                >
-                  Keep Plan
-                </button>
+            <p
+              className="
+              mt-2
+              text-xl
+              font-medium
+              capitalize
+              text-white/90
+              "
+            >
+              {savedCard.brand} •••• {savedCard.last4}
+            </p>
 
-                <button
-                  onClick={async () => {
-                    await fetch("/api/stripe/cancel", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ subscriptionId }),
-                    });
-                    setShowCancelModal(false);
-                    window.location.reload();
-                  }}
-                  className="flex-1 rounded-xl bg-red-600 text-white py-2 font-semibold hover:bg-red-700 transition"
-                >
-                  Cancel at Period End
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <p
+              className="
+              mt-1
+              text-sm
+              text-white/55
+              "
+            >
+              Expires {savedCard.exp_month}/{savedCard.exp_year}
+            </p>
+          </div>
 
-      {/* UPGRADE MODAL */}
-      <AnimatePresence>
-        {showUpgradeModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+{/* CENTERED BUTTONS */}
+<div
+  className="
+    flex
+    flex-wrap
+    gap-3
+    justify-center
+    mt-18
+  "
+>
+  <UpdateCardButton />
+  <RemoveCardButton />
+</div>
+
+
+        </motion.div>
+      )}
+
+      {showPaymentForm && (
+        <motion.div
+          key="payment-form"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 12 }}
+          className="
+          mt-6
+          rounded-xl
+          p-5
+          bg-[#0b0b12]
+          border
+          border-emerald-500/20
+          shadow-[0_0_20px_rgba(0,255,180,0.08)]
+          "
+        >
+          {/* CENTERED FORM HEADING */}
+          <p
+            className="
+            text-lg
+            font-medium
+            text-white/90
+            text-center
+            "
           >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="rounded-2xl bg-white/10 border border-white/20 p-8 max-w-lg w-full backdrop-blur-xl shadow-xl"
-            >
-              <h2 className="text-xl font-semibold text-white">Upgrade Plan</h2>
-              <p className="mt-2 text-white/70 text-sm">
-                Choose a plan below. You’ll be redirected to Stripe Checkout to
-                complete the upgrade.
-              </p>
+            {savedCard ? "Update Payment Method" : "Add Payment Method"}
+          </p>
 
-              <div className="mt-6 space-y-4">
-                {plans.map((plan) => (
-                  <div
-                    key={plan.id}
-                    className="rounded-xl border border-white/10 bg-black/20 p-5"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-lg font-semibold text-white">
-                          {plan.name}
-                        </p>
-                        <p className="text-white/60 text-sm">
-                          {plan.description}
-                        </p>
-                      </div>
+          <p
+            className="
+            mt-1
+            text-sm
+            text-white/55
+            text-center
+            "
+          >
+            Your card is securely stored with Stripe.
+          </p>
 
-                      <button
-                        onClick={() => startUpgrade(plan.priceId)}
-                        className="rounded-lg bg-white/10 px-4 py-2 text-sm text-white border border-white/20 hover:bg-white/20 transition"
-                      >
-                        Upgrade
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div className="mt-4">
+            <PaymentMethodForm />
+          </div>
+        </motion.div>
+      )}
 
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={() => setShowUpgradeModal(false)}
-                  className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-white hover:bg-white/20 transition"
-                >
-                  Close
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+    </AnimatePresence>
 
-      {/* PAYMENT + FEES */}
-      <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <GlassCard title="Payment Method">
-          <AnimatePresence mode="wait">
-            {savedCard && !showPaymentForm ? (
-              <motion.div
-                key="saved-card"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 12 }}
-                className="space-y-5"
-              >
-                <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
-                  <p className="text-xs uppercase tracking-[0.2em] text-white/45">
-                    Card on file
-                  </p>
-                  <p className="mt-2 text-xl font-medium capitalize text-white">
-                    {savedCard.brand} •••• {savedCard.last4}
-                  </p>
-                  <p className="mt-1 text-sm text-white/55">
-                    Expires {savedCard.exp_month}/{savedCard.exp_year}
-                  </p>
-                </div>
+  </div>
 
-                <div className="flex flex-wrap gap-3">
-                  <UpdateCardButton />
-                  <RemoveCardButton />
-                </div>
-              </motion.div>
-            ) : null}
+</GTCard>
 
-            {showPaymentForm && (
-              <motion.div
-                key="payment-form"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 12 }}
-                className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5"
-              >
-                <p className="text-lg font-medium text-white">
-                  {savedCard ? "Update Payment Method" : "Add Payment Method"}
-                </p>
-                <p className="mt-1 text-sm text-white/55">
-                  Your card is securely stored with Stripe.
-                </p>
 
-                <div className="mt-4">
-                  <PaymentMethodForm />
-                </div>
-              </motion.div>
+
+
+        {/* -------------------------
+           INVOICES CARD (CARD 3)
+        -------------------------- */}
+        <GTCard>
+
+<div
+className="
+w-full
+text-center
+"
+>
+  <p
+  className="
+  text-sm
+  uppercase
+  tracking-[0.2em]
+  text-white/45
+  "
+  >
+    Invoices
+  </p>
+</div>
+
+
+          <div className="mt-5">
+
+            {error ? (
+              <EmptyState message={error} tone="error" />
+
+            ) : loading ? (
+              <EmptyState message="Loading invoices..." />
+
+            ) : invoices.length === 0 ? (
+              <EmptyState message="No invoices yet. Completed billing activity will appear here." />
+
+            ) : (
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+<div
+  className="
+  max-h-[290px]
+  overflow-y-auto
+  pr-2
+  divide-y
+  divide-white/10
+  scrollbar-thin
+  scrollbar-thumb-white/10
+  scrollbar-track-transparent
+  "
+>
+  {invoices.map((invoice) => (
+    <Row
+      key={invoice.id}
+      primary={`$${(invoice.total / 100).toFixed(2)}`}
+      secondary={invoice.status}
+      meta={new Date(invoice.created * 1000).toLocaleDateString()}
+      action={invoice.invoice_pdf ? (
+        <a
+          href={invoice.invoice_pdf}
+          target="_blank"
+          className="
+          text-sm
+          text-emerald-300
+          hover:text-emerald-400
+          underline
+          "
+        >
+          PDF
+        </a>
+      ) : invoice.hosted_invoice_url ? (
+        <a
+          href={invoice.hosted_invoice_url}
+          target="_blank"
+          className="
+          text-sm
+          text-emerald-300
+          hover:text-emerald-400
+          underline
+          "
+        >
+          View
+        </a>
+      ) : null}
+    />
+  ))}
+</div>
+
+
+
+
+
+
+
+
+
+
+
             )}
-          </AnimatePresence>
-        </GlassCard>
+
+          </div>
+
+        </GTCard>
 
 
+      </div>
+
+      {/* -------------------------
+         BOTTOM ROW — 2 CARDS
+      -------------------------- */}
+      <div
+      className="
+      grid
+      grid-cols-1
+      lg:grid-cols-2
+      gap-6
+      "
+      >
+
+        {/* -------------------------
+           PERFORMANCE FEES CARD
+        -------------------------- */}
+        <GTCard>
+<div
+className="
+w-full
+text-center
+"
+>
+  <p
+  className="
+  text-sm
+  uppercase
+  tracking-[0.2em]
+  text-white/45
+  "
+  >
+    Performance Fees
+
+  </p>
+</div>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        <GlassCard title="Performance Fees">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+          <div
+            className="
+            mt-5
+            grid
+            gap-4
+            sm:grid-cols-2
+            lg:grid-cols-1
+            "
+          >
             <SummaryTile
               label="Total Fees"
               value={
@@ -466,120 +849,207 @@ export default function BillingClient({
                       .toFixed(2)}`
               }
             />
+
             <SummaryTile
               label="Equity Snapshots"
               value={loading ? "Loading..." : equity.length.toString()}
             />
+
             <SummaryTile
               label="HWM Entries"
               value={loading ? "Loading..." : hwm.length.toString()}
             />
           </div>
-        </GlassCard>
-      </section>
 
-      {/* INVOICES + FEES HISTORY */}
-      <section className="grid gap-6 lg:grid-cols-2">
-        <GlassCard title="Invoices">
-          {error ? (
-            <EmptyState message={error} tone="error" />
-          ) : loading ? (
-            <EmptyState message="Loading invoices..." />
-          ) : invoices.length === 0 ? (
-            <EmptyState message="No invoices yet. Completed billing activity will appear here." />
-          ) : (
-            <div className="divide-y divide-white/10">
-              {invoices.map((invoice) => (
-                <Row
-                  key={invoice.id}
-                  primary={`$${(invoice.total / 100).toFixed(2)}`}
-                  secondary={invoice.status}
-                  meta={new Date(invoice.created * 1000).toLocaleDateString()}
-                  action={
-                    invoice.invoice_pdf ? (
-                      <a
-                        href={invoice.invoice_pdf}
-                        target="_blank"
-                        className="text-sm text-blue-300 hover:text-blue-400 underline"
-                      >
-                        PDF
-                      </a>
-                    ) : invoice.hosted_invoice_url ? (
-                      <a
-                        href={invoice.hosted_invoice_url}
-                        target="_blank"
-                        className="text-sm text-blue-300 hover:text-blue-400 underline"
-                      >
-                        View
-                      </a>
-                    ) : null
-                  }
-                />
-              ))}
-            </div>
-          )}
-        </GlassCard>
+        </GTCard>
 
-        <GlassCard title="Fee History">
-          {error ? (
-            <EmptyState message={error} tone="error" />
-          ) : loading ? (
-            <EmptyState message="Loading fee history..." />
-          ) : fees.length === 0 ? (
-            <EmptyState message="No performance fees have been charged yet." />
-          ) : (
-            <div className="divide-y divide-white/10">
-              {fees.map((fee) => (
-                <Row
-                  key={fee.id}
-                  primary={`$${fee.fee_amount.toFixed(2)}`}
-                  secondary={`Profit: $${fee.profit.toFixed(
-                    2
-                  )} • Rate: ${(fee.fee_rate_used * 100).toFixed(2)}%`}
-                  meta={new Date(fee.created_at).toLocaleString()}
-                />
-              ))}
-            </div>
-          )}
-        </GlassCard>
-      </section>
+
+
+{/* -------------------------
+    FEE HISTORY CARD
+-------------------------- */}
+<GTCard>
+
+<div
+className="
+w-full
+text-center
+"
+>
+  <p
+  className="
+  text-sm
+  uppercase
+  tracking-[0.2em]
+  text-white/45
+  "
+  >
+    Fee History
+  </p>
+</div>
+
+<div
+className="
+mt-5
+"
+>
+
+  {error ? (
+
+    <div
+    className="
+    max-h-[300px]
+    overflow-y-auto
+    rounded-xl
+    p-5
+    bg-[#0b0b12]
+    border
+    border-white/10
+    shadow-none
+    "
+    >
+      <EmptyState message={error} tone="error" />
+    </div>
+
+  ) : loading ? (
+
+    <div
+    className="
+    max-h-[300px]
+    overflow-y-auto
+    rounded-xl
+    p-5
+    bg-[#0b0b12]
+    border
+    border-white/10
+    shadow-none
+    "
+    >
+      <EmptyState message="Loading fee history..." />
+    </div>
+
+  ) : fees.length === 0 ? (
+
+    <div
+    className="
+    max-h-[300px]
+    overflow-y-auto
+    rounded-xl
+    p-5
+    bg-[#0b0b12]
+    border
+    border-white/10
+    shadow-none
+    "
+    >
+      <EmptyState message="No performance fees have been charged yet." />
+    </div>
+
+  ) : (
+
+    <div
+    className="
+    max-h-[300px]
+    overflow-y-auto
+    pr-2
+    divide-y
+    divide-white/10
+    scrollbar-thin
+    scrollbar-thumb-white/10
+    scrollbar-track-transparent
+    "
+    >
+      {fees.map((fee) => (
+        <Row
+          key={fee.id}
+          primary={`$${fee.fee_amount.toFixed(2)}`}
+          secondary={`Profit: $${fee.profit.toFixed(
+            2
+          )} • Rate: ${(fee.fee_rate_used * 100).toFixed(2)}%`}
+          meta={new Date(fee.created_at).toLocaleString()}
+        />
+      ))}
+    </div>
+
+  )}
+
+</div>
+
+</GTCard>
+
+
+
+
+
+      </div>
+
+
+      {/* end bottom row */}
+      
+
+      {/* -------------------------
+         HELPER COMPONENTS
+      -------------------------- */}
+
+      {/* SUMMARY TILE */}
+      <div></div>
     </div>
   );
 }
 
 
-function SummaryTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-      <p className="text-xs uppercase tracking-[0.2em] text-white/45">
-        {label}
-      </p>
-      <p className="mt-2 text-lg font-semibold text-white">{value}</p>
-    </div>
-  );
-}
 
-
-
-function GlassCard({
-  children,
-  title,
+/* ---------------------------------------------
+   SUMMARY TILE COMPONENT
+---------------------------------------------- */
+function SummaryTile({
+  label,
+  value,
 }: {
-  children: React.ReactNode;
-  title: string;
+  label: string;
+  value: string;
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_0_40px_rgba(0,0,0,0.35)] backdrop-blur-xl"
+    <div
+    className="
+    rounded-xl
+    p-5
+    bg-[#0b0b12]
+    border
+    border-emerald-500/20
+    shadow-[0_0_20px_rgba(0,255,180,0.08)]
+    "
     >
-      <h2 className="text-lg font-semibold text-white">{title}</h2>
-      <div className="mt-5">{children}</div>
-    </motion.div>
+      <p
+      className="
+      text-xs
+      uppercase
+      tracking-[0.2em]
+      text-white/45
+      "
+      >
+        {label}
+      </p>
+
+      <p
+      className="
+      mt-2
+      text-xl
+      font-medium
+      text-white/90
+      "
+      >
+        {value}
+      </p>
+    </div>
   );
 }
 
+
+
+/* ---------------------------------------------
+   ROW COMPONENT
+---------------------------------------------- */
 function Row({
   primary,
   secondary,
@@ -592,38 +1062,89 @@ function Row({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-3 text-sm">
+    <div
+    className="
+    flex
+    items-center
+    justify-between
+    py-4
+    "
+    >
       <div>
-        <div className="font-medium text-white">{primary}</div>
+        <p
+        className="
+        text-white/90
+        font-medium
+        "
+        >
+          {primary}
+        </p>
+
         {secondary && (
-          <div className="mt-1 text-xs text-white/55">{secondary}</div>
+          <p
+          className="
+          text-white/50
+          text-sm
+          mt-1
+          "
+          >
+            {secondary}
+          </p>
+        )}
+
+        {meta && (
+          <p
+          className="
+          text-white/40
+          text-xs
+          mt-1
+          "
+          >
+            {meta}
+          </p>
         )}
       </div>
 
-      <div className="flex items-center gap-3">
-        {meta && <div className="text-xs text-white/45">{meta}</div>}
-        {action}
-      </div>
+      {action && (
+        <div className="ml-4">
+          {action}
+        </div>
+      )}
     </div>
   );
 }
 
+
+
+/* ---------------------------------------------
+   EMPTY STATE COMPONENT
+---------------------------------------------- */
 function EmptyState({
   message,
-  tone = "muted",
+  tone = "neutral",
 }: {
   message: string;
-  tone?: "error" | "muted";
+  tone?: "neutral" | "error";
 }) {
   return (
     <div
-      className={`flex min-h-28 items-center justify-center rounded-2xl border px-4 text-center text-sm ${
-        tone === "error"
-          ? "border-red-500/25 bg-red-500/10 text-red-300"
-          : "border-white/10 bg-black/20 text-white/55"
-      }`}
+    className={`
+    rounded-xl
+    p-5
+    text-center
+    ${
+      tone === "error"
+        ? "bg-red-500/10 border border-red-500/20 text-red-300"
+        : "bg-white/5 border border-white/10 text-white/60"
+    }
+    `}
     >
-      {message}
+      <p className="text-sm">
+        {message}
+      </p>
     </div>
   );
 }
+
+
+

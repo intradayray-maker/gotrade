@@ -45,6 +45,12 @@ export default function MobileMenu() {
             <Link href="/account-linking" onClick={() => setOpen(false)}>
               Broker Linking
             </Link>
+            
+<Link href="/billing" onClick={() => setOpen(false)}>
+  Billing
+</Link>
+
+
             <Link href="/profile" onClick={() => setOpen(false)}>
               Profile
             </Link>

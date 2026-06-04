@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 
 import { createStripeCustomer } from "@/utils/billing/createStripeCustomer";
-import { createServerClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "");
 
@@ -10,7 +10,7 @@ export async function attachPaymentMethod(
   email: string | null | undefined,
   paymentMethodId: string
 ) {
-  const supabase = await createServerClient();
+  const supabase = await createSupabaseServerClient();
   const customerId = await createStripeCustomer(userId, email);
 
   try {

@@ -1,9 +1,9 @@
-import { createServerClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 import { sendNotification } from "@/utils/notifications";
 // import { createInvoiceForFee } from "@/utils/billing/createInvoice"; // optional
 
 export async function crystallizePerformanceFees() {
-  const supabase = await createServerClient();
+  const supabase = await createSupabaseServerClient();
 
   try {
     // 1. Load all followers with equity

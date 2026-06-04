@@ -1,18 +1,17 @@
+//app\dashboard\copy-trading\CopyTradingClient.tsx
+
 "use client";
 
 import type { Tables } from "@/types/supabase";
 import MasterPerformanceCard from "./MasterPerformanceCard";
 import UnifiedSettingsForm from "./UnifiedSettingsForm";
 
-type Settings = Pick<
-  Tables<"copy_trading_settings">,
-  | "allocation_model"
-  | "allocation_value"
-  | "enabled"
-  | "max_daily_loss"
-  | "max_position_size"
-  | "risk_multiplier"
->;
+export type Settings = {
+  enabled: boolean
+  allocation_value: number
+  allocation_mode: string
+  max_allocation_pct: number | null
+}
 
 export default function CopyTradingClient({
   initialSettings,
@@ -20,7 +19,7 @@ export default function CopyTradingClient({
   initialSettings: Settings | null;
 }) {
   return (
-    <div className="max-w-6xl mx-auto pt-10 pb-20 space-y-12">
+    <div className="max-w-6xl mx-auto pt-6 pb-20 space-y-12">
       <UnifiedSettingsForm initialSettings={initialSettings} />
     </div>
   );

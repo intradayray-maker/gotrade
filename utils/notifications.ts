@@ -1,4 +1,4 @@
-import { createServerClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 import { notifyUser } from "@/utils/email/notifyUser";
 
 export type NotificationType =
@@ -18,7 +18,7 @@ export async function sendNotification(options: {
   message: string;
   sendEmail?: boolean;
 }) {
-  const supabase = await createServerClient();
+  const supabase = await createSupabaseServerClient();
 
   // Insert in-app notification
   const { data: notif, error } = await supabase

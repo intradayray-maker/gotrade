@@ -1,10 +1,10 @@
-import { createServerClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "");
 
 export async function createStripeCustomer(userId: string, email?: string | null) {
-  const supabase = await createServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")

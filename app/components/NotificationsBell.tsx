@@ -11,7 +11,6 @@ export default function NotificationsBell() {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  // Fetch notifications
   async function loadNotifications() {
     try {
       const res = await fetch("/api/notifications/list");
@@ -24,22 +23,15 @@ export default function NotificationsBell() {
     }
   }
 
-  // Mark all as read
   async function markAllRead() {
     try {
-      await fetch("/api/notifications/mark-all-read", {
-        method: "POST",
-      });
-
-      setNotifications((prev) =>
-        prev.map((n) => ({ ...n, read: true }))
-      );
+      await fetch("/api/notifications/mark-all-read", { method: "POST" });
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch (err) {
       console.error("Failed to mark all read:", err);
     }
   }
 
-  // Mark single notification as read
   async function markRead(id: string) {
     try {
       await fetch("/api/notifications/mark-read", {
@@ -65,11 +57,9 @@ export default function NotificationsBell() {
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      {/* Bell Icon */}
       <button className="relative p-2 rounded-full hover:bg-white/10 transition">
         <Bell className="w-6 h-6 text-white" />
 
-        {/* Unread Badge */}
         {unreadCount > 0 && (
           <motion.span
             initial={{ scale: 0 }}
@@ -81,7 +71,6 @@ export default function NotificationsBell() {
         )}
       </button>
 
-      {/* Dropdown */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -104,18 +93,16 @@ export default function NotificationsBell() {
               )}
             </div>
 
-            {/* Loading */}
             {loading && (
               <p className="text-white/50 text-sm">Loading...</p>
             )}
 
-            {/* Empty */}
             {!loading && notifications.length === 0 && (
               <p className="text-white/50 text-sm">No notifications</p>
             )}
 
-            {/* List */}
-            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+            {/* ⭐ DARK MODERN SCROLLBAR APPLIED HERE */}
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1 dark-scroll">
               {notifications.slice(0, 5).map((n) => (
                 <motion.div
                   key={n.id}
@@ -133,7 +120,6 @@ export default function NotificationsBell() {
                       {n.title}
                     </p>
 
-                    {/* Category Badge */}
                     <span className="text-[10px] px-2 py-1 rounded-full bg-white/10 text-white/60">
                       {n.type}
                     </span>
@@ -150,7 +136,6 @@ export default function NotificationsBell() {
               ))}
             </div>
 
-            {/* View All */}
             <a
               href="/dashboard/notifications"
               className="block text-center text-blue-400 hover:text-blue-300 text-sm mt-3"

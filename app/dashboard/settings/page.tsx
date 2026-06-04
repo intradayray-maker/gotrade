@@ -1,8 +1,8 @@
 import SettingsClient from "./SettingsClient";
-import { createServerClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 
 export default async function SettingsPage() {
-  const supabase = await createServerClient();
+  const supabase = await createSupabaseServerClient();
 
   await supabase.auth.getUser();
 

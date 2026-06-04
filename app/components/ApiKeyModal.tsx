@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getBrokerApiBase } from "@/lib/brokers/getBrokerApiBase";
 
 export default function ApiKeyModal({
   broker,
@@ -20,7 +21,8 @@ export default function ApiKeyModal({
     setError(null);
 
     try {
-      const response = await fetch("/api/alpaca/link", {
+      const base = getBrokerApiBase();
+      const response = await fetch(`${base}/link`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -38,6 +40,7 @@ export default function ApiKeyModal({
         : { error: await response.text() };
 
       if (!response.ok) {
+        // TODO: Blofin-specific credential fields may be added here later.
         setError(result.error ?? "Failed to save Alpaca credentials");
         return;
       }

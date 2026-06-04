@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getBrokerApiBase } from "@/lib/brokers/getBrokerApiBase";
 
 export default function AlpacaLinkForm() {
   const [keyId, setKeyId] = useState("");
@@ -17,7 +18,8 @@ export default function AlpacaLinkForm() {
     setError(null);
 
     try {
-      const res = await fetch("/api/alpaca/link", {
+      const base = getBrokerApiBase();
+      const res = await fetch(`${base}/link`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -47,7 +49,8 @@ export default function AlpacaLinkForm() {
     setError(null);
 
     try {
-      const res = await fetch("/api/alpaca/disconnect", {
+      const base = getBrokerApiBase();
+      const res = await fetch(`${base}/disconnect`, {
         method: "DELETE",
         credentials: "include",
         cache: "no-store",

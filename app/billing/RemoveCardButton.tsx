@@ -22,7 +22,40 @@ export default function RemoveCardButton() {
   return (
     <button
       onClick={handleRemove}
-      className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition"
+      className="
+      relative
+      flex
+      items-center
+      justify-center
+
+      px-[15px]
+      py-[15px]
+      rounded-[6px]
+
+      text-[14px]
+      font-semibold
+      text-[rgb(225,254,234)]
+
+      bg-[rgb(84,33,33)]
+      shadow-[0_0_34px_rgba(84,33,33,0.45)]
+
+      border-[5px]
+      border-[rgb(84,33,33)]
+      bg-clip-padding
+
+      before:absolute
+      before:inset-0
+      before:rounded-[6px]
+      before:p-[2px]
+      before:bg-gradient-to-br
+      before:from-[rgba(84,33,33,0.9)]
+      before:via-[rgba(120,50,50,0.9)]
+      before:to-[rgba(84,33,33,0.9)]
+      before:-z-10
+
+      hover:bg-[rgb(100,40,40)]
+      transition
+      "
     >
       Remove Card
     </button>

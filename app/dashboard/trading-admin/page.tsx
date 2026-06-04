@@ -1,9 +1,9 @@
-import { createServerClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 import { requireAdminUser } from "@/utils/auth/admin";
 import TradingAdminClient from "./TradingAdminClient";
 
 export default async function Page() {
-  const supabase = await createServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

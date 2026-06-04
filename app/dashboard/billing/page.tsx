@@ -6,7 +6,7 @@ import BillingClient, {
   type SavedCard,
 } from "./BillingClient";
 
-import { createServerClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,7 @@ type BillingPageProps = {
 };
 
 export default async function BillingPage({ searchParams }: BillingPageProps) {
-  const supabase = await createServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

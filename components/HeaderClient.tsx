@@ -4,6 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import UserMenu from "@/components/UserMenu";
 import { useState, useEffect } from "react";
+import { CreditCardIcon } from "@heroicons/react/24/outline";
+import { getBrokerApiBase } from "@/lib/brokers/getBrokerApiBase";
+
 import NotificationsBell from "@/app/components/NotificationsBell";
 
 import {
@@ -14,7 +17,7 @@ import {
   Cog6ToothIcon,
   Bars3Icon,
   ClockIcon,
-  ShieldCheckIcon, // admin icon
+  ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +39,8 @@ export default function HeaderClient({
   useEffect(() => {
     async function loadStatus() {
       try {
-        const res = await fetch("/api/alpaca/status", {
+        const base = getBrokerApiBase();
+        const res = await fetch(`${base}/status`, {
           method: "GET",
           cache: "no-store",
         });
@@ -54,12 +58,7 @@ export default function HeaderClient({
 
   const closeMobile = () => setMobileOpen(false);
 
-  const displayName =
-    user?.user_metadata?.full_name ||
-    user?.email?.split("@")[0] ||
-    "User";
-
-  // Admin email (you)
+  // Admin email
   const ADMIN_EMAIL = "relertech@gmail.com";
 
   return (
@@ -79,8 +78,8 @@ export default function HeaderClient({
 
           {/* LOGO */}
           <Link href={homeHref} className="flex items-center gap-3 text-white">
-            <img src="/logo/flowtrade.png" alt="FlowTrade" className="h-8 w-auto" />
-            <span className="text-lg font-semibold tracking-tight">FlowTrade</span>
+            <img src="/logo/gotrade.png" alt="GoTrade" className="h-8 w-auto" />
+            <span className="text-lg font-semibold tracking-tight">GoTrade</span>
           </Link>
         </div>
 
@@ -145,6 +144,22 @@ export default function HeaderClient({
                 <ClockIcon className="h-5 w-5" />
               </Link>
 
+              {/* Billing */}
+              <Link
+                href="/dashboard/billing"
+                title="Billing"
+                className={`
+                  flex items-center justify-center h-9 w-9 rounded-full border border-white/10 bg-white/5 transition hover:bg-white/10
+                  ${
+                    pathname.startsWith("/dashboard/billing")
+                      ? "text-white shadow-[0_0_12px_rgba(255,255,255,0.45)]"
+                      : "text-white/60"
+                  }
+                `}
+              >
+                <CreditCardIcon className="h-5 w-5" />
+              </Link>
+
               {/* Profile */}
               <Link
                 href="/dashboard/profile"
@@ -165,7 +180,7 @@ export default function HeaderClient({
                 <Cog6ToothIcon className="h-5 w-5" />
               </Link>
 
-              {/* ADMIN PANEL — ONLY FOR YOU */}
+              {/* ADMIN PANEL */}
               {user?.email === ADMIN_EMAIL && (
                 <Link
                   href="/dashboard/trading-admin"
@@ -175,9 +190,8 @@ export default function HeaderClient({
                 >
                   <ShieldCheckIcon className="h-5 w-5" />
 
-                  {/* Error badge */}
                   {typeof window !== "undefined" &&
-                    (window.__flowtrade_errors ?? 0) > 0 && (
+                    (window.__gotrade_errors ?? 0) > 0 && (
                       <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 shadow-[0_0_6px_rgba(255,0,0,0.8)]"></span>
                     )}
                 </Link>
@@ -241,6 +255,19 @@ export default function HeaderClient({
             >
               <ClockIcon className="h-6 w-6" />
               <span className="text-base">Trade History</span>
+            </Link>
+            <div className="h-px bg-white/10 my-2" />
+
+            {/* Billing */}
+            <Link
+              href="/dashboard/billing"
+              onClick={closeMobile}
+              className="
+                flex items-center gap-3 py-3 text-white/90 hover:text-white transition
+              "
+            >
+              <CreditCardIcon className="h-6 w-6" />
+              <span className="text-base">Billing</span>
             </Link>
             <div className="h-px bg-white/10 my-2" />
 

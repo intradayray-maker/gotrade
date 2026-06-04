@@ -1,9 +1,9 @@
-import { createServerClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 import { executeFollowerTrade } from "@/utils/trading/followerExecutor";
 import { calculateNewEquity } from "@/utils/trading/pnl";
 
 export async function processTradeQueue() {
-  const supabase = await createServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data: jobs } = await supabase
     .from("trade_queue")

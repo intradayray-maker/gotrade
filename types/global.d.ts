@@ -1,7 +1,8 @@
 declare global {
   interface Window {
-    __flowtrade_errors?: number;
+    __gotrade_errors?: number;
   }
 }
 
 export {};
+

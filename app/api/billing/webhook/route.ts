@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import { createRouteHandlerClient } from "@/utils/supabase/route";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
@@ -64,7 +63,7 @@ async function updateBillingStatus(userId: string, billingStatus: string) {
 }
 
 export async function POST(request: Request) {
-  const signature = headers().get("stripe-signature");
+  const signature = request.headers.get("stripe-signature");
 
   if (!signature) {
     return NextResponse.json({ error: "Missing stripe-signature header" }, { status: 400 });

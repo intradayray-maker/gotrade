@@ -1,5 +1,5 @@
-import { placeOrder } from "@/utils/trading/placeOrder";
-import { createServerClient } from "@/utils/supabase/server";
+import { placeOrder } from "@/lib/brokers/router";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 
 export async function executeMasterTrade(params: {
   symbol: string;
@@ -16,7 +16,7 @@ export async function executeMasterTrade(params: {
   console.log("MASTER TRADER ID USED:", masterTraderId);
   console.log("MASTER TRADE PARAMS:", { symbol, side, qty });
 
-  const supabase = await createServerClient();
+  const supabase = await createSupabaseServerClient();
 
   try {
     // 1. Execute master trade
@@ -112,6 +112,80 @@ export async function executeMasterTrade(params: {
       }
     }
 
+    // ⭐ MASTER EXIT MIRRORING
+    // ---------------------------------------------------------
+    console.log("🔎 CHECKING FOR MASTER EXIT...");
+
+    if (side === "sell") {
+      console.log("➡️ MASTER SELL DETECTED — checking master position...");
+
+      // 1. Load master position AFTER the trade
+      const { data: masterPos, error: masterPosErr } = await supabase
+        .from("follower_positions") // master uses same table but with masterTraderId
+        .select("qty")
+        .eq("follower_user_id", masterTraderId)
+        .eq("symbol", symbol)
+        .maybeSingle();
+
+      if (masterPosErr) {
+        console.error("❌ ERROR LOADING MASTER POSITION:", masterPosErr);
+      } else {
+        const masterQty = masterPos?.qty ?? 0;
+
+        console.log("📉 MASTER POSITION AFTER SELL:", masterQty);
+
+        // 2. If master is now FLAT → followers must exit too
+        if (masterQty === 0) {
+          console.log("🚨 MASTER EXIT CONFIRMED — MIRRORING FOLLOWER EXITS...");
+
+          // Load followers who currently hold this symbol
+          const { data: followerPositions, error: followerPosErr } =
+            await supabase
+              .from("follower_positions")
+              .select("follower_user_id, qty")
+              .eq("symbol", symbol)
+              .gt("qty", 0);
+
+          if (followerPosErr) {
+            console.error("❌ ERROR LOADING FOLLOWER POSITIONS:", followerPosErr);
+          } else {
+            console.log("📊 FOLLOWERS HOLDING POSITION:", followerPositions);
+
+            for (const fp of followerPositions ?? []) {
+              console.log(
+                "➡️ QUEUING FOLLOWER EXIT:",
+                fp.follower_user_id,
+                "qty:",
+                fp.qty
+              );
+
+              const { error: exitErr } = await supabase
+                .from("trade_queue")
+                .insert({
+                  follower_user_id: fp.follower_user_id,
+                  symbol,
+                  side: "sell",
+                  qty: fp.qty,
+                  master_trade_id: masterTradeRow.id,
+                });
+
+              if (exitErr) {
+                console.error("❌ FOLLOWER EXIT QUEUE ERROR:", exitErr);
+              } else {
+                console.log("✅ FOLLOWER EXIT QUEUED:", {
+                  follower_user_id: fp.follower_user_id,
+                  qty: fp.qty,
+                });
+              }
+            }
+          }
+        } else {
+          console.log("ℹ️ MASTER STILL HAS POSITION — no exit mirroring needed.");
+        }
+      }
+    }
+    // ---------------------------------------------------------
+
     console.log("🎉 MASTER EXECUTOR FINISHED SUCCESSFULLY");
 
     return { masterOrder, followers };
@@ -120,3 +194,5 @@ export async function executeMasterTrade(params: {
     throw err;
   }
 }
+
+export const runMasterExecutor = executeMasterTrade;

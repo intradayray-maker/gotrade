@@ -1,230 +1,405 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import { getBrokerApiBase } from "@/lib/brokers/getBrokerApiBase"
 
 export default function AccountLinkingPage() {
-  const [keyId, setKeyId] = useState("");
-  const [secretKey, setSecretKey] = useState("");
-  const [environment, setEnvironment] = useState("paper");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [error, setError] = useState("");
-  const [connected, setConnected] = useState<boolean | null>(null);
 
-  // -----------------------------
-  // STATUS FETCHER
-  // -----------------------------
-  async function refreshStatus() {
-    try {
-      const res = await fetch("/api/alpaca/status", { cache: "no-store" });
-      const data = await res.json();
-      setConnected(data.status === "connected");
-    } catch {
-      setConnected(false);
-    }
-  }
+const [keyId, setKeyId] = useState("")
+const [secretKey, setSecretKey] = useState("")
+const [environment, setEnvironment] = useState("paper")
+const [loading, setLoading] = useState(false)
+const [result, setResult] = useState<any>(null)
+const [error, setError] = useState("")
+const [connected, setConnected] = useState<boolean | null>(null)
 
-  // Load status on mount
-  useEffect(() => {
-    refreshStatus();
-  }, []);
+const pageTitle = "Link Your Broker"
+const pageDescription = "Link your Alpaca account to enable automated trading."
 
-  // -----------------------------
-  // ⭐ FIX: CLEAR STALE UI WHEN CONNECTION STATE CHANGES
-  // -----------------------------
-  useEffect(() => {
-    setResult(null);
-    setError("");
+async function refreshStatus() {
+try {
+const base = getBrokerApiBase()
+const res = await fetch(`${base}/status`, { cache: "no-store" })
+const data = await res.json()
+setConnected(data.status === "connected")
+} catch {
+setConnected(false)
+}
+}
 
-    if (connected === false) {
-      setKeyId("");
-      setSecretKey("");
-    }
-  }, [connected]);
+useEffect(() => {
+refreshStatus()
+}, [])
 
-  // -----------------------------
-  // CONNECT HANDLER
-  // -----------------------------
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setResult(null);
+useEffect(() => {
+setResult(null)
+setError("")
+if (connected === false) {
+setKeyId("")
+setSecretKey("")
+}
+}, [connected])
 
-    try {
-      const res = await fetch("/api/alpaca/link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyId, secretKey, environment }),
-      });
+async function handleSubmit(e: any) {
 
-      const contentType = res.headers.get("content-type") ?? "";
-      const data = contentType.includes("application/json")
-        ? ((await res.json()) as { error?: string; success?: boolean })
-        : { error: await res.text() };
+e.preventDefault()
+setLoading(true)
+setError("")
+setResult(null)
 
-      if (!res.ok) {
-        setError(data.error || "Failed to save keys");
-      } else {
-        setResult(data);
-        await refreshStatus();
-      }
-    } catch (err) {
-      console.error("Broker save failed:", err);
-      setError(
-        err instanceof Error ? err.message : "Unexpected error saving broker credentials"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
+try {
 
-  // -----------------------------
-  // DISCONNECT HANDLER
-  // -----------------------------
-  async function handleDisconnect() {
-    setLoading(true);
-    setError("");
-    setResult(null);
+const base = getBrokerApiBase()
+const res = await fetch(`${base}/link`, {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ keyId, secretKey, environment })
+})
 
-    try {
-      const res = await fetch("/api/alpaca/disconnect", {
-        method: "DELETE",
-        cache: "no-store",
-      });
+const contentType = res.headers.get("content-type") ?? ""
+const data = contentType.includes("application/json")
+? await res.json()
+: { error: await res.text() }
 
-      if (!res.ok) {
-        setError("Failed to disconnect broker");
-      } else {
-        setResult({ success: true });
-        await refreshStatus();
-      }
-    } catch {
-      setError("Unexpected error disconnecting broker");
-    } finally {
-      setLoading(false);
-    }
-  }
+if (!res.ok) {
+setError(data.error || "Failed to save keys")
+} else {
+setResult(data)
+await refreshStatus()
+}
 
-  // -----------------------------
-  // UI
-  // -----------------------------
-  return (
-    <div className="max-w-xl mx-auto py-10 space-y-8">
+} catch (err: any) {
 
-      {/* HEADER */}
-      <div>
-        <h1 className="text-3xl font-bold text-white">Link Your Broker</h1>
-        <p className="text-white/60 mt-1">
-          Connect your Alpaca account to enable automated trading and portfolio syncing.
-        </p>
-      </div>
+setError(err?.message || "Unexpected error saving broker credentials")
 
-      {/* CONNECTED STATE */}
-      {connected === true && (
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6 shadow-xl space-y-6">
-          <div className="p-4 rounded-xl border border-green-500/40 bg-green-900/20">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-green-400 text-lg">●</span>
-              <h2 className="font-semibold text-green-300">Broker Connected</h2>
-            </div>
-            <p className="text-sm text-green-200/80">
-              Your Alpaca account is currently linked.
-            </p>
-          </div>
+} finally {
+setLoading(false)
+}
 
-          <button
-            onClick={handleDisconnect}
-            disabled={loading}
-            className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white py-3 rounded-lg font-semibold transition-all shadow-lg shadow-red-600/20"
-          >
-            {loading ? "Disconnecting..." : "Disconnect Broker"}
-          </button>
-        </div>
-      )}
+}
 
-      {/* DISCONNECTED STATE */}
-      {connected === false && (
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6 shadow-xl space-y-6">
+async function handleDisconnect() {
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+setLoading(true)
+setError("")
+setResult(null)
 
-            {/* API KEY */}
-            <div className="space-y-1">
-              <label className="block text-sm text-white/70">API Key ID</label>
-              <input
-                type="text"
-                value={keyId}
-                onChange={(e) => setKeyId(e.target.value)}
-                className="w-full rounded-lg bg-[#0d0d12] border border-white/10 px-3 py-2 text-white placeholder-white/30
-                           focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all"
-                placeholder="Your Alpaca API Key ID"
-                required
-              />
-            </div>
+try {
 
-            {/* SECRET KEY */}
-            <div className="space-y-1">
-              <label className="block text-sm text-white/70">Secret Key</label>
-              <input
-                type="password"
-                value={secretKey}
-                onChange={(e) => setSecretKey(e.target.value)}
-                className="w-full rounded-lg bg-[#0d0d12] border border-white/10 px-3 py-2 text-white placeholder-white/30
-                           focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all"
-                placeholder="Your Alpaca Secret Key"
-                required
-              />
-            </div>
+const base = getBrokerApiBase()
+const res = await fetch(`${base}/disconnect`, {
+method: "DELETE",
+cache: "no-store"
+})
 
-            {/* ENVIRONMENT */}
-            <div className="space-y-1">
-              <label className="block text-sm text-white/70">Environment</label>
-              <select
-                value={environment}
-                onChange={(e) => setEnvironment(e.target.value)}
-                className="w-full rounded-lg bg-[#0d0d12] border border-white/10 px-3 py-2 text-white
-                           focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all"
-              >
-                <option value="paper">Paper Trading</option>
-                <option value="live">Live Trading</option>
-              </select>
-            </div>
+if (!res.ok) {
+setError("Failed to disconnect broker")
+} else {
+setResult({ success: true })
+await refreshStatus()
+}
 
-            {/* SUBMIT BUTTON */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white py-3 rounded-lg font-semibold transition-all shadow-lg shadow-blue-600/20"
-            >
-              {loading ? "Saving..." : "Save Keys"}
-            </button>
-          </form>
+} catch {
+setError("Unexpected error disconnecting broker")
+} finally {
+setLoading(false)
+}
 
-          {/* ERROR */}
-          {error && (
-            <p className="text-red-400 font-medium text-sm">{error}</p>
-          )}
+}
 
-          {/* SUCCESS */}
-          {result?.success && (
-            <div className="mt-4 p-4 rounded-xl border border-green-500/40 bg-green-900/20">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-green-400 text-lg">●</span>
-                <h2 className="font-semibold text-green-300">Broker Linked</h2>
-              </div>
-              <p className="text-sm text-green-200/80">
-                Your keys have been securely stored and are now ready for trading operations.
-              </p>
-            </div>
-          )}
-        </div>
-      )}
+return (
 
-      {/* LOADING STATE */}
-      {connected === null && (
-        <p className="text-white/60">Checking broker status…</p>
-      )}
-    </div>
-  );
+<div className="max-w-xl mx-auto py-10 space-y-8 mt-0 pt-0">
+
+{/* -------------------------
+   TF PAGE HEADER (UNIVERSAL)
+-------------------------- */}
+<div className="w-full px-1 md:px-6 lg:px-2 space-y-4 max-w-5xl mx-none">
+
+<div className="flex items-center gap-2 text-[13px] text-white/40 pt-3 animate-fadeIn">
+<Link
+href="/dashboard"
+className="hover:text-white/70 transition-colors cursor-pointer"
+>
+Dashboard
+</Link>
+<span className="text-white/30">/</span>
+<span className="text-white/60">{pageTitle}</span>
+</div>
+
+<div className="animate-fadeIn [animation-duration:0.6s]">
+
+<div className="flex items-center gap-3">
+<svg
+className="w-7 h-7 text-emerald-400 drop-shadow-[0_0_6px_rgba(0,255,180,0.35)]"
+viewBox="0 0 24 24"
+fill="none"
+stroke="currentColor"
+strokeWidth="1.6"
+strokeLinecap="round"
+strokeLinejoin="round"
+>
+  <path d="M12 5v4" />
+  <path d="M12 15v4" />
+  <rect x="7" y="9" width="10" height="6" rx="2" />
+  <path d="M5 12h2" />
+  <path d="M17 12h2" />
+</svg>
+
+
+<h1 className="text-3xl font-bold tracking-tight text-white/90 drop-shadow-[0_0_10px_rgba(0,255,180,0.25)]">
+{pageTitle}
+</h1>
+</div>
+
+<p className="text-white/50 text-sm mt-2 tracking-wide max-w-md">
+{pageDescription}
+</p>
+
+<div className="mt-5 h-[2px] w-24 bg-gradient-to-r from-emerald-400/80 to-emerald-700/80 rounded-full shadow-[0_0_12px_rgba(0,255,180,0.35)] animate-fadeIn [animation-delay:0.2s]"></div>
+
+</div>
+
+</div>
+
+{/* CONNECTED */}
+{connected === true && (
+
+<div className="relative rounded-xl p-[2px] bg-gradient-to-br from-emerald-500/40 via-teal-400/40 to-emerald-600/40 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
+
+<div className="rounded-xl bg-[#0b0b12] p-6 space-y-6">
+
+<div className="p-4 rounded-lg bg-emerald-900/20 border border-emerald-500/30">
+<div className="flex items-center gap-2 mb-1">
+<span className="text-emerald-400 text-lg">●</span>
+<h2 className="font-semibold text-emerald-300">
+Broker Connected
+</h2>
+</div>
+<p className="text-sm text-emerald-200/80">
+{/* TODO: Blofin-specific account labels may replace Alpaca wording later. */}
+Your Alpaca account is currently linked.
+</p>
+</div>
+
+<button
+onClick={handleDisconnect}
+disabled={loading}
+className="
+w-full
+px-4 py-3
+rounded-lg
+font-semibold
+text-[rgb(225,254,234)]
+bg-[rgb(84,33,33)]
+border-[3px] border-transparent
+shadow-[0_0_25px_rgba(84,33,33,0.55)]
+hover:brightness-110 hover:-translate-y-[1px]
+transition-all
+"
+>
+{loading ? "Disconnecting..." : "Disconnect Broker"}
+</button>
+
+</div>
+
+</div>
+
+)}
+
+{/* DISCONNECTED */}
+{connected === false && (
+
+<div className="relative rounded-xl p-[2px] bg-gradient-to-br from-emerald-500/40 via-teal-400/40 to-emerald-600/40 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
+
+<div className="rounded-xl bg-[#0b0b12] p-6 space-y-6">
+
+<form onSubmit={handleSubmit} className="space-y-5">
+
+{/* KEY ID */}
+<div className="space-y-1 my-6">
+<label className="text-sm text-slate-400">
+API Key ID
+</label>
+
+<input
+type="text"
+value={keyId}
+onChange={e => setKeyId(e.target.value)}
+placeholder="Your Alpaca API Key ID"
+required
+className="
+w-full
+rounded-lg
+bg-[rgb(17,18,24)]
+text-white
+border border-slate-800
+px-6 py-4
+placeholder-slate-500
+focus:outline-none
+focus:ring-2 focus:ring-emerald-500/40
+focus:border-emerald-500/40
+transition-all
+[color-scheme:dark]
+"
+/>
+</div>
+
+
+{/* SECRET KEY */}
+<div className="space-y-1">
+<label className="text-sm text-slate-400">
+Secret Key
+</label>
+<input
+type="password"
+value={secretKey}
+onChange={e => setSecretKey(e.target.value)}
+placeholder="Your Alpaca Secret Key"
+required
+className="
+w-full
+rounded-lg
+bg-[rgb(17,18,24)]
+text-white
+border border-slate-800
+px-6 py-4
+placeholder-slate-500
+focus:outline-none
+focus:ring-2 focus:ring-emerald-500/40
+focus:border-emerald-500/40
+transition-all
+[color-scheme:dark]
+"
+
+/>
+</div>
+
+{/* ENVIRONMENT */}
+<div className="space-y-1 my-6">
+
+<label className="text-sm text-slate-400 py-2">
+Environment
+</label>
+
+<div className="relative">
+
+<select
+value={environment}
+onChange={e => setEnvironment(e.target.value)}
+className={`
+w-full
+appearance-none
+rounded-lg
+bg-[rgb(17,18,24)]
+border border-slate-800
+px-4 py-3
+pr-12
+focus:outline-none
+focus:ring-2 focus:ring-emerald-500/40
+focus:border-emerald-500/40
+transition-all
+[color-scheme:dark]
+${
+environment === "paper"
+? "text-[rgb(128,117,0)]"
+: "text-[rgb(3,150,65)]"
+}
+`}
+>
+<option
+value="paper"
+className="
+text-[rgb(113,97,20)]
+text-lg
+leading-10
+"
+>
+Paper Trading
+</option>
+
+<option
+value="live"
+className="
+text-[rgb(3,82,65)]
+text-lg
+leading-10
+"
+>
+Live Trading
+</option>
+
+</select>
+
+
+{/* CUSTOM ARROW */}
+<div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-xs">
+▼
+</div></div></div>
+
+
+{/* SUBMIT */}
+<button
+type="submit"
+disabled={loading}
+className="
+w-full
+px-6 py-4
+rounded-lg
+font-semibold
+text-[rgb(225,254,234)]
+bg-[rgb(3,82,65)]
+border-[3px] border-transparent
+shadow-[0_0_25px_rgba(3,82,65,0.55)]
+hover:brightness-110 hover:-translate-y-[1px]
+transition-all
+"
+>
+{loading ? "Saving..." : "Save Keys"}
+</button>
+
+</form>
+
+{/* ERROR */}
+{error && (
+<p className="text-red-400 font-medium text-sm">
+{error}
+</p>
+)}
+
+{/* SUCCESS */}
+{result?.success && (
+
+<div className="p-4 rounded-lg bg-emerald-900/20 border border-emerald-500/30">
+<div className="flex items-center gap-2 mb-1">
+<span className="text-emerald-400 text-lg">●</span>
+<h2 className="font-semibold text-emerald-300">
+Broker Linked
+</h2>
+</div>
+<p className="text-sm text-emerald-200/80">
+Your keys have been securely stored and are now ready for trading operations.
+</p>
+</div>
+
+)}
+
+</div>
+
+</div>
+
+)}
+
+{/* LOADING */}
+{connected === null && (
+<p className="text-white/60">
+Checking broker status…
+</p>
+)}
+
+</div>
+
+)
+
 }

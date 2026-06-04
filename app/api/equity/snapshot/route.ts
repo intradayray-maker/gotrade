@@ -1,9 +1,9 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import { createServerClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 
 export async function GET() {
-  const supabase = await createServerClient();
+  const supabase = await createSupabaseServerClient();
   return NextResponse.json({ ok: true });
 }

@@ -125,6 +125,36 @@ export type Database = {
         }
         Relationships: []
       }
+      follower_allocation_settings: {
+        Row: {
+          user_id: string
+          mode: string
+          value: number
+          max_allocation_pct: number | null
+          enabled: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          mode: string
+          value: number
+          max_allocation_pct?: number | null
+          enabled: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          mode?: string
+          value?: number
+          max_allocation_pct?: number | null
+          enabled?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       follower_equity: {
         Row: {
           equity: number

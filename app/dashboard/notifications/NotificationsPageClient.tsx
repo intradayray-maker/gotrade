@@ -64,7 +64,6 @@ export default function NotificationsPageClient() {
     loadNotifications();
   }, []);
 
-  // REALTIME SUBSCRIPTION
   useEffect(() => {
     const channel = supabase
       .channel("notifications-realtime")
@@ -127,7 +126,17 @@ export default function NotificationsPageClient() {
         <p className="text-white/50 text-sm">No notifications yet</p>
       )}
 
-      <div className="space-y-3">
+      {/* ⭐ Dark Modern Scroll Container */}
+      <div
+        className="
+          max-h-[70vh]
+          overflow-y-auto
+          pr-2
+          space-y-3
+          scroll-smooth
+          dark-scroll
+        "
+      >
         {notifications.map((n) => (
           <motion.div
             key={n.id}

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { getBrokerApiBase } from "@/lib/brokers/getBrokerApiBase";
 
 type MasterTrade = {
   id: string;
@@ -109,7 +110,8 @@ export default function TradingAdminClient() {
       let brokerConnected = false;
 
       try {
-        const brokerStatusResponse = await fetch("/api/alpaca/status", {
+        const base = getBrokerApiBase();
+        const brokerStatusResponse = await fetch(`${base}/status`, {
           cache: "no-store",
         });
         const brokerStatusData = (await brokerStatusResponse.json()) as {

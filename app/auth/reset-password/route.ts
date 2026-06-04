@@ -1,26 +1,8 @@
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name, value, options) {
-          cookieStore.set({ name, value, ...options });
-        },
-        remove(name, options) {
-          cookieStore.set({ name, value: "", ...options });
-        },
-      },
-    }
-  );
+  const supabase = await createSupabaseServerClient();
 
   const {
     data: { user },
@@ -43,9 +25,13 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.redirect(
-      new URL(`/dashboard/profile?error=${encodeURIComponent(error.message)}`, request.url)
+      new URL(
+        `/dashboard/profile?error=${encodeURIComponent(error.message)}`,
+        request.url
+      )
     );
   }
 
   return NextResponse.redirect(new URL("/dashboard/profile?sent=1", request.url));
 }
+

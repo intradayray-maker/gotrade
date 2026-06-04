@@ -209,7 +209,7 @@ async function processFollowerJob(job: any) {
   }
 
   // 3. Insert into follower_trades
-  const { data: followerTrade, error: ftErr } = await supabase
+  const { data: followerTrade, error: gtErr } = await supabase
     .from("follower_trades")
     .insert({
       master_trade_id: job.master_trade_id,
@@ -225,8 +225,8 @@ async function processFollowerJob(job: any) {
     .select()
     .single();
 
-  if (ftErr) {
-    console.error("Failed to insert follower_trade:", ftErr);
+  if (gtErr) {
+    console.error("Failed to insert follower_trade:", gtErr);
     throw new Error("Failed to log follower trade");
   }
 
@@ -331,3 +331,4 @@ function json(body: any, status = 200) {
     headers: { "Content-Type": "application/json" },
   });
 }
+

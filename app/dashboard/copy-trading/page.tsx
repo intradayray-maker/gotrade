@@ -1,8 +1,8 @@
-import { createServerClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 import CopyTradingClient from "./CopyTradingClient";
 
 export default async function CopyTradingPage() {
-  const supabase = await createServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const {
     data: { user },
@@ -19,11 +19,22 @@ export default async function CopyTradingPage() {
     );
   }
 
-  const { data: settings } = await supabase
-    .from("copy_trading_settings")
+  // Load from the NEW table
+  const { data: allocation } = await supabase
+    .from("follower_allocation_settings")
     .select("*")
     .eq("user_id", user.id)
     .maybeSingle();
+
+  // Normalize into the shape your UI expects
+  const settings = allocation
+    ? {
+        enabled: allocation.enabled,
+        allocation_value: allocation.value,
+        allocation_mode: allocation.mode,
+        max_allocation_pct: allocation.max_allocation_pct,
+      }
+    : null;
 
   return <CopyTradingClient initialSettings={settings} />;
 }

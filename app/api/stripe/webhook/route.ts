@@ -7,7 +7,6 @@ export const runtime = "nodejs";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-// PUBLIC SUPABASE CLIENT (safe for checkout creation)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -25,28 +24,53 @@ export async function POST(req: Request) {
       );
     }
 
-    // Fetch user email from Supabase
+    // Fetch user profile
     const { data: profile } = await supabase
       .from("profiles")
-      .select("email")
+      .select("email, stripe_customer_id")
       .eq("id", userId)
       .maybeSingle();
 
-    const email = profile?.email ?? undefined;
+    if (!profile) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
 
-    // Create Stripe Checkout Session
+    let stripeCustomerId = profile.stripe_customer_id;
+
+    // Create Stripe customer if missing
+    if (!stripeCustomerId) {
+      const customer = await stripe.customers.create({
+        email: profile.email,
+        metadata: { user_id: userId }
+      });
+
+      stripeCustomerId = customer.id;
+
+      // Save to Supabase
+      await supabase
+        .from("profiles")
+        .update({ stripe_customer_id: stripeCustomerId })
+        .eq("id", userId);
+    }
+
+    // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
-      customer_email: email,
+      customer: stripeCustomerId,
       line_items: [{ price: priceId, quantity: 1 }],
+      client_reference_id: userId,
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?canceled=true`,
-      metadata: { user_id: userId },
+      metadata: { user_id: userId }
     });
 
     return NextResponse.json({ url: session.url });
+
   } catch (err: any) {
-    console.error("❌ Stripe Checkout Error:", err.message);
+    console.error("❌ Stripe Checkout Error:", err);
     return NextResponse.json(
       { error: "Stripe checkout session creation failed" },
       { status: 500 }

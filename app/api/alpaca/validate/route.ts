@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createRouteHandlerClient } from "@/utils/supabase/route";
-import { getAlpacaAccount } from "@/lib/alpacaClient";
+import { getAlpacaAccount } from "@/lib/brokers/alpaca/alpacaClient";
 
 export const runtime = "nodejs";
 

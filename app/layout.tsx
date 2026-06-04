@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FlowTrade",
-  description: "Smart long-term investing meets automated short-term execution.",
+  title: "GoTrade",
+  description: "GoTrade blends smart long-term investing with automated short-term execution.",
 };
 
 export default function RootLayout({
@@ -17,3 +17,4 @@ export default function RootLayout({
     </html>
   );
 }
+

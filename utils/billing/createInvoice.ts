@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { createServerClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 import { sendNotification } from "@/utils/notifications";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -13,7 +13,7 @@ export async function createInvoiceForFee({
   feeId: string;
   amount: number;
 }) {
-  const supabase = await createServerClient();
+  const supabase = await createSupabaseServerClient();
 
   try {
     // 1. Load Stripe customer ID

@@ -1,32 +1,33 @@
-import { createServerClient } from "@/utils/supabase/server";
-import ProfileClient from "./ProfileClient";
+import { createSupabaseServerClient } from "@/utils/supabase/server"
+import ProfileClient from "./ProfileClient"
+import type { User } from "@supabase/supabase-js"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 export default async function ProfilePage() {
-  const supabase = await createServerClient();
+  const supabase = await createSupabaseServerClient()
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
   if (!user) {
-    return <div className="text-white p-6">Not logged in</div>;
+    return <div className="text-white p-6">Not logged in</div>
   }
 
-  // Fetch profile fields safely
+  // Fetch profile INCLUDING id
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("planname, nextbillingdate, billing_status")
+    .select("id, planname, nextbillingdate, billing_status")
     .eq("id", user.id)
-    .maybeSingle();
+    .maybeSingle()
 
   return (
     <ProfileClient
-      user={user}
+      user={user as User}
       profile={profile}
       passwordResetError={null}
       passwordResetSent={false}
     />
-  );
+  )
 }

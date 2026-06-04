@@ -1,8 +1,8 @@
-import { createServerClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 import { sendNotification } from "@/utils/notifications";
 
 export async function mirrorTrade(job: any) {
-  const supabase = await createServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const {
     follower_user_id,

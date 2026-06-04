@@ -1,128 +1,374 @@
-"use client";
+"use client"
 
-import Toggle from "@/components/ui/Toggle";
-import TimezoneSelect from "@/components/ui/TimezoneSelect";
-import { useState } from "react";
+import TimezoneSelect from "@/components/ui/TimezoneSelect"
+import Link from "next/link"
+import { useState } from "react"
 
 export default function SettingsClient() {
-  const [timezone, setTimezone] = useState("America/New_York");
-  const [emailNotifications, setEmailNotifications] = useState(true);
 
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+const [timezone, setTimezone] = useState("America/New_York")
+const [emailNotifications, setEmailNotifications] = useState(true)
 
-  const save = () => {
-    setSaving(true);
-    setSaved(false);
+const [saving, setSaving] = useState(false)
+const [saved, setSaved] = useState(false)
 
-    setTimeout(() => {
-      setSaving(false);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    }, 800);
-  };
+const save = () => {
+  setSaving(true)
+  setSaved(false)
 
-  return (
-    <div className="max-w-4xl mx-auto p-6 md:p-8 text-white space-y-10 md:space-y-12">
+  setTimeout(() => {
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }, 800)
+}
 
-      {/* PAGE HEADER */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-white/50 mt-1">
-          Customize your preferences and account experience.
-        </p>
-      </div>
+return (
 
-      {/* GENERAL PREFERENCES */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-xl space-y-8 md:space-y-10">
+<div
+className="
+w-full
+max-w-xl
+mx-auto
+px-4
+md:px-6
+lg:px-8
+space-y-10
+text-white
+"
+>
 
-        <p className="text-white/40 text-sm uppercase tracking-wider">
-          General Preferences
-        </p>
+{/* -------------------------
+   TF PAGE HEADER (UNIVERSAL)
+-------------------------- */}
+<div
+className="
+w-full
+px-1
+md:px-6
+lg:px-2
+space-y-4
+max-w-5xl
+mx-none
+"
+>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-60">
+<div
+className="
+flex
+items-center
+gap-2
+text-[13px]
+text-white/40
+pt-3
+animate-fadeIn
+"
+>
+  <Link
+  href="/dashboard"
+  className="
+  hover:text-white/70
+  transition-colors
+  cursor-pointer
+  "
+  >
+    Dashboard
+  </Link>
 
-          {/* LEFT SIDE */}
-          <div className="space-y-6">
+  <span className="text-white/30">/</span>
 
-          {/* TIMEZONE */}
-          <div className="space-y-3 md:space-y-4">
-            <label className="text-sm text-white/70 pl-0.5 mb-2 block">Timezone</label>            <TimezoneSelect value={timezone} onChange={setTimezone} />
-          </div>
+  <span className="text-white/60">
+    Settings
+  </span>
+</div>
+
+<div
+className="
+animate-fadeIn
+[animation-duration:0.6s]
+"
+>
+
+  <div
+  className="
+  flex
+  items-center
+  gap-3
+  "
+  >
+
+    <svg
+    className="
+    w-7
+    h-7
+    text-emerald-400
+    drop-shadow-[0_0_6px_rgba(0,255,180,0.35)]
+    "
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.02a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.02a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.02a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+
+    <h1
+    className="
+    text-3xl
+    font-bold
+    tracking-tight
+    text-white/90
+    drop-shadow-[0_0_10px_rgba(0,255,180,0.25)]
+    "
+    >
+      Settings
+    </h1>
+
+  </div>
+
+  <p
+  className="
+  text-white/50
+  text-sm
+  mt-2
+  tracking-wide
+  max-w-md
+  "
+  >
+    Customize your preferences and account experience.
+  </p>
+
+  <div
+  className="
+  mt-5
+  h-[2px]
+  w-24
+  bg-gradient-to-r
+  from-emerald-400/80
+  to-emerald-700/80
+  rounded-full
+  shadow-[0_0_12px_rgba(0,255,180,0.35)]
+  animate-fadeIn
+  [animation-delay:0.2s]
+  "
+  ></div>
+
+</div>
+
+</div>
+
+{/* -------------------------
+   TF SETTINGS CARD (UNIFIED)
+-------------------------- */}
+<div
+className="
+relative
+rounded-[14px]
+p-[2px]
+bg-gradient-to-br
+from-emerald-300/60
+to-emerald-700/60
+shadow-[0_0_6px_rgba(3,82,65,0.45)]
+"
+>
+
+<div
+className="
+bg-[rgb(5,5,5)]
+rounded-[12px]
+p-6
+md:p-8
+border-[3px]
+border-[rgb(3,82,65)]
+flex
+flex-col
+items-center
+space-y-10
+"
+>
+
+{/* HEADER WITH BADGE ICON */}
+<div
+className="
+flex
+items-center
+gap-2
+"
+>
+  <svg
+  className="w-4 h-4 text-emerald-400"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="2"
+  strokeLinecap="round"
+  strokeLinejoin="round"
+  >
+    <path d="M9 12l2 2 4-4" />
+    <circle cx="12" cy="12" r="10" />
+  </svg>
+
+  <span
+  className="
+  text-white/40
+  text-sm
+  uppercase
+  tracking-wider
+  "
+  >
+    General Preferences
+  </span>
+</div>
+
+{/* -------------------------
+   3 VERTICAL GRID CELLS
+-------------------------- */}
+<div
+className="
+grid
+grid-cols-1
+gap-8
+w-full
+"
+>
+
+{/* CELL 1 — TIMEZONE */}
+<div
+className="
+flex
+flex-col
+items-center
+space-y-3
+bg-[rgb(22, 24, 23)]
+rounded-xl
+p-6
+border border-zinc-700
+"
+>
+<span className="text-white/50 text-sm mb-5">
+  ⌚ Timezone
+</span>
+
+  <div className="w-[320px]">
+    <TimezoneSelect
+    value={timezone}
+    onChange={setTimezone}
+    />
+  </div>
+</div>
+
+{/* CELL 2 — EMAIL NOTIFICATIONS */}
+<div
+className="
+flex
+flex-col
+items-center
+space-y-3
+bg-[rgb(22, 24, 23)]
+rounded-xl
+p-6
+border border-zinc-700
+"
+>
+
+<span className="text-white/50 text-sm mb-5">
+  📩 Email Notifications
+</span>
 
 
-          </div>
+  <div
+  onClick={() => setEmailNotifications(!emailNotifications)}
+  className={`
+  relative
+  w-32
+  h-9
+  rounded-full
+  cursor-pointer
+  transition-all
+  duration-300
+  ${emailNotifications
+    ? "bg-emerald-500/60 shadow-[0_0_12px_rgba(16,185,129,0.6)]"
+    : "bg-zinc-600/60 shadow-[0_0_12px_rgba(113,113,122,0.6)]"
+  }
+  `}
+  >
+    <div
+    className={`
+    absolute
+    top-1
+    left-1
+    h-7
+    w-7
+    rounded-full
+    bg-white
+    shadow-md
+    transition-all
+    duration-300
+    ${emailNotifications
+      ? "translate-x-20 shadow-[0_0_12px_rgba(16,185,129,0.6)]"
+      : "shadow-[0_0_12px_rgba(113,113,122,0.6)]"
+    }
+    `}
+    ></div>
+  </div>
 
-          {/* RIGHT SIDE */}
-          <div className="space-y-6">
+</div>
 
-            {/* EMAIL NOTIFICATIONS */}
-            <div className="flex items-center justify-between">
-              <span className="text-white/90">Email Notifications</span>
-              <Toggle
-                defaultOn={emailNotifications}
-                onChange={setEmailNotifications}
-              />
-            </div>
+{/* CELL 3 — SAVE BUTTON */}
+<div
+className="
+flex
+flex-col
+items-center
+space-y-3
+bg-[rgb(22, 24, 23)]
+rounded-xl
+p-6
+border border-zinc-700
+"
+>
 
-          </div>
-        </div>
-      </div>
+  <button
+  onClick={save}
+  disabled={saving}
+  className="
+  relative
+  flex
+  items-center
+  justify-center
+  w-[150px]
+  px-[15px]
+  py-[15px]
+  rounded-[6px]
+  text-[14px]
+  font-semibold
+  text-[rgb(225,254,234)]
+  bg-[rgb(3,82,65)]
+  shadow-[0_0_34px_rgba(3,82,65,0.45)]
+  border-[5px]
+  border-[rgb(3,82,65)]
+  bg-clip-padding
+  hover:bg-[rgb(4,100,80)]
+  transition
+  disabled:opacity-50
+  "
+  >
+    {saving ? "Saving…" : saved ? "Saved ✓" : "Save Changes"}
+  </button>
 
-      {/* BILLING / SUBSCRIPTION SECTION */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-xl space-y-8 md:space-y-10 mb-20">
+</div>
 
-        <p className="text-white/40 text-sm uppercase tracking-wider">
-          Billing & Subscription
-        </p>
+</div>
 
-        <div className="space-y-6">
+</div>
 
-          {/* CURRENT PLAN */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/90 font-medium">Current Plan</p>
-              <p className="text-white/50 text-sm">Pro Monthly</p>
-            </div>
+</div>
 
-            <span className="px-3 py-1 rounded-lg bg-green-500/20 text-green-400 text-sm">
-              Active
-            </span>
-          </div>
+</div>
 
-          {/* RENEWAL DATE */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/90 font-medium">Next Renewal</p>
-              <p className="text-white/50 text-sm">May 28, 2026</p>
-            </div>
-          </div>
+)
 
-          {/* MANAGE BILLING BUTTON */}
-          <div className="pt-2">
-            <form action="/api/billing-portal" method="POST">
-              <button
-                type="submit"
-                className="px-5 py-2 rounded-lg bg-white text-black font-semibold hover:bg-white/90 transition"
-              >
-                Manage Billing
-              </button>
-            </form>
-          </div>
-
-        </div>
-      </div>
-
-      {/* STICKY SAVE BAR */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black/40 backdrop-blur-xl border-t border-white/10 p-4 flex justify-center">
-        <button
-          onClick={save}
-          disabled={saving}
-          className="px-6 py-3 rounded-lg bg-white text-black font-semibold hover:bg-white/90 transition disabled:opacity-50"
-        >
-          {saving ? "Saving…" : saved ? "Saved ✓" : "Save Changes"}
-        </button>
-      </div>
-    </div>
-  );
 }
