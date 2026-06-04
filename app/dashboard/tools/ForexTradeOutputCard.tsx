@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
 import GTCard from "@/components/ui/GTCard";
 
 type Trade = {
@@ -23,7 +22,16 @@ export default function TradeOutput() {
     stop: 0,
   });
 
-  const updateTrade = (t: Trade) => setData(t);
+  // 🔥 Poll the API every 1 second
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const res = await fetch("/api/trade");
+      const json = await res.json();
+      if (json) setData(json);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const getSideColor = () => {
     if (data.side === "long") return "text-emerald-400 drop-shadow-[0_0_6px_rgba(0,255,180,0.45)]";

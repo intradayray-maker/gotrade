@@ -1,1 +1,5 @@
-the outer card borders look great but i need the inner boarders to be very thin
+it not ready on vercel.
+
+i need now run webhook tradingview..
+
+do i have to get the gotrade.one domain now
