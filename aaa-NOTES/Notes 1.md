@@ -1,10 +1,40 @@
-Rewrite the React JSX for this combined cell
+does this sound better?
 
-but we just need the line breaks at the correct moment.. all centered
+Your Personal Ai Forex Trading Assistant
 
-⚠️ NEWS WAS TODAY 
-Occurred at 6:43 PM 
-next event: Mon, Jul 9 at 6 PM
+instead of :
 
 
-all, the font colors need to make sense so it all flows
+Forex Tools
+
+
+if so then format correctly to put trading in the ai theme
+
+center text
+
+// app/dashboard/page.tsx
+
+import ForexAiCard from "./tools/ForexAiCard";
+import ForexNewsCard from "./tools/ForexNewsCard";
+import ForexTradeOutputCard from "./tools/ForexTradeOutputCard";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function DashboardPage() {
+  const supabase = await createSupabaseServerClient();
+  await supabase.auth.getUser(); // still required for gated dashboard, but no userId passed anywhere
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 py-6 space-y-6">
+      <h1 className="text-2xl font-semibold text-white">Forex Tools</h1>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <ForexAiCard />
+        <ForexNewsCard />
+        <ForexTradeOutputCard />
+      </div>
+    </div>
+  );
+}
