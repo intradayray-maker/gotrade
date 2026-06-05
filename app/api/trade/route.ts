@@ -1,5 +1,3 @@
-// app/api/trade/route.ts
-
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -39,12 +37,12 @@ export async function POST(req: Request) {
     }
 
     // 2) TRADE ALERT HANDLER
-    const { ticker, side, entry, stop, tp, timestamp } = body;
+    const { ticker, side, entry, stop, tp, timestamp, user_id } = body;
 
-    const user_id = req.headers.get("x-user-id");
+    // TradingView CANNOT send headers → user_id MUST come from body
     if (!user_id) {
       return NextResponse.json(
-        { error: "Missing x-user-id header" },
+        { error: "Missing user_id in alert body" },
         { status: 400 }
       );
     }
