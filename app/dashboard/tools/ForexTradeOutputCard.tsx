@@ -1,5 +1,3 @@
-// app/dashboard/tools/ForexTradeOutputCard.tsx
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -60,14 +58,35 @@ export default function ForexTradeOutputCard() {
     navigator.clipboard.writeText(String(val));
   }
 
-  const CopyBtn = ({ val }: { val: number }) => (
-    <button
-      onClick={() => copy(val)}
-      className="ml-2 rounded-md bg-slate-700/40 px-2 py-1 text-xs text-slate-300 hover:bg-slate-600/40 hover:text-white transition"
-    >
-      Copy
-    </button>
-  );
+  // ⭐ UPDATED COPY BUTTON WITH ANIMATION
+  const CopyBtn = ({ val }: { val: number }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = async () => {
+      await navigator.clipboard.writeText(String(val));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    };
+
+    return (
+      <button
+        onClick={handleCopy}
+        className={`
+          relative ml-2 rounded-md px-2 py-1 text-xs font-medium transition-all
+          ${copied
+            ? "text-emerald-300 drop-shadow-[0_0_6px_rgba(0,255,0,0.45)] scale-105"
+            : "text-slate-300 bg-slate-700/40 hover:bg-slate-600/40 hover:text-white"
+          }
+        `}
+      >
+        {copied ? "✓ Copied!" : "Copy"}
+
+        {copied && (
+          <span className="absolute inset-0 rounded-md bg-emerald-400/20 animate-ping"></span>
+        )}
+      </button>
+    );
+  };
 
   // Load leverage + margin from AI card
   useEffect(() => {
@@ -146,8 +165,6 @@ export default function ForexTradeOutputCard() {
       };
     }
 
-    // AI card: margin = (size * entry) / leverage
-    // => size = margin * leverage / entry
     const units = (marginFromAi * leverage) / trade.entry;
     const positionValue = units * trade.entry;
 
@@ -260,7 +277,7 @@ export default function ForexTradeOutputCard() {
 
         {/* UNITS */}
         <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
-          <span className="text-slate-400">Units (OANDA):</span>
+          <span className="text-slate-400">Units:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-200 flex items-center">
             {animDerived.units ? fmtInt(animDerived.units) : "--"}
             {animDerived.units > 0 && <CopyBtn val={Math.round(animDerived.units)} />}
@@ -269,7 +286,7 @@ export default function ForexTradeOutputCard() {
 
         {/* POSITION VALUE */}
         <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
-          <span className="text-slate-400">Position Value (USD):</span>
+          <span className="text-slate-400">Trade Amount:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-200 flex items-center">
             {animDerived.position_value ? `$${fmtInt(animDerived.position_value)}` : "--"}
             {animDerived.position_value > 0 && (
