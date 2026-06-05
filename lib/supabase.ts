@@ -1,3 +1,3 @@
-"use client";
+// lib/supabase.ts
 
-export { createClient } from "@/utils/supabase/client";
+export { supabaseBrowserClient as supabase } from "@/utils/supabase/client";
