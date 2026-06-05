@@ -34,8 +34,8 @@ export default function ForexTradeOutputCard() {
     required_margin: 0,
   });
 
-  const [riskPerTrade, setRiskPerTrade] = useState<number>(0);
   const [leverage, setLeverage] = useState<number>(1);
+  const [marginFromAi, setMarginFromAi] = useState<number>(0);
 
   const [animTrade, setAnimTrade] = useState(trade);
   const [animDerived, setAnimDerived] = useState(derived);
@@ -69,15 +69,30 @@ export default function ForexTradeOutputCard() {
     </button>
   );
 
-  // Load settings (sync with AI card)
+  // Load leverage + margin from AI card
   useEffect(() => {
     try {
-      const storedRisk = localStorage.getItem("forex_dollar_risk");
       const storedLev = localStorage.getItem("forex_leverage");
+      const storedMargin = localStorage.getItem("forex_required_margin");
 
-      if (storedRisk) setRiskPerTrade(parseFloat(storedRisk));
       if (storedLev) setLeverage(parseFloat(storedLev));
+      if (storedMargin) setMarginFromAi(parseFloat(storedMargin));
     } catch {}
+  }, []);
+
+  // Sync margin from AI card every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      try {
+        const storedMargin = localStorage.getItem("forex_required_margin");
+        if (storedMargin) {
+          const m = parseFloat(storedMargin);
+          setMarginFromAi((prev) => (prev !== m ? m : prev));
+        }
+      } catch {}
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Poll trade every second
@@ -121,32 +136,32 @@ export default function ForexTradeOutputCard() {
     };
   }, []);
 
-  // Compute margin + size + position value (AI card math)
+  // Compute units + position value from AI margin
   const computeDerived = () => {
-    if (!trade.entry || !trade.stop) {
+    if (!trade.entry || marginFromAi <= 0 || leverage <= 0) {
       return {
         units: 0,
         position_value: 0,
-        required_margin: 0,
+        required_margin: marginFromAi,
       };
     }
 
-    const rd = Math.abs(trade.entry - trade.stop);
-    const sz = rd > 0 && riskPerTrade > 0 ? riskPerTrade / rd : 0;
-    const margin = leverage > 0 ? (sz * trade.entry) / leverage : 0;
-    const positionValue = sz * trade.entry;
+    // AI card: margin = (size * entry) / leverage
+    // => size = margin * leverage / entry
+    const units = (marginFromAi * leverage) / trade.entry;
+    const positionValue = units * trade.entry;
 
     return {
-      units: sz,
+      units,
       position_value: positionValue,
-      required_margin: margin,
+      required_margin: marginFromAi,
     };
   };
 
-  // Instant update when trade changes
+  // Instant update when trade or margin changes
   useEffect(() => {
     setDerived(computeDerived());
-  }, [trade, riskPerTrade, leverage]);
+  }, [trade, marginFromAi, leverage]);
 
   // Heartbeat refresh every 60 seconds
   useEffect(() => {
@@ -155,7 +170,7 @@ export default function ForexTradeOutputCard() {
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [trade, riskPerTrade, leverage]);
+  }, [trade, marginFromAi, leverage]);
 
   // Animate transitions
   useEffect(() => {

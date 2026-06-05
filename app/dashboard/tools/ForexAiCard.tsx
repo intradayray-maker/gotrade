@@ -117,6 +117,11 @@ export default function ForexAiCard() {
     setRiskDistance(rd);
     setSize(sz);
     setRequiredMargin(margin);
+
+    // 🔥 Persist margin for TradeOutputCard
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("forex_required_margin", String(margin));
+    }
   }, [latestTrade, riskAmount, leverage]);
 
   // Animate margin
