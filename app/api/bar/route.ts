@@ -1,7 +1,7 @@
 // app/api/bar/route.ts
 
 import { NextResponse } from "next/server";
-import { setLatestBar } from "@/app/api/trade/route";
+import { setLatestBar } from "@/app/api/trade/store";
 
 export async function POST(req: Request) {
   try {

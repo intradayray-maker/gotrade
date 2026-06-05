@@ -1,32 +1,13 @@
-//app\api\trade\route.ts
+// app/api/trade/route.ts
 
 import { NextResponse } from "next/server";
-
-type TradeData = {
-  ticker: string;
-  side: string;
-  entry: number;
-  stop: number;
-  tp: number;
-  timestamp: string;
-};
-
-type BarData = {
-  high: number;
-  low: number;
-  updated_at: string;
-};
-
-export let latestTrade: TradeData | null = null;
-export let latestBar: BarData | null = null;
-
-export function setLatestTrade(trade: TradeData) {
-  latestTrade = trade;
-}
-
-export function setLatestBar(bar: BarData) {
-  latestBar = bar;
-}
+import {
+  latestTrade,
+  latestBar,
+  setLatestTrade,
+  setLatestBar,
+  TradeData,
+} from "./store";
 
 // ---------------------------------------------------------
 // POST — TradingView Webhook Handler (Bars + Trades)
@@ -78,13 +59,13 @@ export async function POST(req: Request) {
     setLatestTrade(trade);
 
     return NextResponse.json({ status: "trade stored" });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 }
 
 // ---------------------------------------------------------
-// GET — Return Latest Trade for UI Polling
+// GET — Return Latest Trade + Bar
 // ---------------------------------------------------------
 export async function GET() {
   return NextResponse.json({
