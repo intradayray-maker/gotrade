@@ -1,19 +1,20 @@
-i dont think we are syncing correctly.
+your format is triggering lots of errors use this format
 
-Required Margin: seems way too much for only a $10 risk
+// NEWS HELPER
+nw(y,m,d,h,mm,pair) =>
+    time > timestamp(y,m,d,h,mm) 
+     and time <= timestamp(y,m,d,h,mm) 
+     + NewsWindow*60000 and syminfo.ticker == pair
 
-positon value seems off too
+//{ 📰 NEWS FEB
 
-also color code results
+newsFeb =
 
-ticker blue glow
+// Mon Feb 2
+     nw(2026,2,2,10,0,"EURUSD")
 
-tp green glow
-576160000
-sl red glow
+// Wed Feb 4
+  or nw(2026,2,4,8,15,"EURUSD")
+  or nw(2026,2,4,10,0,"EURUSD")
 
-entry blue glow
-
-units, position value, margin should be gray or dimmed white
-
-1.15232
+//}

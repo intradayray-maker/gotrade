@@ -6,19 +6,48 @@ import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
 
 export default function ForexNewsCard() {
-  const [newsTime] = useState("8:30 AM");
-  const [newsDate] = useState("Wed Jun 3");
-  const [newsMessage] = useState(
-    "No trades before news event today. Trading resumes following event."
-  );
+  const [news, setNews] = useState({
+    headline: "No news today",
+    instructions: "No trades before news event today. Trading resumes following event.",
+    next: "None",
+  });
 
   const [session, setSession] = useState("Asian");
 
+  // ------------------------------------------------------------
+  // FETCH NEWS FROM GOTRADE (ONCE PER HOUR)
+  // ------------------------------------------------------------
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const res = await fetch("/api/trade", { cache: "no-store" });
+        if (!res.ok) return;
+
+        const json = await res.json();
+        if (!json.trade) return;
+
+        setNews({
+          headline: json.trade.news ?? "No news today",
+          instructions: json.trade.instructions ?? "",
+          next: json.trade.next_news ?? "None",
+        });
+      } catch (err) {
+        console.error("News fetch failed:", err);
+      }
+    };
+
+    fetchNews(); // initial load
+    const interval = setInterval(fetchNews, 3600_000); // once per hour
+    return () => clearInterval(interval);
+  }, []);
+
+  // ------------------------------------------------------------
+  // SESSION DETECTION (unchanged)
+  // ------------------------------------------------------------
   useEffect(() => {
     const updateSession = () => {
       const now = new Date();
 
-      // New York hour (EST/EDT)
       const nyHour = parseInt(
         now.toLocaleString("en-US", {
           hour: "numeric",
@@ -27,36 +56,30 @@ export default function ForexNewsCard() {
         })
       );
 
-      // New York weekday (0=Sunday, 6=Saturday)
       const nyDay = new Date(
         now.toLocaleString("en-US", { timeZone: "America/New_York" })
       ).getDay();
 
-      // Weekend closure
       if (nyDay === 6 || nyDay === 0) {
         setSession("Closed");
         return;
       }
 
-      // Sydney: 5 PM – 2 AM NY time
       if (nyHour >= 17 || nyHour < 2) {
         setSession("Sydney");
         return;
       }
 
-      // Tokyo: 7 PM – 4 AM NY time
       if (nyHour >= 19 || nyHour < 4) {
         setSession("Tokyo");
         return;
       }
 
-      // London: 3 AM – 8 AM NY time
       if (nyHour >= 3 && nyHour < 8) {
         setSession("London");
         return;
       }
 
-      // New York: 8 AM – 5 PM NY time
       if (nyHour >= 8 && nyHour < 17) {
         setSession("NewYork");
         return;
@@ -88,13 +111,16 @@ export default function ForexNewsCard() {
     return "Off Hours";
   };
 
-  const todayString = new Date().toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
+  // ------------------------------------------------------------
+  // PARSE NEWS HEADLINE INTO DATE + TIME
+  // Example: "High Impact News Today at 8:30AM"
+  // ------------------------------------------------------------
+  const extractTime = (headline: string) => {
+    const parts = headline.split(" at ");
+    return parts.length === 2 ? parts[1] : "";
+  };
 
-  const isToday = newsDate === todayString;
+  const newsTime = extractTime(news.headline);
 
   return (
     <GTCard className="flex h-full flex-col gap-4">
@@ -103,6 +129,8 @@ export default function ForexNewsCard() {
       </p>
 
       <div className="flex flex-1 flex-col space-y-3">
+
+        {/* Ticker */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Today's Ticker:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
@@ -110,6 +138,7 @@ export default function ForexNewsCard() {
           </span>
         </div>
 
+        {/* Price Source */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Price Source:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
@@ -117,18 +146,21 @@ export default function ForexNewsCard() {
           </span>
         </div>
 
+        {/* News Header */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
           <span className="text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
-            High Impact News Today ❗
+            {news.headline.includes("No news") ? "No High Impact News" : "High Impact News Today ❗"}
           </span>
         </div>
 
+        {/* News Time */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
           <span className="text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
-            {isToday ? "Today" : newsDate} at {newsTime}
+            {newsTime || "—"}
           </span>
         </div>
 
+        {/* Session */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Current Session:</span>
 
@@ -140,8 +172,11 @@ export default function ForexNewsCard() {
 
         <div className="flex-1" />
 
+        {/* Instructions */}
         <div className="mt-auto rounded-xl border border-emerald-500/20 p-3">
-          <p className="text-sm leading-relaxed text-slate-300">{newsMessage}</p>
+          <p className="text-sm leading-relaxed text-slate-300">
+            {news.instructions}
+          </p>
         </div>
       </div>
     </GTCard>
