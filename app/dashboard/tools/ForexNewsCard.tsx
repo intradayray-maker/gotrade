@@ -5,11 +5,7 @@
 import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
 
-type ForexNewsCardProps = {
-  userId: string | null;
-};
-
-export default function DailyAllocationCard({ userId }: ForexNewsCardProps) {
+export default function ForexNewsCard() {
   const [newsTime] = useState("8:30 AM");
   const [newsDate] = useState("Wed Jun 3");
   const [newsMessage] = useState(

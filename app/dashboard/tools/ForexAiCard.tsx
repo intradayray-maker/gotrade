@@ -1,20 +1,31 @@
+// app/dashboard/tools/ForexAiCard.tsx
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import GTSlider from "@/app/components/ui/GTSlider";
 import GTCard from "@/components/ui/GTCard";
 
-type ForexAiCardProps = {
-  userId: string | null;
+type Trade = {
+  ticker: string;
+  side: string;
+  entry: number;
+  stop: number;
+  tp: number;
 };
 
-export default function AI_VoiceAssistantCard({ userId }: ForexAiCardProps) {
+export default function ForexAiCard() {
   const [enabled, setEnabled] = useState(true);
+
   const [riskAmount, setRiskAmount] = useState(50);
   const [leverage, setLeverage] = useState(5);
 
   const [requiredMargin, setRequiredMargin] = useState(0);
   const [displayMargin, setDisplayMargin] = useState(0);
+  const [size, setSize] = useState(0);
+  const [riskDistance, setRiskDistance] = useState(0);
+
+  const [latestTrade, setLatestTrade] = useState<Trade | null>(null);
 
   const [flashColor, setFlashColor] = useState("");
   const prevMargin = useRef(0);
@@ -22,10 +33,28 @@ export default function AI_VoiceAssistantCard({ userId }: ForexAiCardProps) {
   const [status, setStatus] = useState("Listening for breakouts…");
   const [now, setNow] = useState(new Date());
 
-  // Format money: no decimals + thousands separators
   function formatMoney(n: number) {
     return Math.round(n).toLocaleString("en-US");
   }
+
+  // Load settings
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const savedRisk = window.localStorage.getItem("forex_dollar_risk");
+    const savedLeverage = window.localStorage.getItem("forex_leverage");
+
+    if (savedRisk !== null) setRiskAmount(Number(savedRisk));
+    if (savedLeverage !== null) setLeverage(Number(savedLeverage));
+  }, []);
+
+  // Save settings
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    window.localStorage.setItem("forex_dollar_risk", String(riskAmount));
+    window.localStorage.setItem("forex_leverage", String(leverage));
+  }, [riskAmount, leverage]);
 
   // Live clock
   useEffect(() => {
@@ -33,52 +62,64 @@ export default function AI_VoiceAssistantCard({ userId }: ForexAiCardProps) {
     return () => clearInterval(t);
   }, []);
 
-  // Fetch margin (shared function)
-  async function updateMargin() {
-    if (!userId) return;
+  // Poll latest trade
+  useEffect(() => {
+    let active = true;
 
-    try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-        "x-user-id": userId,
-      };
+    const fetchTrade = async () => {
+      try {
+        const res = await fetch("/api/trade", {
+          method: "GET",
+          cache: "no-store",
+        });
 
-      const res = await fetch("/api/margin", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          dollar_risk: riskAmount,
-          leverage,
-        }),
-      });
+        if (!res.ok) return;
 
-      const json = await res.json();
+        const json = await res.json();
+        if (!active || !json.trade) return;
 
-      if (typeof json.required_margin === "number") {
-        setRequiredMargin(json.required_margin);
+        const t = json.trade as Trade;
+
+        if (
+          typeof t.entry === "number" &&
+          typeof t.stop === "number" &&
+          typeof t.tp === "number"
+        ) {
+          setLatestTrade(t);
+        }
+      } catch (err) {
+        console.error("Latest trade fetch failed:", err);
       }
-    } catch (err) {
-      console.error("Margin fetch failed:", err);
+    };
+
+    fetchTrade();
+    const interval = setInterval(fetchTrade, 2000);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Compute margin + size + risk distance
+  useEffect(() => {
+    if (!latestTrade) {
+      setRequiredMargin(0);
+      setSize(0);
+      setRiskDistance(0);
+      return;
     }
-  }
 
-  // Fetch margin whenever sliders change
-  useEffect(() => {
-    updateMargin();
-  }, [riskAmount, leverage, userId]);
+    const rd = Math.abs(latestTrade.entry - latestTrade.stop);
+    const sz = rd > 0 ? riskAmount / rd : 0;
+    const margin = leverage > 0 ? (sz * latestTrade.entry) / leverage : 0;
 
-  // Continuous polling (updates when new bars arrive)
-  useEffect(() => {
-    if (!userId) return;
+    setRiskDistance(rd);
+    setSize(sz);
+    setRequiredMargin(margin);
+  }, [latestTrade, riskAmount, leverage]);
 
-    const interval = setInterval(() => {
-      updateMargin();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [userId, riskAmount, leverage]);
-
-  // Animate margin changes
+  // Animate margin
   useEffect(() => {
     const oldVal = prevMargin.current;
     const newVal = requiredMargin;
@@ -101,30 +142,6 @@ export default function AI_VoiceAssistantCard({ userId }: ForexAiCardProps) {
       prevMargin.current = newVal;
     }
   }, [requiredMargin]);
-
-  // Poll latest trade (unchanged)
-  useEffect(() => {
-    if (!userId) return;
-
-    const interval = setInterval(async () => {
-      try {
-        const headers: Record<string, string> = {};
-        headers["x-user-id"] = userId;
-
-        const res = await fetch("/api/trade", {
-          method: "GET",
-          headers,
-        });
-
-        const json = await res.json();
-        // TODO: wire json into other UI panels
-      } catch (err) {
-        console.error("Latest trade fetch failed:", err);
-      }
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [userId]);
 
   const toggleEnabled = () => {
     setEnabled(!enabled);
