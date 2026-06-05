@@ -9,10 +9,11 @@ also color code results
 ticker blue glow
 
 tp green glow
-
+576160000
 sl red glow
 
 entry blue glow
 
 units, position value, margin should be gray or dimmed white
 
+1.15232

@@ -1,3 +1,5 @@
+// app/dashboard/tools/ForexTradeOutputCard.tsx
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -67,7 +69,7 @@ export default function ForexTradeOutputCard() {
     </button>
   );
 
-  // Load settings
+  // Load settings (sync with AI card)
   useEffect(() => {
     try {
       const storedRisk = localStorage.getItem("forex_dollar_risk");
@@ -78,7 +80,7 @@ export default function ForexTradeOutputCard() {
     } catch {}
   }, []);
 
-  // Poll trade
+  // Poll trade every second
   useEffect(() => {
     let active = true;
 
@@ -97,16 +99,14 @@ export default function ForexTradeOutputCard() {
         const t = json.trade as Trade;
 
         if (
-          typeof t.ticker !== "string" ||
-          typeof t.side !== "string" ||
-          typeof t.entry !== "number" ||
-          typeof t.stop !== "number" ||
-          typeof t.tp !== "number"
+          typeof t.ticker === "string" &&
+          typeof t.side === "string" &&
+          typeof t.entry === "number" &&
+          typeof t.stop === "number" &&
+          typeof t.tp === "number"
         ) {
-          return;
+          setTrade(t);
         }
-
-        setTrade(t);
       } catch (err) {
         console.error("Error polling /api/trade:", err);
       }
@@ -121,39 +121,40 @@ export default function ForexTradeOutputCard() {
     };
   }, []);
 
-  // OANDA math
-  useEffect(() => {
+  // Compute margin + size + position value (AI card math)
+  const computeDerived = () => {
     if (!trade.entry || !trade.stop) {
-      setDerived({
+      return {
         units: 0,
         position_value: 0,
         required_margin: 0,
-      });
-      return;
+      };
     }
 
-    const risk_distance = Math.abs(trade.entry - trade.stop);
+    const rd = Math.abs(trade.entry - trade.stop);
+    const sz = rd > 0 && riskPerTrade > 0 ? riskPerTrade / rd : 0;
+    const margin = leverage > 0 ? (sz * trade.entry) / leverage : 0;
+    const positionValue = sz * trade.entry;
 
-    // pip value per unit
-    const pipValuePerUnit = trade.ticker.endsWith("JPY") ? 0.01 : 0.0001;
+    return {
+      units: sz,
+      position_value: positionValue,
+      required_margin: margin,
+    };
+  };
 
-    // OANDA units formula
-    const units =
-      risk_distance > 0 && riskPerTrade > 0
-        ? riskPerTrade / (pipValuePerUnit * risk_distance) / 20
-        : 0;
+  // Instant update when trade changes
+  useEffect(() => {
+    setDerived(computeDerived());
+  }, [trade, riskPerTrade, leverage]);
 
-    const position_value = units * trade.entry;
+  // Heartbeat refresh every 60 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDerived(computeDerived());
+    }, 60000);
 
-    // OANDA margin formula
-    const required_margin =
-      leverage > 0 ? (position_value / leverage) * 10 : 0;
-
-    setDerived({
-      units,
-      position_value,
-      required_margin,
-    });
+    return () => clearInterval(interval);
   }, [trade, riskPerTrade, leverage]);
 
   // Animate transitions
