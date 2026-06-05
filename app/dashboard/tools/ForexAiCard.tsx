@@ -30,39 +30,50 @@ export default function AI_VoiceAssistantCard({ userId }: ForexAiCardProps) {
     return () => clearInterval(t);
   }, []);
 
+  // Fetch margin (shared function)
+  async function updateMargin() {
+    if (!userId) return;
+
+    try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "x-user-id": userId,
+      };
+
+      const res = await fetch("/api/margin", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          dollar_risk: riskAmount,
+          leverage,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (typeof json.required_margin === "number") {
+        setRequiredMargin(json.required_margin);
+      }
+    } catch (err) {
+      console.error("Margin fetch failed:", err);
+    }
+  }
+
   // Fetch margin whenever sliders change
+  useEffect(() => {
+    updateMargin();
+  }, [riskAmount, leverage, userId]);
+
+  // Continuous polling (updates when new bars arrive)
   useEffect(() => {
     if (!userId) return;
 
-    async function updateMargin() {
-      try {
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
+    const interval = setInterval(() => {
+      updateMargin();
+    }, 5000); // every 5 seconds
 
-        if (userId) headers["x-user-id"] = userId;
-
-        const res = await fetch("/api/margin", {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            dollar_risk: riskAmount,
-            leverage,
-          }),
-        });
-
-        const json = await res.json();
-
-        if (typeof json.required_margin === "number") {
-          setRequiredMargin(json.required_margin);
-        }
-      } catch (err) {
-        console.error("Margin fetch failed:", err);
-      }
-    }
-
-    updateMargin();
-  }, [riskAmount, leverage, userId]);
+    return () => clearInterval(interval);
+  }, [userId, riskAmount, leverage]);
 
   // Animate margin changes
   useEffect(() => {
@@ -88,14 +99,14 @@ export default function AI_VoiceAssistantCard({ userId }: ForexAiCardProps) {
     }
   }, [requiredMargin]);
 
-  // Poll latest trade
+  // Poll latest trade (unchanged)
   useEffect(() => {
     if (!userId) return;
 
     const interval = setInterval(async () => {
       try {
         const headers: Record<string, string> = {};
-        if (userId) headers["x-user-id"] = userId;
+        headers["x-user-id"] = userId;
 
         const res = await fetch("/api/trade", {
           method: "GET",
@@ -119,6 +130,7 @@ export default function AI_VoiceAssistantCard({ userId }: ForexAiCardProps) {
 
   return (
     <GTCard className="flex h-full flex-col gap-4">
+
       {/* DATE + TIME */}
       <div className="grid grid-cols-2 gap-2 text-center">
         <div className="flex flex-col">
@@ -216,6 +228,7 @@ export default function AI_VoiceAssistantCard({ userId }: ForexAiCardProps) {
           ${displayMargin.toFixed(2)}
         </span>
       </div>
+
     </GTCard>
   );
 }

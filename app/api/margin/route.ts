@@ -1,5 +1,4 @@
-//app\api\margin\route.ts
-
+// app/api/margin/route.ts
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -30,16 +29,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Fetch latest bar for this user
+    // 2. Fetch the latest bar (GLOBAL — not per user)
     const { data: bar, error: barError } = await supabase
       .from("latest_bar")
       .select("high, low")
-      .eq("user_id", user_id)
+      .eq("id", 1)
       .single();
 
     if (barError || !bar) {
       return NextResponse.json(
-        { error: "No latest bar found for user" },
+        { error: "No latest bar found" },
         { status: 400 }
       );
     }
