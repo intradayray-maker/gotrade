@@ -75,7 +75,7 @@ export default function ForexNewsCard() {
     <GTCard className="flex h-full flex-col gap-4">
       {/* Header */}
       <p className="text-center text-xs uppercase tracking-wide text-slate-400">
-        Daily Risk Status
+        Daily News Status
       </p>
 
       <div className="flex flex-1 flex-col space-y-3">
@@ -90,51 +90,53 @@ export default function ForexNewsCard() {
         {/* ------------------------------------------------------------
             COMBINED NEWS CELL (all scenarios)
         ------------------------------------------------------------ */}
-        <div className="rounded-xl border border-emerald-500/20 p-3 text-center space-y-1">
+<div className="rounded-xl border border-emerald-500/20 p-3 text-center space-y-1">
 
-          {/* SCENARIO 1 — NEWS TODAY (UPCOMING) */}
-          {newsToday && countdown > 0 && (
-            <>
-              <span className="text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
-                ⚠️ NEWS TODAY
-              </span>
+  {/* SCENARIO 1 — NEWS TODAY (UPCOMING) */}
+  {newsToday && countdown > 0 && (
+    <>
+      <span className="block text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
+        ⚠️ NEWS TODAY
+      </span>
 
-              <span className="text-lg font-semibold text-slate-50">
-                at {cleanTime}
-              </span>
-            </>
-          )}
+      <span className="block text-lg font-semibold text-slate-50">
+        on {cleanTime}
+      </span>
+    </>
+  )}
 
-          {/* SCENARIO 2 — NEWS TODAY (ALREADY PASSED) */}
-          {newsToday && countdown === 0 && (
-            <>
-              <span className="text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
-                ⚠️ NEWS WAS TODAY
-              </span>
+  {/* SCENARIO 2 — NEWS TODAY (ALREADY PASSED) */}
+  {newsToday && countdown === 0 && (
+    <>
+      <span className="block text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
+        ⚠️ NEWS WAS TODAY
+      </span>
 
-              <span className="text-lg font-semibold text-slate-50">
-                Occurred at {cleanTime}
-              </span>
+      <span className="block text-lg font-semibold text-slate-50">
+        Occurred at {cleanTime}
+      </span>
 
-              <span className="text-sm text-red-300 italic">
-                next event: {nextNewsTime}
-              </span>
-            </>
-          )}
+      <span className="block text-sm text-red-300 italic">
+        next event: {nextNewsTime}
+      </span>
+    </>
+  )}
 
-          {/* SCENARIO 3 — NO NEWS TODAY */}
-          {!newsToday && (
-            <>
-              <span className="text-xl font-semibold text-emerald-400">
-                ✓ No News Today
-              </span>
+  {/* SCENARIO 3 — NO NEWS TODAY */}
+  {!newsToday && (
+    <>
+      <span className="block text-xl font-semibold text-emerald-400">
+        ✓ No News Today
+      </span>
 
-              <span className="text-sm text-slate-400 italic">
-                next: {nextNewsTime}
-              </span>
-            </>
-          )}
-        </div>
+      <span className="block text-sm text-slate-400 italic">
+        next event: {nextNewsTime}
+      </span>
+    </>
+  )}
+
+</div>
+
 
         {/* Safe / Unsafe */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
@@ -152,7 +154,7 @@ export default function ForexNewsCard() {
         {/* Countdown */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
           <span className="text-lg font-semibold text-slate-50">
-            Countdown until next news: {formatCountdown(countdown)}
+            {formatCountdown(countdown)} Until Next Event
           </span>
         </div>
 
