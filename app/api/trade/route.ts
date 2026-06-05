@@ -16,7 +16,9 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    // -----------------------------------------------------
     // BAR UPDATE
+    // -----------------------------------------------------
     if (body.type === "bar") {
       const { high, low } = body;
 
@@ -33,8 +35,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: "bar stored" });
     }
 
-    // TRADE UPDATE
-    const { ticker, side, entry, stop, tp, timestamp } = body;
+    // -----------------------------------------------------
+    // TRADE UPDATE (with news fields)
+    // -----------------------------------------------------
+    const {
+      ticker,
+      side,
+      entry,
+      stop,
+      tp,
+      timestamp,
+
+      // NEW FIELDS FROM PINE SCRIPT
+      news_today,
+      news_message,
+      next_news_time,
+    } = body;
 
     if (
       typeof ticker !== "string" ||
@@ -54,6 +70,11 @@ export async function POST(req: Request) {
       stop,
       tp,
       timestamp,
+
+      // NEW FIELDS (safe defaults)
+      news_today: Boolean(news_today),
+      news_message: news_message ?? "NO NEWS TODAY",
+      next_news_time: next_news_time ?? "None",
     };
 
     setLatestTrade(trade);

@@ -7,6 +7,17 @@ export type TradeData = {
   stop: number;
   tp: number;
   timestamp: string;
+
+  // NEW FIELDS FOR GOTRADE NEWS
+  news_today: boolean;
+  news_message: string;
+  next_news_time: string;
+};
+
+export let latestTrade: TradeData | null = null;
+
+export const setLatestTrade = (trade: TradeData) => {
+  latestTrade = trade;
 };
 
 export type BarData = {
@@ -15,13 +26,8 @@ export type BarData = {
   updated_at: string;
 };
 
-export let latestTrade: TradeData | null = null;
 export let latestBar: BarData | null = null;
 
-export function setLatestTrade(trade: TradeData) {
-  latestTrade = trade;
-}
-
-export function setLatestBar(bar: BarData) {
+export const setLatestBar = (bar: BarData) => {
   latestBar = bar;
-}
+};
