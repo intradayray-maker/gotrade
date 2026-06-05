@@ -100,7 +100,7 @@ export default function ForexNewsCard() {
       </span>
 
       <span className="block text-lg font-semibold text-slate-50">
-        on {cleanTime}
+        {cleanTime}
       </span>
     </>
   )}
@@ -138,25 +138,26 @@ export default function ForexNewsCard() {
 </div>
 
 
-        {/* Safe / Unsafe */}
-        <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
-          <span
-            className={`text-lg font-semibold ${
-              windowActive ? "text-red-400" : "text-emerald-400"
-            }`}
-          >
-            {windowActive
-              ? "⚠️ Avoid trading — news window active"
-              : "Safe to take trades"}
-          </span>
-        </div>
+{/* Safe / Unsafe */}
+<div className="rounded-xl border border-emerald-500/20 p-3 text-center">
+  {windowActive ? (
+    <span className="block text-lg font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
+      ⚠️ Avoid trading — news window active
+    </span>
+  ) : (
+    <span className="block text-lg font-semibold text-emerald-400 drop-shadow-[0_0_6px_rgba(0,255,0,0.35)]">
+      🟢 Safe to take trades
+    </span>
+  )}
+</div>
 
-        {/* Countdown */}
-        <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
-          <span className="text-lg font-semibold text-slate-50">
-            {formatCountdown(countdown)} Until Next Event
-          </span>
-        </div>
+
+{/* Countdown */}
+<div className="rounded-xl border border-emerald-500/20 p-3 text-center">
+  <span className="block text-lg font-semibold text-blue-300 drop-shadow-[0_0_6px_rgba(0,5,255,0.35)]">
+    {formatCountdown(countdown)} until next event
+  </span>
+</div>
 
         <div className="flex-1" />
 
