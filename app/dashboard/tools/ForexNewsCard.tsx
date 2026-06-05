@@ -1,53 +1,26 @@
-//app\dashboard\tools\ForexNewsCard.tsx
+// app/dashboard/tools/ForexNewsCard.tsx
 
 "use client";
 
 import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
 
-export default function ForexNewsCard() {
-  const [news, setNews] = useState({
-    today: false,
-    message: "NO NEWS TODAY",
-    nextTime: "None",
-  });
+type ForexNewsCardProps = {
+  userId: string | null;
+};
+
+export default function DailyAllocationCard({ userId }: ForexNewsCardProps) {
+  const [nextNewsTime, setNextNewsTime] = useState("None");
+  const [newsMessage, setNewsMessage] = useState("Normal trading conditions today.");
+  const [newsToday, setNewsToday] = useState(false);
 
   const [session, setSession] = useState("Asian");
 
-  // ------------------------------------------------------------
-  // FETCH NEWS FROM GOTRADE (ONCE PER HOUR)
-  // ------------------------------------------------------------
-  useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        const res = await fetch("/api/trade", { cache: "no-store" });
-        if (!res.ok) return;
-
-        const json = await res.json();
-        if (!json.trade) return;
-
-        setNews({
-          today: json.trade.news_today ?? false,
-          message: json.trade.news_message ?? "NO NEWS TODAY",
-          nextTime: json.trade.next_news_time ?? "None",
-        });
-      } catch (err) {
-        console.error("News fetch failed:", err);
-      }
-    };
-
-    fetchNews();
-    const interval = setInterval(fetchNews, 3600_000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // ------------------------------------------------------------
-  // SESSION DETECTION (unchanged)
-  // ------------------------------------------------------------
   useEffect(() => {
     const updateSession = () => {
       const now = new Date();
 
+      // New York hour (EST/EDT)
       const nyHour = parseInt(
         now.toLocaleString("en-US", {
           hour: "numeric",
@@ -56,30 +29,36 @@ export default function ForexNewsCard() {
         })
       );
 
+      // New York weekday (0=Sunday, 6=Saturday)
       const nyDay = new Date(
         now.toLocaleString("en-US", { timeZone: "America/New_York" })
       ).getDay();
 
+      // Weekend closure
       if (nyDay === 6 || nyDay === 0) {
         setSession("Closed");
         return;
       }
 
+      // Sydney: 5 PM – 2 AM NY time
       if (nyHour >= 17 || nyHour < 2) {
         setSession("Sydney");
         return;
       }
 
+      // Tokyo: 7 PM – 4 AM NY time
       if (nyHour >= 19 || nyHour < 4) {
         setSession("Tokyo");
         return;
       }
 
+      // London: 3 AM – 8 AM NY time
       if (nyHour >= 3 && nyHour < 8) {
         setSession("London");
         return;
       }
 
+      // New York: 8 AM – 5 PM NY time
       if (nyHour >= 8 && nyHour < 17) {
         setSession("NewYork");
         return;
@@ -92,6 +71,44 @@ export default function ForexNewsCard() {
     const t = setInterval(updateSession, 60000);
     return () => clearInterval(t);
   }, []);
+
+  // Fetch news info from backend (uses the new trade.* fields)
+  useEffect(() => {
+    let active = true;
+
+    const fetchNews = async () => {
+      try {
+        const res = await fetch("/api/trade", { cache: "no-store" });
+        if (!res.ok) return;
+
+        const json = await res.json();
+
+        const trade = json?.trade ?? json;
+
+        if (!trade || typeof trade !== "object") return;
+
+        if (!active) return;
+
+        const nt = typeof trade.next_news_time === "string" ? trade.next_news_time : "None";
+        const nm = typeof trade.news_message === "string" ? trade.news_message : "Normal trading conditions today.";
+        const nd = Boolean(trade.news_today === true);
+
+        setNextNewsTime(nt);
+        setNewsMessage(nm);
+        setNewsToday(nd);
+      } catch (err) {
+        console.error("Failed to fetch news from /api/trade", err);
+      }
+    };
+
+    fetchNews();
+    const interval = setInterval(fetchNews, 60000);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [userId]);
 
   const getSessionDot = () => {
     if (session === "NewYork") return <span className="text-emerald-400">●</span>;
@@ -118,8 +135,6 @@ export default function ForexNewsCard() {
       </p>
 
       <div className="flex flex-1 flex-col space-y-3">
-
-        {/* Ticker */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Today's Ticker:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
@@ -127,7 +142,6 @@ export default function ForexNewsCard() {
           </span>
         </div>
 
-        {/* Price Source */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Price Source:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
@@ -135,21 +149,18 @@ export default function ForexNewsCard() {
           </span>
         </div>
 
-        {/* News Header */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
           <span className="text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
-            {news.today ? "High Impact News Today ❗" : "No High Impact News"}
+            {newsToday ? "High Impact News Today ❗" : "No High Impact News"}
           </span>
         </div>
 
-        {/* News Time */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
           <span className="text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
-            {news.nextTime || "—"}
+            {nextNewsTime}
           </span>
         </div>
 
-        {/* Session */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Current Session:</span>
 
@@ -161,10 +172,9 @@ export default function ForexNewsCard() {
 
         <div className="flex-1" />
 
-        {/* Instructions */}
         <div className="mt-auto rounded-xl border border-emerald-500/20 p-3">
           <p className="text-sm leading-relaxed text-slate-300">
-            {news.today
+            {newsToday
               ? "No trades before news event today. Trading resumes following event."
               : "Normal trading conditions today."}
           </p>
