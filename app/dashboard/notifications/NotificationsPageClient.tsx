@@ -2,10 +2,10 @@
 
 import GTCard from "@/components/ui/GTCard";
 import { useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { supabaseBrowserClient } from "@/utils/supabase/client";
 
 export default function NotificationsPageClient() {
-  const supabase = createClient();
+  const supabase = supabaseBrowserClient;
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

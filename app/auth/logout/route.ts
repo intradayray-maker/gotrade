@@ -1,21 +1,32 @@
-import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/utils/supabase/server";
+// app/auth/logout/route.ts
 
-export async function POST(request: Request) {
-  const supabase = await createSupabaseServerClient();
+import { NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+export async function POST() {
+  // FIX: cookies() must be awaited in your environment
+  const cookieStore = await cookies();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get: (name: string) => {
+          return cookieStore.get(name)?.value;
+        },
+        set: (name: string, value: string, options: any) => {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove: (name: string, options: any) => {
+          cookieStore.set({ name, value: "", ...options });
+        },
+      },
+    }
+  );
 
   await supabase.auth.signOut();
 
-  const response = NextResponse.redirect(new URL("/login", request.url));
-
-  response.cookies.set("sb-access-token", "", {
-    expires: new Date(0),
-    path: "/",
-  });
-  response.cookies.set("sb-refresh-token", "", {
-    expires: new Date(0),
-    path: "/",
-  });
-
-  return response;
+  return NextResponse.json({ success: true });
 }
