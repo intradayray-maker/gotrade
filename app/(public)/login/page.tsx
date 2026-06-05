@@ -1,13 +1,15 @@
+// app/(public)/login/page.tsx
+
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { createClient } from "@/utils/supabase/client";
- 
+import { supabaseBrowserClient } from "@/utils/supabase/client";
+
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = supabaseBrowserClient;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

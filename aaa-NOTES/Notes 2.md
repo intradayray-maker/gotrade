@@ -1,1 +1,1 @@
-give me a prompt to continue from here in a new copilot conversation. this one is sluggish
+i never had an issue with it before why all of a sudden ...we might break something new
