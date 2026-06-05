@@ -100,7 +100,7 @@ export default function ForexNewsCard() {
       </span>
 
       <span className="block text-lg font-semibold text-slate-50">
-        {cleanTime}
+        {cleanTime} est
       </span>
     </>
   )}
@@ -113,11 +113,11 @@ export default function ForexNewsCard() {
       </span>
 
       <span className="block text-lg font-semibold text-slate-50">
-        Occurred at {cleanTime}
+        Occurred at {cleanTime} est
       </span>
 
       <span className="block text-sm text-red-300 italic">
-        next event: {nextNewsTime}
+        next event: {nextNewsTime} est
       </span>
     </>
   )}
@@ -130,7 +130,7 @@ export default function ForexNewsCard() {
       </span>
 
       <span className="block text-sm text-slate-400 italic">
-        next event: {nextNewsTime}
+        next event: {nextNewsTime} est
       </span>
     </>
   )}
