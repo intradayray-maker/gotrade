@@ -1,1 +1,1 @@
-http://localhost:3000/dashboard/profile
+Give me the latest_bar SQL

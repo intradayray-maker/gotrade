@@ -19,16 +19,45 @@ export default function AI_VoiceAssistantCard() {
   const [status, setStatus] = useState("Listening for breakouts…");
   const [now, setNow] = useState(new Date());
 
+  // TODO: Replace with real auth user ID
+  const userId = "00000000-0000-0000-0000-000000000001";
+
+  // Live clock
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  const toggleEnabled = () => {
-    setEnabled(!enabled);
-    setStatus(!enabled ? "Listening for breakouts…" : "Assistant disabled");
-  };
+  // Fetch margin whenever sliders change
+  useEffect(() => {
+    async function updateMargin() {
+      try {
+        const res = await fetch("/api/margin", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-id": userId
+          },
+          body: JSON.stringify({
+            dollar_risk: riskAmount,
+            leverage: leverage
+          })
+        });
 
+        const json = await res.json();
+
+        if (json && typeof json.required_margin === "number") {
+          setRequiredMargin(json.required_margin);
+        }
+      } catch (err) {
+        console.error("Margin fetch failed:", err);
+      }
+    }
+
+    updateMargin();
+  }, [riskAmount, leverage]);
+
+  // Animate margin changes
   useEffect(() => {
     const oldVal = prevMargin.current;
     const newVal = requiredMargin;
@@ -52,25 +81,14 @@ export default function AI_VoiceAssistantCard() {
     }
   }, [requiredMargin]);
 
-  const getCushion = (ticker: string) => {
-    const t = ticker.toUpperCase();
-
-    if (t.includes("EURUSD")) return 0.0001;
-    if (t.includes("GBPUSD")) return 0.0001;
-    if (t.includes("AUDUSD")) return 0.0001;
-    if (t.includes("NZDUSD")) return 0.0001;
-    if (t.includes("USDCAD")) return 0.0001;
-    if (t.includes("JPY")) return 0.01;
-    if (t.includes("XAU")) return 0.5;
-    if (t.includes("XAG")) return 0.05;
-    if (t.includes("BTC")) return 5.0;
-    if (t.includes("ETH")) return 1.0;
-
-    return 0.0001;
+  const toggleEnabled = () => {
+    setEnabled(!enabled);
+    setStatus(!enabled ? "Listening for breakouts…" : "Assistant disabled");
   };
 
   return (
     <GTCard className="flex h-full flex-col gap-4">
+      {/* DATE + TIME */}
       <div className="grid grid-cols-2 gap-2 text-center">
         <div className="flex flex-col">
           <span className="text-[20px] font-semibold tracking-wide text-slate-400">
@@ -92,6 +110,7 @@ export default function AI_VoiceAssistantCard() {
         </div>
       </div>
 
+      {/* TOGGLE */}
       <div
         className={`
           flex items-center justify-between rounded-xl border border-emerald-500/20 p-3 transition-all
@@ -116,6 +135,7 @@ export default function AI_VoiceAssistantCard() {
         </div>
       </div>
 
+      {/* STATUS */}
       <div className="rounded-xl border border-emerald-500/20 p-3">
         <p
           className={`
@@ -127,6 +147,7 @@ export default function AI_VoiceAssistantCard() {
         </p>
       </div>
 
+      {/* RISK SLIDER */}
       <div className="rounded-xl border border-emerald-500/20 p-4">
         <GTSlider
           title="Dollar Risk Per Trade"
@@ -139,6 +160,7 @@ export default function AI_VoiceAssistantCard() {
         />
       </div>
 
+      {/* LEVERAGE SLIDER */}
       <div className="rounded-xl border border-emerald-500/20 p-4">
         <GTSlider
           title="Set your Leverage"
@@ -150,6 +172,7 @@ export default function AI_VoiceAssistantCard() {
         />
       </div>
 
+      {/* REQUIRED MARGIN */}
       <div
         className={`
           flex items-center justify-between rounded-xl border border-emerald-500/20 p-3 transition-all duration-300

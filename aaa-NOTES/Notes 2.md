@@ -1,5 +1,7 @@
-it not ready on vercel.
+If you want, I can now generate:
 
-i need now run webhook tradingview..
-
-do i have to get the gotrade.one domain now
+• The multi‑user user_settings UI page
+• The multi‑user trade history API
+• The multi‑user trade history UI
+• The multi‑user TradingView routing logic
+Just tell me what you want next.
