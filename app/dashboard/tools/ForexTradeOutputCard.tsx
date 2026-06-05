@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
 
 type ForexTradeOutputCardProps = {
@@ -32,6 +32,22 @@ export default function ForexTradeOutputCard({ userId }: ForexTradeOutputCardPro
     risk_distance: 0,
   });
 
+  // Animated values
+  const [anim, setAnim] = useState(data);
+  const prev = useRef(data);
+
+  // Flash color
+  const [flash, setFlash] = useState("");
+
+  // Number formatter
+  function fmt(n: number, decimals = 2) {
+    return n.toLocaleString("en-US", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+  }
+
+  // Poll latest trade
   useEffect(() => {
     if (!userId) return;
 
@@ -40,7 +56,7 @@ export default function ForexTradeOutputCard({ userId }: ForexTradeOutputCardPro
     const pollTrade = async () => {
       try {
         const headers: HeadersInit = {};
-        if (userId) headers["x-user-id"] = userId;
+        headers["x-user-id"] = userId;
 
         const res = await fetch("/api/trade", {
           method: "GET",
@@ -52,13 +68,7 @@ export default function ForexTradeOutputCard({ userId }: ForexTradeOutputCardPro
 
         const json = await res.json();
 
-        if (
-          active &&
-          json &&
-          typeof json === "object" &&
-          typeof json.ticker === "string" &&
-          typeof json.side === "string"
-        ) {
+        if (active && json && typeof json === "object") {
           setData(json);
         }
       } catch (err) {
@@ -74,6 +84,55 @@ export default function ForexTradeOutputCard({ userId }: ForexTradeOutputCardPro
       clearInterval(interval);
     };
   }, [userId]);
+
+  // Animate transitions
+  useEffect(() => {
+    const oldVal = prev.current;
+    const newVal = data;
+
+    if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+      setFlash(newVal.side === "long" ? "flash-green" : "flash-red");
+      setTimeout(() => setFlash(""), 300);
+
+      const duration = 300;
+      const start = performance.now();
+
+      const animate = (time: number) => {
+        const progress = Math.min((time - start) / duration, 1);
+        const eased = progress * (2 - progress);
+
+        setAnim({
+          ticker: newVal.ticker,
+          side: newVal.side,
+          size: oldVal.size + (newVal.size - oldVal.size) * eased,
+          entry: oldVal.entry + (newVal.entry - oldVal.entry) * eased,
+          tp: oldVal.tp + (newVal.tp - oldVal.tp) * eased,
+          stop: oldVal.stop + (newVal.stop - oldVal.stop) * eased,
+          required_margin:
+            oldVal.required_margin +
+            (newVal.required_margin - oldVal.required_margin) * eased,
+          risk_distance:
+            oldVal.risk_distance +
+            (newVal.risk_distance - oldVal.risk_distance) * eased,
+        });
+
+        if (progress < 1) requestAnimationFrame(animate);
+      };
+
+      requestAnimationFrame(animate);
+      prev.current = newVal;
+    }
+  }, [data]);
+
+  // P/L calculation
+  const pnl = (anim.tp - anim.entry) * anim.size;
+
+  const pnlColor =
+    pnl > 0
+      ? "text-emerald-400 drop-shadow-[0_0_6px_rgba(0,255,180,0.45)]"
+      : pnl < 0
+      ? "text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]"
+      : "text-slate-500";
 
   const getSideColor = () => {
     if (data.side === "long")
@@ -92,10 +151,16 @@ export default function ForexTradeOutputCard({ userId }: ForexTradeOutputCardPro
       <div className="space-y-3">
 
         {/* SIDE */}
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
+        <div
+          className={`
+            flex items-center justify-between rounded-xl border border-emerald-500/20 p-3 transition-all
+            ${flash === "flash-green" ? "bg-emerald-950/30" : ""}
+            ${flash === "flash-red" ? "bg-red-950/30" : ""}
+          `}
+        >
           <span className="text-slate-400">Side:</span>
           <span className={`text-xl font-semibold capitalize tabular-nums ${getSideColor()}`}>
-            {data.side || "--"}
+            {anim.side || "--"}
           </span>
         </div>
 
@@ -103,7 +168,7 @@ export default function ForexTradeOutputCard({ userId }: ForexTradeOutputCardPro
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Ticker:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
-            {data.ticker || "--"}
+            {anim.ticker || "--"}
           </span>
         </div>
 
@@ -111,7 +176,7 @@ export default function ForexTradeOutputCard({ userId }: ForexTradeOutputCardPro
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Size:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
-            {data.size ? data.size.toFixed(2) : "--"}
+            {anim.size ? fmt(anim.size, 2) : "--"}
           </span>
         </div>
 
@@ -119,7 +184,7 @@ export default function ForexTradeOutputCard({ userId }: ForexTradeOutputCardPro
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Required Margin:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
-            {data.required_margin ? data.required_margin.toFixed(2) : "--"}
+            {anim.required_margin ? fmt(anim.required_margin, 2) : "--"}
           </span>
         </div>
 
@@ -127,7 +192,7 @@ export default function ForexTradeOutputCard({ userId }: ForexTradeOutputCardPro
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Risk Distance:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
-            {data.risk_distance ? data.risk_distance.toFixed(5) : "--"}
+            {anim.risk_distance ? fmt(anim.risk_distance, 5) : "--"}
           </span>
         </div>
 
@@ -135,7 +200,7 @@ export default function ForexTradeOutputCard({ userId }: ForexTradeOutputCardPro
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Entry Price:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
-            {data.entry || "--"}
+            {anim.entry ? fmt(anim.entry, 5) : "--"}
           </span>
         </div>
 
@@ -143,7 +208,7 @@ export default function ForexTradeOutputCard({ userId }: ForexTradeOutputCardPro
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Take Profit:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
-            {data.tp || "--"}
+            {anim.tp ? fmt(anim.tp, 5) : "--"}
           </span>
         </div>
 
@@ -151,7 +216,15 @@ export default function ForexTradeOutputCard({ userId }: ForexTradeOutputCardPro
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Stop Loss:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
-            {data.stop || "--"}
+            {anim.stop ? fmt(anim.stop, 5) : "--"}
+          </span>
+        </div>
+
+        {/* P/L */}
+        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
+          <span className="text-slate-400">P/L:</span>
+          <span className={`text-xl font-semibold tabular-nums ${pnlColor}`}>
+            {fmt(pnl, 2)}
           </span>
         </div>
 
