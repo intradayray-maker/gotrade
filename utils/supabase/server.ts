@@ -1,3 +1,5 @@
+//utils\supabase\server.ts
+
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@/types";

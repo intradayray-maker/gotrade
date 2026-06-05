@@ -1,3 +1,5 @@
+//components\Header.tsx
+// 
 import HeaderClient from "./HeaderClient";
 import type { User } from "@supabase/supabase-js";
 

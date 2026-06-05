@@ -5,27 +5,24 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { supabaseBrowserClient } from "@/utils/supabase/client";
+import { loginAction } from "./actions";
 
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = supabaseBrowserClient;
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const formData = new FormData(e.currentTarget);
+    const result = await loginAction(formData);
 
-    if (error) {
-      setError(error.message);
+    if (result.error) {
+      setError(result.error);
+      setLoading(false);
       return;
     }
 
@@ -39,46 +36,29 @@ export default function LoginPage() {
 
       <form onSubmit={handleLogin} className="space-y-4">
         <input
+          name="email"
           type="email"
           placeholder="Email"
           className="w-full p-3 rounded bg-white/10 border border-white/20"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
         />
 
         <input
+          name="password"
           type="password"
           placeholder="Password"
           className="w-full p-3 rounded bg-white/10 border border-white/20"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
         />
 
         {error && <p className="text-red-500">{error}</p>}
 
         <button
           type="submit"
+          disabled={loading}
           className="w-full bg-white text-black py-3 rounded font-semibold"
         >
-          Log In
+          {loading ? "Logging in..." : "Log In"}
         </button>
       </form>
-
-      <div className="text-center mt-4">
-        <a
-          href="/reset-password"
-          className="text-white/70 hover:text-white transition"
-        >
-          Forgot your password?
-        </a>
-      </div>
-
-      <div className="text-center mt-4 text-white/60">
-        Don’t have an account?{" "}
-        <a href="/signup" className="text-white hover:underline">
-          Sign up
-        </a>
-      </div>
     </div>
   );
 }

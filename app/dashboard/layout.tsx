@@ -1,3 +1,5 @@
+//app\dashboard\layout.tsx
+ 
 import Header from "@/components/Header";
 import { isAdminUser } from "@/utils/auth/admin";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
