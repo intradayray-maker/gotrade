@@ -71,6 +71,14 @@ export default function ForexNewsCard() {
   // Extract "Today, Jun 05 6:43PM" → "6:43PM"
   const cleanTime = nextNewsTime.replace("Today, ", "");
 
+  // ------------------------------------------------------------
+  // NEW FALLBACK LOGIC
+  // ------------------------------------------------------------
+  const noEvents =
+    nextNewsTime === "None" ||
+    nextNewsTime === "" ||
+    nextNewsTime === null;
+
   return (
     <GTCard className="flex h-full flex-col gap-4">
       {/* Header */}
@@ -90,74 +98,74 @@ export default function ForexNewsCard() {
         {/* ------------------------------------------------------------
             COMBINED NEWS CELL (all scenarios)
         ------------------------------------------------------------ */}
-<div className="rounded-xl border border-emerald-500/20 p-3 text-center space-y-1">
+        <div className="rounded-xl border border-emerald-500/20 p-3 text-center space-y-1">
 
-  {/* SCENARIO 1 — NEWS TODAY (UPCOMING) */}
-  {newsToday && countdown > 0 && (
-    <>
-      <span className="block text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
-        ⚠️ NEWS TODAY
-      </span>
+          {/* SCENARIO 1 — NEWS TODAY (UPCOMING) */}
+          {newsToday && countdown > 0 && (
+            <>
+              <span className="block text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
+                ⚠️ NEWS TODAY
+              </span>
 
-      <span className="block text-lg font-semibold text-slate-50">
-        {cleanTime} est
-      </span>
-    </>
-  )}
+              <span className="block text-lg font-semibold text-slate-50">
+                {cleanTime} est
+              </span>
+            </>
+          )}
 
-  {/* SCENARIO 2 — NEWS TODAY (ALREADY PASSED) */}
-  {newsToday && countdown === 0 && (
-    <>
-      <span className="block text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
-        ⚠️ NEWS WAS TODAY
-      </span>
+          {/* SCENARIO 2 — NEWS TODAY (ALREADY PASSED) */}
+          {newsToday && countdown === 0 && (
+            <>
+              <span className="block text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
+                ⚠️ NEWS WAS TODAY
+              </span>
 
-      <span className="block text-lg font-semibold text-slate-50">
-        Occurred at {cleanTime} est
-      </span>
+              <span className="block text-lg font-semibold text-slate-50">
+                Occurred at {cleanTime} est
+              </span>
 
-      <span className="block text-sm text-red-300 italic">
-        next event: {nextNewsTime} est
-      </span>
-    </>
-  )}
+              <span className="block text-sm text-red-300 italic">
+                {noEvents ? "No upcoming events scheduled" : `next event: ${nextNewsTime} est`}
+              </span>
+            </>
+          )}
 
-  {/* SCENARIO 3 — NO NEWS TODAY */}
-  {!newsToday && (
-    <>
-      <span className="block text-xl font-semibold text-emerald-400">
-        ✓ No News Today
-      </span>
+          {/* SCENARIO 3 — NO NEWS TODAY */}
+          {!newsToday && (
+            <>
+              <span className="block text-xl font-semibold text-emerald-400">
+                ✓ No News Today
+              </span>
 
-      <span className="block text-sm text-slate-400 italic">
-        next event: {nextNewsTime} est
-      </span>
-    </>
-  )}
+              <span className="block text-sm text-slate-400 italic">
+                {noEvents ? "No upcoming events scheduled" : `next event: ${nextNewsTime} est`}
+              </span>
+            </>
+          )}
 
-</div>
+        </div>
 
+        {/* Safe / Unsafe */}
+        <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
+          {windowActive ? (
+            <span className="block text-lg font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
+              ⚠️ Avoid trading — news window active
+            </span>
+          ) : (
+            <span className="block text-lg font-semibold text-emerald-400 drop-shadow-[0_0_6px_rgba(0,255,0,0.35)]">
+              🟢 Safe to take trades
+            </span>
+          )}
+        </div>
 
-{/* Safe / Unsafe */}
-<div className="rounded-xl border border-emerald-500/20 p-3 text-center">
-  {windowActive ? (
-    <span className="block text-lg font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
-      ⚠️ Avoid trading — news window active
-    </span>
-  ) : (
-    <span className="block text-lg font-semibold text-emerald-400 drop-shadow-[0_0_6px_rgba(0,255,0,0.35)]">
-      🟢 Safe to take trades
-    </span>
-  )}
-</div>
-
-
-{/* Countdown */}
-<div className="rounded-xl border border-emerald-500/20 p-3 text-center">
-  <span className="block text-lg font-semibold text-blue-300 drop-shadow-[0_0_6px_rgba(0,5,255,0.35)]">
-    {formatCountdown(countdown)} until next event
-  </span>
-</div>
+        {/* Countdown */}
+        <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
+          <span className="block text-lg font-semibold text-blue-300 drop-shadow-[0_0_6px_rgba(0,5,255,0.35)]">
+            {noEvents
+              ? "No upcoming events"
+              : `${formatCountdown(countdown)} until next event`}
+          </span>
+        </div>
 
         <div className="flex-1" />
 
