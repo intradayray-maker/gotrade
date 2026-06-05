@@ -10,7 +10,7 @@ import {
 } from "./store";
 
 // ---------------------------------------------------------
-// POST — TradingView Webhook Handler (Bars + Trades)
+// POST — TradingView Webhook Handler
 // ---------------------------------------------------------
 export async function POST(req: Request) {
   try {
@@ -30,57 +30,41 @@ export async function POST(req: Request) {
         high,
         low,
         updated_at: new Date().toISOString(),
+
+        news_today: Boolean(body.news_today),
+        news_message: body.news_message ?? "",
+        next_news_time: body.next_news_time ?? "None",
+
+        news_window_active: Boolean(body.news_window_active),
+        news_countdown: Number(body.news_countdown ?? 0),
       });
 
       return NextResponse.json({ status: "bar stored" });
     }
 
     // -----------------------------------------------------
-    // TRADE UPDATE (with news fields)
+    // TRADE UPDATE
     // -----------------------------------------------------
-    const {
-      ticker,
-      side,
-      entry,
-      stop,
-      tp,
-      timestamp,
-
-      // NEW FIELDS FROM PINE SCRIPT
-      news_today,
-      news_message,
-      next_news_time,
-    } = body;
-
-    if (
-      typeof ticker !== "string" ||
-      typeof side !== "string" ||
-      typeof entry !== "number" ||
-      typeof stop !== "number" ||
-      typeof tp !== "number" ||
-      typeof timestamp !== "string"
-    ) {
-      return NextResponse.json({ error: "Invalid trade data" }, { status: 400 });
-    }
-
     const trade: TradeData = {
-      ticker,
-      side,
-      entry,
-      stop,
-      tp,
-      timestamp,
+      ticker: String(body.ticker ?? ""),
+      side: String(body.side ?? ""),
+      entry: Number(body.entry ?? 0),
+      stop: Number(body.stop ?? 0),
+      tp: Number(body.tp ?? 0),
+      timestamp: String(body.timestamp ?? ""),
 
-      // NEW FIELDS (safe defaults)
-      news_today: Boolean(news_today),
-      news_message: news_message ?? "NO NEWS TODAY",
-      next_news_time: next_news_time ?? "None",
+      news_today: Boolean(body.news_today),
+      news_message: body.news_message ?? "",
+      next_news_time: body.next_news_time ?? "None",
+
+      news_window_active: Boolean(body.news_window_active),
+      news_countdown: Number(body.news_countdown ?? 0),
     };
 
     setLatestTrade(trade);
 
     return NextResponse.json({ status: "trade stored" });
-  } catch {
+  } catch (err) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 }

@@ -8,10 +8,12 @@ export type TradeData = {
   tp: number;
   timestamp: string;
 
-  // NEW FIELDS FOR GOTRADE NEWS
   news_today: boolean;
   news_message: string;
   next_news_time: string;
+
+  news_window_active: boolean;
+  news_countdown: number;
 };
 
 export let latestTrade: TradeData | null = null;
@@ -24,6 +26,13 @@ export type BarData = {
   high: number;
   low: number;
   updated_at: string;
+
+  news_today: boolean;
+  news_message: string;
+  next_news_time: string;
+
+  news_window_active: boolean;
+  news_countdown: number;
 };
 
 export let latestBar: BarData | null = null;

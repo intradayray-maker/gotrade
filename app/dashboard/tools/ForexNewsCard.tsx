@@ -5,65 +5,12 @@ import GTCard from "@/components/ui/GTCard";
 
 export default function ForexNewsCard() {
   const [nextNewsTime, setNextNewsTime] = useState("None");
-  const [newsMessage, setNewsMessage] = useState("Normal trading conditions today.");
   const [newsToday, setNewsToday] = useState(false);
-
-  const [session, setSession] = useState("Asian");
-
-  // ------------------------------------------------------------
-  // SESSION DETECTION
-  // ------------------------------------------------------------
-  useEffect(() => {
-    const updateSession = () => {
-      const now = new Date();
-
-      const nyHour = parseInt(
-        now.toLocaleString("en-US", {
-          hour: "numeric",
-          hour12: false,
-          timeZone: "America/New_York",
-        })
-      );
-
-      const nyDay = new Date(
-        now.toLocaleString("en-US", { timeZone: "America/New_York" })
-      ).getDay();
-
-      if (nyDay === 6 || nyDay === 0) {
-        setSession("Closed");
-        return;
-      }
-
-      if (nyHour >= 17 || nyHour < 2) {
-        setSession("Sydney");
-        return;
-      }
-
-      if (nyHour >= 19 || nyHour < 4) {
-        setSession("Tokyo");
-        return;
-      }
-
-      if (nyHour >= 3 && nyHour < 8) {
-        setSession("London");
-        return;
-      }
-
-      if (nyHour >= 8 && nyHour < 17) {
-        setSession("NewYork");
-        return;
-      }
-
-      setSession("OffHours");
-    };
-
-    updateSession();
-    const t = setInterval(updateSession, 60000);
-    return () => clearInterval(t);
-  }, []);
+  const [windowActive, setWindowActive] = useState(false);
+  const [countdown, setCountdown] = useState(0);
 
   // ------------------------------------------------------------
-  // FETCH NEWS FROM BACKEND (new trade.* fields)
+  // FETCH NEWS FROM BACKEND
   // ------------------------------------------------------------
   useEffect(() => {
     let active = true;
@@ -79,103 +26,85 @@ export default function ForexNewsCard() {
         if (!trade || typeof trade !== "object") return;
         if (!active) return;
 
-        const nt =
-          typeof trade.next_news_time === "string"
-            ? trade.next_news_time
-            : "None";
-
-        const nm =
-          typeof trade.news_message === "string"
-            ? trade.news_message
-            : "Normal trading conditions today.";
-
-        const nd = Boolean(trade.news_today === true);
-
-        setNextNewsTime(nt);
-        setNewsMessage(nm);
-        setNewsToday(nd);
+        setNextNewsTime(trade.next_news_time ?? "None");
+        setNewsToday(Boolean(trade.news_today));
+        setWindowActive(Boolean(trade.news_window_active));
+        setCountdown(Number(trade.news_countdown ?? 0));
       } catch (err) {
-        console.error("Failed to fetch news from /api/trade", err);
+        console.error("Failed to fetch news", err);
       }
     };
 
     fetchNews();
     const interval = setInterval(fetchNews, 60000);
-
     return () => {
       active = false;
       clearInterval(interval);
     };
-  }, []); // ← FIXED: no userId
+  }, []);
 
-  // ------------------------------------------------------------
-  // SESSION DOT + LABEL
-  // ------------------------------------------------------------
-  const getSessionDot = () => {
-    if (session === "NewYork") return <span className="text-emerald-400">●</span>;
-    if (session === "London") return <span className="text-emerald-400">●</span>;
-    if (session === "Tokyo") return <span className="text-yellow-400">●</span>;
-    if (session === "Sydney") return <span className="text-yellow-400">●</span>;
-    if (session === "Closed") return <span className="text-red-400">●</span>;
-    return <span className="text-slate-500">●</span>;
+  // Format countdown
+  const formatCountdown = (sec: number) => {
+    if (sec <= 0) return "—";
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = Math.floor(sec % 60);
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(
+      2,
+      "0"
+    )}:${String(s).padStart(2, "0")}`;
   };
 
-  const getSessionLabel = () => {
-    if (session === "NewYork") return "New York";
-    if (session === "London") return "London";
-    if (session === "Tokyo") return "Tokyo";
-    if (session === "Sydney") return "Sydney";
-    if (session === "Closed") return "Market Closed";
-    return "Off Hours";
-  };
-
-  // ------------------------------------------------------------
-  // RENDER
-  // ------------------------------------------------------------
   return (
     <GTCard className="flex h-full flex-col gap-4">
+      {/* Header */}
       <p className="text-center text-xs uppercase tracking-wide text-slate-400">
-        Daily System Info
+        Daily Risk Status
       </p>
 
       <div className="flex flex-1 flex-col space-y-3">
-        {/* Ticker */}
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
-          <span className="text-slate-400">Today's Ticker:</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-50">
-            EURUSD
-          </span>
-        </div>
-
-        {/* Price Source */}
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
-          <span className="text-slate-400">Price Source:</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-50">
-            OANDA
-          </span>
-        </div>
-
-        {/* News Header */}
+        {/* Ticker + Source */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
-          <span className="text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
-            {newsToday ? "High Impact News Today ❗" : "No High Impact News"}
+          <span className="text-lg font-semibold text-slate-50">
+            EURUSD • OANDA
           </span>
         </div>
 
-        {/* News Time */}
+        {/* News Status */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
-          <span className="text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
-            {nextNewsTime}
+          <span
+            className={`text-xl font-semibold ${
+              newsToday
+                ? "text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]"
+                : "text-emerald-400"
+            }`}
+          >
+            {newsToday ? "⚠️ NEWS TODAY" : "✓ No News Today"}
           </span>
         </div>
 
-        {/* Session */}
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
-          <span className="text-slate-400">Current Session:</span>
+        {/* Next Event */}
+        <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
+          <span className="text-lg font-semibold text-slate-50">
+            Next: {nextNewsTime}
+          </span>
+        </div>
 
-          <span className="flex items-center gap-2 text-xl font-semibold tabular-nums text-slate-50">
-            {getSessionDot()}
-            {getSessionLabel()}
+        {/* Window Active */}
+        <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
+          <span
+            className={`text-lg font-semibold ${
+              windowActive ? "text-red-400" : "text-emerald-400"
+            }`}
+          >
+            Window: {windowActive ? "ACTIVE" : "SAFE"}
+          </span>
+        </div>
+
+        {/* Countdown */}
+        <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
+          <span className="text-lg font-semibold text-slate-50">
+            Countdown: {formatCountdown(countdown)}
           </span>
         </div>
 
@@ -183,10 +112,10 @@ export default function ForexNewsCard() {
 
         {/* Instructions */}
         <div className="mt-auto rounded-xl border border-emerald-500/20 p-3">
-          <p className="text-sm leading-relaxed text-slate-300">
+          <p className="text-xs leading-relaxed text-slate-300">
             {newsToday
-              ? "No trades before news event today. Trading resumes following event."
-              : "Normal trading conditions today."}
+              ? "Exit all positions 15 minutes before news to avoid unexpected loss!"
+              : "Normal trading conditions."}
           </p>
         </div>
       </div>
