@@ -13,16 +13,9 @@ export default async function DashboardPage() {
   await supabase.auth.getUser(); // still required for gated dashboard, but no userId passed anywhere
 
   return (
-<div className="mx-auto max-w-6xl px-4 py-6 space-y-6">
+<div className="mx-auto max-w-6xl px-4 py-1 space-y-6">
 
   <div className="text-center space-y-1 pb-2">
-    <div className="flex justify-center">
-      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-400 to-blue-500 
-                      flex items-center justify-center shadow-[0_0_20px_rgba(0,200,255,0.45)]
-                      animate-float">
-        <span className="text-white text-xl font-bold">AI</span>
-      </div>
-    </div>
 
     <h1
       className="
