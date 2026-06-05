@@ -21,41 +21,47 @@ export default function DailyAllocationCard({ userId }: ForexNewsCardProps) {
   useEffect(() => {
     const updateSession = () => {
       const now = new Date();
-      const utcHour = parseInt(
+
+      // New York hour (EST/EDT)
+      const nyHour = parseInt(
         now.toLocaleString("en-US", {
           hour: "numeric",
           hour12: false,
-          timeZone: "UTC",
+          timeZone: "America/New_York",
         })
       );
 
-      const utcDay = now.getUTCDay();
+      // New York weekday (0=Sunday, 6=Saturday)
+      const nyDay = new Date(
+        now.toLocaleString("en-US", { timeZone: "America/New_York" })
+      ).getDay();
 
-      if (
-        (utcDay === 5 && utcHour >= 21) ||
-        utcDay === 6 ||
-        (utcDay === 0 && utcHour < 21)
-      ) {
+      // Weekend closure
+      if (nyDay === 6 || nyDay === 0) {
         setSession("Closed");
         return;
       }
 
-      if (utcHour >= 21 || utcHour < 6) {
+      // Sydney: 5 PM – 2 AM NY time
+      if (nyHour >= 17 || nyHour < 2) {
         setSession("Sydney");
         return;
       }
 
-      if (utcHour >= 0 && utcHour < 9) {
+      // Tokyo: 7 PM – 4 AM NY time
+      if (nyHour >= 19 || nyHour < 4) {
         setSession("Tokyo");
         return;
       }
 
-      if (utcHour >= 7 && utcHour < 16) {
+      // London: 3 AM – 8 AM NY time
+      if (nyHour >= 3 && nyHour < 8) {
         setSession("London");
         return;
       }
 
-      if (utcHour >= 12 && utcHour < 21) {
+      // New York: 8 AM – 5 PM NY time
+      if (nyHour >= 8 && nyHour < 17) {
         setSession("NewYork");
         return;
       }

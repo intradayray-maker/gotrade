@@ -1,5 +1,3 @@
-// app/dashboard/tools/ForexAiCard.tsx
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -23,6 +21,11 @@ export default function AI_VoiceAssistantCard({ userId }: ForexAiCardProps) {
 
   const [status, setStatus] = useState("Listening for breakouts…");
   const [now, setNow] = useState(new Date());
+
+  // Format money: no decimals + thousands separators
+  function formatMoney(n: number) {
+    return Math.round(n).toLocaleString("en-US");
+  }
 
   // Live clock
   useEffect(() => {
@@ -70,7 +73,7 @@ export default function AI_VoiceAssistantCard({ userId }: ForexAiCardProps) {
 
     const interval = setInterval(() => {
       updateMargin();
-    }, 5000); // every 5 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [userId, riskAmount, leverage]);
@@ -225,7 +228,7 @@ export default function AI_VoiceAssistantCard({ userId }: ForexAiCardProps) {
       >
         <span className="text-slate-400">Required Margin:</span>
         <span className="text-xl font-semibold text-slate-50 tabular-nums">
-          ${displayMargin.toFixed(2)}
+          ${formatMoney(displayMargin)}
         </span>
       </div>
 
