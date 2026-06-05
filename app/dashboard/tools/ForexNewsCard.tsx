@@ -1,10 +1,15 @@
+// app/dashboard/tools/ForexNewsCard.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
-
 import GTCard from "@/components/ui/GTCard";
 
-export default function DailyAllocationCard() {
+type ForexNewsCardProps = {
+  userId: string | null;
+};
+
+export default function DailyAllocationCard({ userId }: ForexNewsCardProps) {
   const [newsTime] = useState("8:30 AM");
   const [newsDate] = useState("Wed Jun 3");
   const [newsMessage] = useState(
@@ -13,87 +18,81 @@ export default function DailyAllocationCard() {
 
   const [session, setSession] = useState("Asian");
 
-useEffect(() => {
-  const updateSession = () => {
-    const now = new Date();
-    const utcHour = parseInt(
-      now.toLocaleString("en-US", {
-        hour: "numeric",
-        hour12: false,
-        timeZone: "UTC",
-      })
-    );
+  useEffect(() => {
+    const updateSession = () => {
+      const now = new Date();
+      const utcHour = parseInt(
+        now.toLocaleString("en-US", {
+          hour: "numeric",
+          hour12: false,
+          timeZone: "UTC",
+        })
+      );
 
-    // Weekend check (Forex closes Friday 21:00 UTC, opens Sunday 21:00 UTC)
-    const utcDay = now.getUTCDay(); // 0 = Sunday, 6 = Saturday
-    if (
-      (utcDay === 5 && utcHour >= 21) || // Friday after 21:00
-      utcDay === 6 ||                    // Saturday
-      (utcDay === 0 && utcHour < 21)     // Sunday before 21:00
-    ) {
-      setSession("Closed");
-      return;
-    }
+      const utcDay = now.getUTCDay();
 
-    // Sydney: 21:00–06:00 UTC
-    if (utcHour >= 21 || utcHour < 6) {
-      setSession("Sydney");
-      return;
-    }
+      if (
+        (utcDay === 5 && utcHour >= 21) ||
+        utcDay === 6 ||
+        (utcDay === 0 && utcHour < 21)
+      ) {
+        setSession("Closed");
+        return;
+      }
 
-    // Tokyo: 00:00–09:00 UTC
-    if (utcHour >= 0 && utcHour < 9) {
-      setSession("Tokyo");
-      return;
-    }
+      if (utcHour >= 21 || utcHour < 6) {
+        setSession("Sydney");
+        return;
+      }
 
-    // London: 07:00–16:00 UTC
-    if (utcHour >= 7 && utcHour < 16) {
-      setSession("London");
-      return;
-    }
+      if (utcHour >= 0 && utcHour < 9) {
+        setSession("Tokyo");
+        return;
+      }
 
-    // New York: 12:00–21:00 UTC
-    if (utcHour >= 12 && utcHour < 21) {
-      setSession("NewYork");
-      return;
-    }
+      if (utcHour >= 7 && utcHour < 16) {
+        setSession("London");
+        return;
+      }
 
-    // If somehow outside all windows (rare overlap gaps)
-    setSession("OffHours");
+      if (utcHour >= 12 && utcHour < 21) {
+        setSession("NewYork");
+        return;
+      }
+
+      setSession("OffHours");
+    };
+
+    updateSession();
+    const t = setInterval(updateSession, 60000);
+    return () => clearInterval(t);
+  }, []);
+
+  const getSessionDot = () => {
+    if (session === "NewYork") return <span className="text-emerald-400">●</span>;
+    if (session === "London") return <span className="text-emerald-400">●</span>;
+    if (session === "Tokyo") return <span className="text-yellow-400">●</span>;
+    if (session === "Sydney") return <span className="text-yellow-400">●</span>;
+    if (session === "Closed") return <span className="text-red-400">●</span>;
+    return <span className="text-slate-500">●</span>;
   };
 
-  updateSession();
-  const t = setInterval(updateSession, 60000);
-  return () => clearInterval(t);
-}, []);
+  const getSessionLabel = () => {
+    if (session === "NewYork") return "New York";
+    if (session === "London") return "London";
+    if (session === "Tokyo") return "Tokyo";
+    if (session === "Sydney") return "Sydney";
+    if (session === "Closed") return "Market Closed";
+    return "Off Hours";
+  };
 
+  const todayString = new Date().toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
 
-const getSessionDot = () => {
-  if (session === "NewYork") return <span className="text-emerald-400">●</span>;
-  if (session === "London") return <span className="text-emerald-400">●</span>;
-  if (session === "Tokyo") return <span className="text-yellow-400">●</span>;
-  if (session === "Sydney") return <span className="text-yellow-400">●</span>;
-  if (session === "Closed") return <span className="text-red-400">●</span>;
-  return <span className="text-slate-500">●</span>;
-};
-
-const getSessionLabel = () => {
-  if (session === "NewYork") return "New York";
-  if (session === "London") return "London";
-  if (session === "Tokyo") return "Tokyo";
-  if (session === "Sydney") return "Sydney";
-  if (session === "Closed") return "Market Closed";
-  return "Off Hours";
-};
-const todayString = new Date().toLocaleDateString("en-US", {
-  weekday: "short",
-  month: "short",
-  day: "numeric",
-});
-
-const isToday = newsDate === todayString;
-
+  const isToday = newsDate === todayString;
 
   return (
     <GTCard className="flex h-full flex-col gap-4">

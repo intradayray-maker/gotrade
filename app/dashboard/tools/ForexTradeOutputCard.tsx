@@ -3,8 +3,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSupabaseUserId } from "@/hooks/useSupabaseUserId";
 import GTCard from "@/components/ui/GTCard";
+
+type ForexTradeOutputCardProps = {
+  userId: string | null;
+};
 
 type Trade = {
   ticker: string;
@@ -17,9 +20,7 @@ type Trade = {
   risk_distance: number;
 };
 
-export default function TradeOutput() {
-  const { userId, loading } = useSupabaseUserId();
-
+export default function ForexTradeOutputCard({ userId }: ForexTradeOutputCardProps) {
   const [data, setData] = useState<Trade>({
     ticker: "",
     side: "",
@@ -32,18 +33,14 @@ export default function TradeOutput() {
   });
 
   useEffect(() => {
-    if (!userId || loading) return;
+    if (!userId) return;
 
     let active = true;
 
     const pollTrade = async () => {
       try {
-        // OPTION A — dynamic headers (TS-safe)
         const headers: HeadersInit = {};
-
-        if (userId) {
-          headers["x-user-id"] = userId;
-        }
+        if (userId) headers["x-user-id"] = userId;
 
         const res = await fetch("/api/trade", {
           method: "GET",
@@ -76,7 +73,7 @@ export default function TradeOutput() {
       active = false;
       clearInterval(interval);
     };
-  }, [userId, loading]);
+  }, [userId]);
 
   const getSideColor = () => {
     if (data.side === "long")
