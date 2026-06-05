@@ -1,17 +1,18 @@
-it works but we need to fix:
+i dont think we are syncing correctly.
 
+Required Margin: seems way too much for only a $10 risk
 
+positon value seems off too
 
-Size:
- - i took screenshot of oanda trade menu. "size" should similate the input field in oanda so that user doesnt have to think...just input the number to oanda..if its dollar amount, or just raw number not sure 
+also color code results
 
-Required Margin: 
- - is not the correct number, does not match "Required Margin: " in ai card
+ticker blue glow
 
- - also need the correct no decimal and thousands seperater just like ai card margin
+tp green glow
 
-Risk Distance:
- - get rid of it.
+sl red glow
 
+entry blue glow
 
-P/L: get rid of it
+units, position value, margin should be gray or dimmed white
+

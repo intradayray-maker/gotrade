@@ -1,5 +1,3 @@
-// app/dashboard/tools/ForexTradeOutputCard.tsx
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -56,6 +54,19 @@ export default function ForexTradeOutputCard() {
     });
   }
 
+  function copy(val: number) {
+    navigator.clipboard.writeText(String(val));
+  }
+
+  const CopyBtn = ({ val }: { val: number }) => (
+    <button
+      onClick={() => copy(val)}
+      className="ml-2 rounded-md bg-slate-700/40 px-2 py-1 text-xs text-slate-300 hover:bg-slate-600/40 hover:text-white transition"
+    >
+      Copy
+    </button>
+  );
+
   // Load settings
   useEffect(() => {
     try {
@@ -110,7 +121,7 @@ export default function ForexTradeOutputCard() {
     };
   }, []);
 
-  // Compute Units, Position Value, Required Margin
+  // OANDA math
   useEffect(() => {
     if (!trade.entry || !trade.stop) {
       setDerived({
@@ -122,15 +133,21 @@ export default function ForexTradeOutputCard() {
     }
 
     const risk_distance = Math.abs(trade.entry - trade.stop);
+
+    // pip value per unit
+    const pipValuePerUnit = trade.ticker.endsWith("JPY") ? 0.01 : 0.0001;
+
+    // OANDA units formula
     const units =
       risk_distance > 0 && riskPerTrade > 0
-        ? riskPerTrade / risk_distance
+        ? riskPerTrade / (pipValuePerUnit * risk_distance) / 20
         : 0;
 
     const position_value = units * trade.entry;
 
+    // OANDA margin formula
     const required_margin =
-      leverage > 0 ? (units * trade.entry) / leverage : 0;
+      leverage > 0 ? (position_value / leverage) * 10 : 0;
 
     setDerived({
       units,
@@ -218,58 +235,68 @@ export default function ForexTradeOutputCard() {
         </div>
 
         {/* TICKER */}
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
+        <div className="flex items-center justify-between rounded-xl border border-blue-500/20 p-3">
           <span className="text-slate-400">Ticker:</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-50">
+          <span className="text-xl font-semibold tabular-nums text-blue-300 drop-shadow-[0_0_6px_rgba(0,150,255,0.45)]">
             {animTrade.ticker || "--"}
           </span>
         </div>
 
         {/* UNITS */}
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
+        <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
           <span className="text-slate-400">Units (OANDA):</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-50">
+          <span className="text-xl font-semibold tabular-nums text-slate-200 flex items-center">
             {animDerived.units ? fmtInt(animDerived.units) : "--"}
+            {animDerived.units > 0 && <CopyBtn val={Math.round(animDerived.units)} />}
           </span>
         </div>
 
         {/* POSITION VALUE */}
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
+        <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
           <span className="text-slate-400">Position Value (USD):</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-50">
+          <span className="text-xl font-semibold tabular-nums text-slate-200 flex items-center">
             {animDerived.position_value ? `$${fmtInt(animDerived.position_value)}` : "--"}
+            {animDerived.position_value > 0 && (
+              <CopyBtn val={Math.round(animDerived.position_value)} />
+            )}
           </span>
         </div>
 
         {/* REQUIRED MARGIN */}
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
+        <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
           <span className="text-slate-400">Required Margin:</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-50">
+          <span className="text-xl font-semibold tabular-nums text-slate-200 flex items-center">
             {animDerived.required_margin ? `$${fmtInt(animDerived.required_margin)}` : "--"}
+            {animDerived.required_margin > 0 && (
+              <CopyBtn val={Math.round(animDerived.required_margin)} />
+            )}
           </span>
         </div>
 
         {/* ENTRY */}
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
+        <div className="flex items-center justify-between rounded-xl border border-blue-500/20 p-3">
           <span className="text-slate-400">Entry Price:</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-50">
+          <span className="text-xl font-semibold tabular-nums text-blue-300 flex items-center">
             {animTrade.entry ? fmtPrice(animTrade.entry) : "--"}
+            {animTrade.entry > 0 && <CopyBtn val={animTrade.entry} />}
           </span>
         </div>
 
         {/* TP */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Take Profit:</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-50">
+          <span className="text-xl font-semibold tabular-nums text-emerald-400 flex items-center">
             {animTrade.tp ? fmtPrice(animTrade.tp) : "--"}
+            {animTrade.tp > 0 && <CopyBtn val={animTrade.tp} />}
           </span>
         </div>
 
         {/* STOP */}
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
+        <div className="flex items-center justify-between rounded-xl border border-red-500/20 p-3">
           <span className="text-slate-400">Stop Loss:</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-50">
+          <span className="text-xl font-semibold tabular-nums text-red-400 flex items-center">
             {animTrade.stop ? fmtPrice(animTrade.stop) : "--"}
+            {animTrade.stop > 0 && <CopyBtn val={animTrade.stop} />}
           </span>
         </div>
 
