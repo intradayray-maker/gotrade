@@ -1,15 +1,11 @@
-import { createBrowserClient } from "@supabase/ssr";
-import type { Database } from "@/types";
+// utils/supabase/client.ts
+import { createClient } from '@supabase/supabase-js'
 
-/**
- * Browser-side Supabase client for use in Client Components.
- * ✔ Handles auth state in browser
- * ✔ Real-time subscriptions
- * ✔ Auto token refresh via cookies
- */
-export function createClient() {
-  return createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+export const supabaseBrowserClient = createClient(supabaseUrl, supabaseAnonKey, {
+ auth: {
+  persistSession: true,
+ },
+})

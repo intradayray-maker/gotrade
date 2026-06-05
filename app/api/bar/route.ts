@@ -10,13 +10,17 @@ const supabase = createClient(
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const user_id = req.headers.get("x-user-id");
+    const { searchParams } = new URL(req.url);
+    const user_id = searchParams.get("user_id");
 
     if (!user_id) {
-      return NextResponse.json({ error: "Missing x-user-id" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing user_id in query params" },
+        { status: 400 }
+      );
     }
 
+    const body = await req.json();
     const { high, low } = body;
 
     const { error } = await supabase.from("latest_bar").upsert(

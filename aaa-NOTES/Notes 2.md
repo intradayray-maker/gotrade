@@ -1,7 +1,1 @@
-If you want, I can now generate:
-
-• The multi‑user user_settings UI page
-• The multi‑user trade history API
-• The multi‑user trade history UI
-• The multi‑user TradingView routing logic
-Just tell me what you want next.
+give me a prompt to continue from here in a new copilot conversation. this one is sluggish

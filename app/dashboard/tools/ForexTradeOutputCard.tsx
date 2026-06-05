@@ -1,6 +1,9 @@
+// app/dashboard/tools/ForexTradeOutputCard.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSupabaseUserId } from "@/hooks/useSupabaseUserId";
 import GTCard from "@/components/ui/GTCard";
 
 type Trade = {
@@ -15,6 +18,8 @@ type Trade = {
 };
 
 export default function TradeOutput() {
+  const { userId, loading } = useSupabaseUserId();
+
   const [data, setData] = useState<Trade>({
     ticker: "",
     side: "",
@@ -27,20 +32,40 @@ export default function TradeOutput() {
   });
 
   useEffect(() => {
+    if (!userId || loading) return;
+
     let active = true;
 
     const pollTrade = async () => {
-      const res = await fetch("/api/trade", { cache: "no-store" });
-      const json = await res.json();
+      try {
+        // OPTION A — dynamic headers (TS-safe)
+        const headers: HeadersInit = {};
 
-      if (
-        active &&
-        json &&
-        typeof json === "object" &&
-        typeof json.ticker === "string" &&
-        typeof json.side === "string"
-      ) {
-        setData(json);
+        if (userId) {
+          headers["x-user-id"] = userId;
+        }
+
+        const res = await fetch("/api/trade", {
+          method: "GET",
+          cache: "no-store",
+          headers,
+        });
+
+        if (!res.ok) return;
+
+        const json = await res.json();
+
+        if (
+          active &&
+          json &&
+          typeof json === "object" &&
+          typeof json.ticker === "string" &&
+          typeof json.side === "string"
+        ) {
+          setData(json);
+        }
+      } catch (err) {
+        console.error("Error polling /api/trade:", err);
       }
     };
 
@@ -51,7 +76,7 @@ export default function TradeOutput() {
       active = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [userId, loading]);
 
   const getSideColor = () => {
     if (data.side === "long")
