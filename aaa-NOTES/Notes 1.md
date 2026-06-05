@@ -1,7 +1,17 @@
-where do i find this file:
+going foward always put location in file likes so:
 
-STEP 3 — Fix your UI to send the real user ID
-In your AI card, replace the placeholder:
+// app/dashboard/tools/ForexAiCard.tsx
 
-ts
-const userId = "00000000-0000-0000-0000-000000000001";
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
+import GTSlider from "@/app/components/ui/GTSlider";
+import GTCard from "@/components/ui/GTCard";
+
+type ForexAiCardProps = {
+  userId: string | null;
+};
+
+.....
+.....

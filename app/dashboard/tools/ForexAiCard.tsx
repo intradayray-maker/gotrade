@@ -1,11 +1,16 @@
+// app/dashboard/tools/ForexAiCard.tsx
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-
 import GTSlider from "@/app/components/ui/GTSlider";
 import GTCard from "@/components/ui/GTCard";
 
-export default function AI_VoiceAssistantCard() {
+type ForexAiCardProps = {
+  userId: string | null;
+};
+
+export default function AI_VoiceAssistantCard({ userId }: ForexAiCardProps) {
   const [enabled, setEnabled] = useState(true);
   const [riskAmount, setRiskAmount] = useState(50);
   const [leverage, setLeverage] = useState(5);
@@ -19,9 +24,6 @@ export default function AI_VoiceAssistantCard() {
   const [status, setStatus] = useState("Listening for breakouts…");
   const [now, setNow] = useState(new Date());
 
-  // TODO: Replace with real auth user ID
-  const userId = "00000000-0000-0000-0000-000000000001";
-
   // Live clock
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
@@ -30,23 +32,28 @@ export default function AI_VoiceAssistantCard() {
 
   // Fetch margin whenever sliders change
   useEffect(() => {
+    if (!userId) return;
+
     async function updateMargin() {
       try {
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+
+        if (userId) headers["x-user-id"] = userId;
+
         const res = await fetch("/api/margin", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-user-id": userId
-          },
+          headers,
           body: JSON.stringify({
             dollar_risk: riskAmount,
-            leverage: leverage
-          })
+            leverage,
+          }),
         });
 
         const json = await res.json();
 
-        if (json && typeof json.required_margin === "number") {
+        if (typeof json.required_margin === "number") {
           setRequiredMargin(json.required_margin);
         }
       } catch (err) {
@@ -55,7 +62,7 @@ export default function AI_VoiceAssistantCard() {
     }
 
     updateMargin();
-  }, [riskAmount, leverage]);
+  }, [riskAmount, leverage, userId]);
 
   // Animate margin changes
   useEffect(() => {
@@ -80,6 +87,30 @@ export default function AI_VoiceAssistantCard() {
       prevMargin.current = newVal;
     }
   }, [requiredMargin]);
+
+  // Poll latest trade
+  useEffect(() => {
+    if (!userId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const headers: Record<string, string> = {};
+        if (userId) headers["x-user-id"] = userId;
+
+        const res = await fetch("/api/trade", {
+          method: "GET",
+          headers,
+        });
+
+        const json = await res.json();
+        // TODO: wire json into other UI panels
+      } catch (err) {
+        console.error("Latest trade fetch failed:", err);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [userId]);
 
   const toggleEnabled = () => {
     setEnabled(!enabled);
