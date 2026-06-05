@@ -1,20 +1,7 @@
-your format is triggering lots of errors use this format
+gotrade only needs to know if there is news today or not..if so, then "message" BIG NEWS TODAY and time
 
-// NEWS HELPER
-nw(y,m,d,h,mm,pair) =>
-    time > timestamp(y,m,d,h,mm) 
-     and time <= timestamp(y,m,d,h,mm) 
-     + NewsWindow*60000 and syminfo.ticker == pair
+if not then message NO NEWS Today
 
-//{ 📰 NEWS FEB
+always show next next event
 
-newsFeb =
-
-// Mon Feb 2
-     nw(2026,2,2,10,0,"EURUSD")
-
-// Wed Feb 4
-  or nw(2026,2,4,8,15,"EURUSD")
-  or nw(2026,2,4,10,0,"EURUSD")
-
-//}
+goTrade should never know the news event name ""news_event": "CPI","

@@ -1,4 +1,4 @@
-// app/dashboard/tools/ForexNewsCard.tsx
+//app\dashboard\tools\ForexNewsCard.tsx
 
 "use client";
 
@@ -7,9 +7,9 @@ import GTCard from "@/components/ui/GTCard";
 
 export default function ForexNewsCard() {
   const [news, setNews] = useState({
-    headline: "No news today",
-    instructions: "No trades before news event today. Trading resumes following event.",
-    next: "None",
+    today: false,
+    message: "NO NEWS TODAY",
+    nextTime: "None",
   });
 
   const [session, setSession] = useState("Asian");
@@ -27,17 +27,17 @@ export default function ForexNewsCard() {
         if (!json.trade) return;
 
         setNews({
-          headline: json.trade.news ?? "No news today",
-          instructions: json.trade.instructions ?? "",
-          next: json.trade.next_news ?? "None",
+          today: json.trade.news_today ?? false,
+          message: json.trade.news_message ?? "NO NEWS TODAY",
+          nextTime: json.trade.next_news_time ?? "None",
         });
       } catch (err) {
         console.error("News fetch failed:", err);
       }
     };
 
-    fetchNews(); // initial load
-    const interval = setInterval(fetchNews, 3600_000); // once per hour
+    fetchNews();
+    const interval = setInterval(fetchNews, 3600_000);
     return () => clearInterval(interval);
   }, []);
 
@@ -111,17 +111,6 @@ export default function ForexNewsCard() {
     return "Off Hours";
   };
 
-  // ------------------------------------------------------------
-  // PARSE NEWS HEADLINE INTO DATE + TIME
-  // Example: "High Impact News Today at 8:30AM"
-  // ------------------------------------------------------------
-  const extractTime = (headline: string) => {
-    const parts = headline.split(" at ");
-    return parts.length === 2 ? parts[1] : "";
-  };
-
-  const newsTime = extractTime(news.headline);
-
   return (
     <GTCard className="flex h-full flex-col gap-4">
       <p className="text-center text-xs uppercase tracking-wide text-slate-400">
@@ -149,14 +138,14 @@ export default function ForexNewsCard() {
         {/* News Header */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
           <span className="text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
-            {news.headline.includes("No news") ? "No High Impact News" : "High Impact News Today ❗"}
+            {news.today ? "High Impact News Today ❗" : "No High Impact News"}
           </span>
         </div>
 
         {/* News Time */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
           <span className="text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
-            {newsTime || "—"}
+            {news.nextTime || "—"}
           </span>
         </div>
 
@@ -175,7 +164,9 @@ export default function ForexNewsCard() {
         {/* Instructions */}
         <div className="mt-auto rounded-xl border border-emerald-500/20 p-3">
           <p className="text-sm leading-relaxed text-slate-300">
-            {news.instructions}
+            {news.today
+              ? "No trades before news event today. Trading resumes following event."
+              : "Normal trading conditions today."}
           </p>
         </div>
       </div>
