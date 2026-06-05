@@ -43,6 +43,19 @@ export default function ForexNewsCard() {
     };
   }, []);
 
+  // ------------------------------------------------------------
+  // LIVE COUNTDOWN (ticks every second)
+  // ------------------------------------------------------------
+  useEffect(() => {
+    if (countdown <= 0) return;
+
+    const t = setInterval(() => {
+      setCountdown((c) => Math.max(0, c - 1));
+    }, 1000);
+
+    return () => clearInterval(t);
+  }, [countdown]);
+
   // Format countdown
   const formatCountdown = (sec: number) => {
     if (sec <= 0) return "—";
@@ -55,6 +68,9 @@ export default function ForexNewsCard() {
     )}:${String(s).padStart(2, "0")}`;
   };
 
+  // ------------------------------------------------------------
+  // RENDER
+  // ------------------------------------------------------------
   return (
     <GTCard className="flex h-full flex-col gap-4">
       {/* Header */}
@@ -63,6 +79,7 @@ export default function ForexNewsCard() {
       </p>
 
       <div className="flex flex-1 flex-col space-y-3">
+
         {/* Ticker + Source */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
           <span className="text-lg font-semibold text-slate-50">
@@ -70,34 +87,37 @@ export default function ForexNewsCard() {
           </span>
         </div>
 
-        {/* News Status */}
-        <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
-          <span
-            className={`text-xl font-semibold ${
-              newsToday
-                ? "text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]"
-                : "text-emerald-400"
-            }`}
-          >
-            {newsToday ? "⚠️ NEWS TODAY" : "✓ No News Today"}
-          </span>
+        {/* Combined News Cell */}
+        <div className="rounded-xl border border-emerald-500/20 p-3 text-center space-y-1">
+          {newsToday ? (
+            <>
+              <span className="text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
+                ⚠️ NEWS TODAY
+              </span>
+              <span className="text-lg font-semibold text-slate-50">
+                at {nextNewsTime.replace("Today, ", "")}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="text-xl font-semibold text-emerald-400">
+                ✓ No News Today
+              </span>
+              <span className="text-sm text-slate-400 italic">
+                next: {nextNewsTime}
+              </span>
+            </>
+          )}
         </div>
 
-        {/* Next Event */}
-        <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
-          <span className="text-lg font-semibold text-slate-50">
-            Next: {nextNewsTime}
-          </span>
-        </div>
-
-        {/* Window Active */}
+        {/* Safe / Unsafe */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
           <span
             className={`text-lg font-semibold ${
               windowActive ? "text-red-400" : "text-emerald-400"
             }`}
           >
-            Window: {windowActive ? "ACTIVE" : "SAFE"}
+            {windowActive ? "Avoid trading — news window active" : "Safe to take trades"}
           </span>
         </div>
 

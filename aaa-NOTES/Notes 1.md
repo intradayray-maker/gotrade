@@ -1,8 +1,19 @@
-Generate the updated Pine Script + backend + React card
+also, news today and Next: Today, Jun 05 6:43PM
 
-but
+, should combine 2 cells into one cell ..looks weird messaging
 
-if news: Exit all positions 15 minutes before news to avoid unexpected loss! "its ok if this part wraps...text should be smaller anyway..more of a tool tip style"
+if they share a cell then we can make it more human friendly and centered
 
+upcoming red text...
+      "⚠️ NEWS TODAY "
+          at 6:43PM
 
-And if no news: Normal trading conditions.
+past GRAY TEXT....
+      "⚠️ NEWS WAS TODAY "
+          at 6:43PM  
+      (smaller RED TEXT ITALIC) next news event Mon, jULY, 9 at 6pm    
+ 
+
+ INSTEAD OF "Window: SAFE"
+
+ say: safe to take trades
