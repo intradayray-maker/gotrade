@@ -14,9 +14,9 @@ type Trade = {
 };
 
 type Derived = {
-  size: number;
+  units: number;
+  position_value: number;
   required_margin: number;
-  risk_distance: number;
 };
 
 export default function ForexTradeOutputCard() {
@@ -29,9 +29,9 @@ export default function ForexTradeOutputCard() {
   });
 
   const [derived, setDerived] = useState<Derived>({
-    size: 0,
+    units: 0,
+    position_value: 0,
     required_margin: 0,
-    risk_distance: 0,
   });
 
   const [riskPerTrade, setRiskPerTrade] = useState<number>(0);
@@ -39,18 +39,24 @@ export default function ForexTradeOutputCard() {
 
   const [animTrade, setAnimTrade] = useState(trade);
   const [animDerived, setAnimDerived] = useState(derived);
+
   const prevTrade = useRef(trade);
   const prevDerived = useRef(derived);
 
   const [flash, setFlash] = useState("");
 
-  function fmt(n: number, decimals = 2) {
+  function fmtInt(n: number) {
+    return Math.round(n).toLocaleString("en-US");
+  }
+
+  function fmtPrice(n: number, decimals = 5) {
     return n.toLocaleString("en-US", {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     });
   }
 
+  // Load settings
   useEffect(() => {
     try {
       const storedRisk = localStorage.getItem("forex_dollar_risk");
@@ -58,11 +64,10 @@ export default function ForexTradeOutputCard() {
 
       if (storedRisk) setRiskPerTrade(parseFloat(storedRisk));
       if (storedLev) setLeverage(parseFloat(storedLev));
-    } catch {
-      // ignore
-    }
+    } catch {}
   }, []);
 
+  // Poll trade
   useEffect(() => {
     let active = true;
 
@@ -76,10 +81,7 @@ export default function ForexTradeOutputCard() {
         if (!res.ok) return;
 
         const json = await res.json();
-
-        if (!active || !json || typeof json !== "object") return;
-
-        if (!json.trade) return;
+        if (!active || !json.trade) return;
 
         const t = json.trade as Trade;
 
@@ -108,22 +110,36 @@ export default function ForexTradeOutputCard() {
     };
   }, []);
 
+  // Compute Units, Position Value, Required Margin
   useEffect(() => {
-    const risk_distance = trade.entry && trade.stop ? Math.abs(trade.entry - trade.stop) : 0;
-    const size =
-      risk_distance > 0 && riskPerTrade > 0 ? riskPerTrade / risk_distance : 0;
-    const required_margin =
-      size > 0 && trade.entry > 0 && leverage > 0
-        ? (size * trade.entry) / leverage
+    if (!trade.entry || !trade.stop) {
+      setDerived({
+        units: 0,
+        position_value: 0,
+        required_margin: 0,
+      });
+      return;
+    }
+
+    const risk_distance = Math.abs(trade.entry - trade.stop);
+    const units =
+      risk_distance > 0 && riskPerTrade > 0
+        ? riskPerTrade / risk_distance
         : 0;
 
+    const position_value = units * trade.entry;
+
+    const required_margin =
+      leverage > 0 ? (units * trade.entry) / leverage : 0;
+
     setDerived({
-      size,
+      units,
+      position_value,
       required_margin,
-      risk_distance,
     });
   }, [trade, riskPerTrade, leverage]);
 
+  // Animate transitions
   useEffect(() => {
     const oldT = prevTrade.current;
     const newT = trade;
@@ -153,13 +169,13 @@ export default function ForexTradeOutputCard() {
         });
 
         setAnimDerived({
-          size: oldD.size + (newD.size - oldD.size) * eased,
+          units: oldD.units + (newD.units - oldD.units) * eased,
+          position_value:
+            oldD.position_value +
+            (newD.position_value - oldD.position_value) * eased,
           required_margin:
             oldD.required_margin +
             (newD.required_margin - oldD.required_margin) * eased,
-          risk_distance:
-            oldD.risk_distance +
-            (newD.risk_distance - oldD.risk_distance) * eased,
         });
 
         if (progress < 1) requestAnimationFrame(animate);
@@ -170,15 +186,6 @@ export default function ForexTradeOutputCard() {
       prevDerived.current = newD;
     }
   }, [trade, derived]);
-
-  const pnl = (animTrade.tp - animTrade.entry) * animDerived.size;
-
-  const pnlColor =
-    pnl > 0
-      ? "text-emerald-400 drop-shadow-[0_0_6px_rgba(0,255,180,0.45)]"
-      : pnl < 0
-      ? "text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]"
-      : "text-slate-500";
 
   const getSideColor = () => {
     if (animTrade.side === "long")
@@ -195,6 +202,8 @@ export default function ForexTradeOutputCard() {
       </p>
 
       <div className="space-y-3">
+
+        {/* SIDE */}
         <div
           className={`
             flex items-center justify-between rounded-xl border border-emerald-500/20 p-3 transition-all
@@ -208,6 +217,7 @@ export default function ForexTradeOutputCard() {
           </span>
         </div>
 
+        {/* TICKER */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Ticker:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
@@ -215,54 +225,54 @@ export default function ForexTradeOutputCard() {
           </span>
         </div>
 
+        {/* UNITS */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
-          <span className="text-slate-400">Size:</span>
+          <span className="text-slate-400">Units (OANDA):</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
-            {animDerived.size ? fmt(animDerived.size, 2) : "--"}
+            {animDerived.units ? fmtInt(animDerived.units) : "--"}
           </span>
         </div>
 
+        {/* POSITION VALUE */}
+        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
+          <span className="text-slate-400">Position Value (USD):</span>
+          <span className="text-xl font-semibold tabular-nums text-slate-50">
+            {animDerived.position_value ? `$${fmtInt(animDerived.position_value)}` : "--"}
+          </span>
+        </div>
+
+        {/* REQUIRED MARGIN */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Required Margin:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
-            {animDerived.required_margin ? fmt(animDerived.required_margin, 2) : "--"}
+            {animDerived.required_margin ? `$${fmtInt(animDerived.required_margin)}` : "--"}
           </span>
         </div>
 
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
-          <span className="text-slate-400">Risk Distance:</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-50">
-            {animDerived.risk_distance ? fmt(animDerived.risk_distance, 5) : "--"}
-          </span>
-        </div>
-
+        {/* ENTRY */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Entry Price:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
-            {animTrade.entry ? fmt(animTrade.entry, 5) : "--"}
+            {animTrade.entry ? fmtPrice(animTrade.entry) : "--"}
           </span>
         </div>
 
+        {/* TP */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Take Profit:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
-            {animTrade.tp ? fmt(animTrade.tp, 5) : "--"}
+            {animTrade.tp ? fmtPrice(animTrade.tp) : "--"}
           </span>
         </div>
 
+        {/* STOP */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Stop Loss:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
-            {animTrade.stop ? fmt(animTrade.stop, 5) : "--"}
+            {animTrade.stop ? fmtPrice(animTrade.stop) : "--"}
           </span>
         </div>
 
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
-          <span className="text-slate-400">P/L:</span>
-          <span className={`text-xl font-semibold tabular-nums ${pnlColor}`}>
-            {fmt(pnl, 2)}
-          </span>
-        </div>
       </div>
     </GTCard>
   );
