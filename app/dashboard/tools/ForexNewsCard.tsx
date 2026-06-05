@@ -1,26 +1,22 @@
-// app/dashboard/tools/ForexNewsCard.tsx
-
 "use client";
 
 import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
 
-type ForexNewsCardProps = {
-  userId: string | null;
-};
-
-export default function DailyAllocationCard({ userId }: ForexNewsCardProps) {
+export default function ForexNewsCard() {
   const [nextNewsTime, setNextNewsTime] = useState("None");
   const [newsMessage, setNewsMessage] = useState("Normal trading conditions today.");
   const [newsToday, setNewsToday] = useState(false);
 
   const [session, setSession] = useState("Asian");
 
+  // ------------------------------------------------------------
+  // SESSION DETECTION
+  // ------------------------------------------------------------
   useEffect(() => {
     const updateSession = () => {
       const now = new Date();
 
-      // New York hour (EST/EDT)
       const nyHour = parseInt(
         now.toLocaleString("en-US", {
           hour: "numeric",
@@ -29,36 +25,30 @@ export default function DailyAllocationCard({ userId }: ForexNewsCardProps) {
         })
       );
 
-      // New York weekday (0=Sunday, 6=Saturday)
       const nyDay = new Date(
         now.toLocaleString("en-US", { timeZone: "America/New_York" })
       ).getDay();
 
-      // Weekend closure
       if (nyDay === 6 || nyDay === 0) {
         setSession("Closed");
         return;
       }
 
-      // Sydney: 5 PM – 2 AM NY time
       if (nyHour >= 17 || nyHour < 2) {
         setSession("Sydney");
         return;
       }
 
-      // Tokyo: 7 PM – 4 AM NY time
       if (nyHour >= 19 || nyHour < 4) {
         setSession("Tokyo");
         return;
       }
 
-      // London: 3 AM – 8 AM NY time
       if (nyHour >= 3 && nyHour < 8) {
         setSession("London");
         return;
       }
 
-      // New York: 8 AM – 5 PM NY time
       if (nyHour >= 8 && nyHour < 17) {
         setSession("NewYork");
         return;
@@ -72,7 +62,9 @@ export default function DailyAllocationCard({ userId }: ForexNewsCardProps) {
     return () => clearInterval(t);
   }, []);
 
-  // Fetch news info from backend (uses the new trade.* fields)
+  // ------------------------------------------------------------
+  // FETCH NEWS FROM BACKEND (new trade.* fields)
+  // ------------------------------------------------------------
   useEffect(() => {
     let active = true;
 
@@ -82,15 +74,21 @@ export default function DailyAllocationCard({ userId }: ForexNewsCardProps) {
         if (!res.ok) return;
 
         const json = await res.json();
-
         const trade = json?.trade ?? json;
 
         if (!trade || typeof trade !== "object") return;
-
         if (!active) return;
 
-        const nt = typeof trade.next_news_time === "string" ? trade.next_news_time : "None";
-        const nm = typeof trade.news_message === "string" ? trade.news_message : "Normal trading conditions today.";
+        const nt =
+          typeof trade.next_news_time === "string"
+            ? trade.next_news_time
+            : "None";
+
+        const nm =
+          typeof trade.news_message === "string"
+            ? trade.news_message
+            : "Normal trading conditions today.";
+
         const nd = Boolean(trade.news_today === true);
 
         setNextNewsTime(nt);
@@ -108,8 +106,11 @@ export default function DailyAllocationCard({ userId }: ForexNewsCardProps) {
       active = false;
       clearInterval(interval);
     };
-  }, [userId]);
+  }, []); // ← FIXED: no userId
 
+  // ------------------------------------------------------------
+  // SESSION DOT + LABEL
+  // ------------------------------------------------------------
   const getSessionDot = () => {
     if (session === "NewYork") return <span className="text-emerald-400">●</span>;
     if (session === "London") return <span className="text-emerald-400">●</span>;
@@ -128,6 +129,9 @@ export default function DailyAllocationCard({ userId }: ForexNewsCardProps) {
     return "Off Hours";
   };
 
+  // ------------------------------------------------------------
+  // RENDER
+  // ------------------------------------------------------------
   return (
     <GTCard className="flex h-full flex-col gap-4">
       <p className="text-center text-xs uppercase tracking-wide text-slate-400">
@@ -135,6 +139,7 @@ export default function DailyAllocationCard({ userId }: ForexNewsCardProps) {
       </p>
 
       <div className="flex flex-1 flex-col space-y-3">
+        {/* Ticker */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Today's Ticker:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
@@ -142,6 +147,7 @@ export default function DailyAllocationCard({ userId }: ForexNewsCardProps) {
           </span>
         </div>
 
+        {/* Price Source */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Price Source:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-50">
@@ -149,18 +155,21 @@ export default function DailyAllocationCard({ userId }: ForexNewsCardProps) {
           </span>
         </div>
 
+        {/* News Header */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
           <span className="text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
             {newsToday ? "High Impact News Today ❗" : "No High Impact News"}
           </span>
         </div>
 
+        {/* News Time */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
           <span className="text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
             {nextNewsTime}
           </span>
         </div>
 
+        {/* Session */}
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
           <span className="text-slate-400">Current Session:</span>
 
@@ -172,6 +181,7 @@ export default function DailyAllocationCard({ userId }: ForexNewsCardProps) {
 
         <div className="flex-1" />
 
+        {/* Instructions */}
         <div className="mt-auto rounded-xl border border-emerald-500/20 p-3">
           <p className="text-sm leading-relaxed text-slate-300">
             {newsToday
