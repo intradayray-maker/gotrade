@@ -10,40 +10,27 @@ const supabase = createClient(
 
 export async function POST(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const user_id = searchParams.get("user_id");
-
-    if (!user_id) {
-      return NextResponse.json(
-        { error: "Missing user_id in query params" },
-        { status: 400 }
-      );
-    }
-
     const body = await req.json();
     const { high, low } = body;
 
-    const { error } = await supabase.from("latest_bar").upsert(
+    if (typeof high !== "number" || typeof low !== "number") {
+      return NextResponse.json({ error: "Invalid bar data" }, { status: 400 });
+    }
+
+    await supabase.from("latest_bar").upsert(
       [
         {
-          user_id,
+          id: 1,
           high,
           low,
-          timestamp: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         },
       ],
-      { onConflict: "user_id" }
+      { onConflict: "id" }
     );
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
 
     return NextResponse.json({ status: "ok" });
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Unknown error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 }
