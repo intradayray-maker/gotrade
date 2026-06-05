@@ -1,13 +1,12 @@
+// app/auth/update-password/page.tsx
+
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseBrowserClient } from "@/utils/supabase/client";
 
 export default function UpdatePasswordPage() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = supabaseBrowserClient;
 
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");

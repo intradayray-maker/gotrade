@@ -1,14 +1,16 @@
+// app/(public)/signup/page.tsx
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
+import { supabaseBrowserClient } from "@/utils/supabase/client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export default function SignupPage() {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = supabaseBrowserClient;
   const pathname = usePathname();
 
   const [email, setEmail] = useState("");
@@ -50,8 +52,6 @@ export default function SignupPage() {
     <main className="min-h-screen bg-[#050509] text-white">
 
       <div className="mx-auto max-w-6xl px-6 py-20 space-y-16">
-
-
 
         {/* HEADER */}
         <header className="flex items-center justify-between py-2">
@@ -154,15 +154,10 @@ export default function SignupPage() {
 
         </header>
 
-
-
-
-
         {/* SIGNUP CONTENT */}
         <div className="max-w-md mx-auto space-y-8">
 
           <h1 className="text-3xl font-bold">Sign Up</h1>
-
 
           {/* REQUIREMENTS SECTION */}
           <section className="rounded-xl border border-white/10 bg-white/5 p-5 text-sm text-white/70 space-y-3">
@@ -188,7 +183,6 @@ export default function SignupPage() {
               <li>• Trading involves risk, including the potential loss of capital</li>
             </ul>
           </section>
-
 
           {/* SIGNUP FORM */}
           <form onSubmit={handleSignup} className="space-y-4">
@@ -218,7 +212,6 @@ export default function SignupPage() {
             </button>
           </form>
 
-
           {/* FOOTER LINKS */}
           <div className="text-center mt-4 text-white/60">
             Already have an account?{" "}
@@ -230,8 +223,6 @@ export default function SignupPage() {
         </div>
 
       </div>
-
-
 
       {/* BACK TO TOP BUTTON */}
       <button
