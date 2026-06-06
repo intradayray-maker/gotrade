@@ -6,6 +6,15 @@ import { useEffect, useRef, useState } from "react";
 import GTSlider from "@/app/components/ui/GTSlider";
 import GTCard from "@/components/ui/GTCard";
 
+import {
+  initBackgroundMusic,
+  setMusicEnabled,
+  setMusicVolume,
+  enqueueAudio,
+} from "./Ai_AudioManager";
+
+import { getVoiceClip } from "./Ai_LocalVoice";
+
 type Trade = {
   ticker: string;
   side: string;
@@ -13,6 +22,15 @@ type Trade = {
   stop: number;
   tp: number;
 };
+
+// ------------------------------------------------------------
+// NOTIFICATION SOUND
+// ------------------------------------------------------------
+function playNotification() {
+  const audio = new Audio("/notification.mp3");
+  audio.volume = 1.0;
+  audio.play().catch((err) => console.error("Audio play failed:", err));
+}
 
 export default function ForexAiCard() {
   const [enabled, setEnabled] = useState(true);
@@ -33,36 +51,70 @@ export default function ForexAiCard() {
   const [status, setStatus] = useState("Listening for breakouts…");
   const [now, setNow] = useState(new Date());
 
+  // ------------------------------------------------------------
+  // BACKGROUND MUSIC STATE
+  // ------------------------------------------------------------
+  const [musicEnabledState, setMusicEnabledState] = useState(false);
+  const [musicVolumeState, setMusicVolumeState] = useState(0.25);
+
   function formatMoney(n: number) {
     return Math.round(n).toLocaleString("en-US");
   }
 
-  // Load settings
+  // ------------------------------------------------------------
+  // LOAD SETTINGS
+  // ------------------------------------------------------------
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const savedRisk = window.localStorage.getItem("forex_dollar_risk");
     const savedLeverage = window.localStorage.getItem("forex_leverage");
 
+    const savedMusicEnabled = window.localStorage.getItem("ai_music_enabled");
+    const savedMusicVolume = window.localStorage.getItem("ai_music_volume");
+
     if (savedRisk !== null) setRiskAmount(Number(savedRisk));
     if (savedLeverage !== null) setLeverage(Number(savedLeverage));
+
+    // Init music engine
+    initBackgroundMusic();
+
+    if (savedMusicVolume !== null) {
+      const vol = Number(savedMusicVolume);
+      setMusicVolumeState(vol);
+      setMusicVolume(vol);
+    }
+
+    if (savedMusicEnabled === "true") {
+      setMusicEnabledState(true);
+      setMusicEnabled(true);
+    }
   }, []);
 
-  // Save settings
+  // ------------------------------------------------------------
+  // SAVE SETTINGS
+  // ------------------------------------------------------------
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
     window.localStorage.setItem("forex_dollar_risk", String(riskAmount));
     window.localStorage.setItem("forex_leverage", String(leverage));
   }, [riskAmount, leverage]);
 
-  // Live clock
+  useEffect(() => {
+    window.localStorage.setItem("ai_music_enabled", String(musicEnabledState));
+    window.localStorage.setItem("ai_music_volume", String(musicVolumeState));
+  }, [musicEnabledState, musicVolumeState]);
+
+  // ------------------------------------------------------------
+  // LIVE CLOCK
+  // ------------------------------------------------------------
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  // Poll latest trade
+  // ------------------------------------------------------------
+  // POLL LATEST TRADE
+  // ------------------------------------------------------------
   useEffect(() => {
     let active = true;
 
@@ -101,7 +153,44 @@ export default function ForexAiCard() {
     };
   }, []);
 
-  // Compute margin + size + risk distance
+  // ------------------------------------------------------------
+  // NEW TRADE DETECTION + VOICE + DUCKING
+  // ------------------------------------------------------------
+  const prevTradeRef = useRef<Trade | null>(null);
+
+  useEffect(() => {
+    if (!latestTrade) return;
+
+    const prev = prevTradeRef.current;
+
+    // First trade ever → no sound
+    if (!prev) {
+      prevTradeRef.current = latestTrade;
+      return;
+    }
+
+    const isNew =
+      prev.side !== latestTrade.side || prev.entry !== latestTrade.entry;
+
+    if (isNew) {
+      playNotification();
+
+      const clip =
+        latestTrade.side === "long"
+          ? getVoiceClip("long")
+          : latestTrade.side === "short"
+          ? getVoiceClip("short")
+          : getVoiceClip("flat");
+
+      enqueueAudio(clip);
+    }
+
+    prevTradeRef.current = latestTrade;
+  }, [latestTrade]);
+
+  // ------------------------------------------------------------
+  // MARGIN CALCULATION
+  // ------------------------------------------------------------
   useEffect(() => {
     if (!latestTrade) {
       setRequiredMargin(0);
@@ -118,13 +207,14 @@ export default function ForexAiCard() {
     setSize(sz);
     setRequiredMargin(margin);
 
-    // 🔥 Persist margin for TradeOutputCard
     if (typeof window !== "undefined") {
       window.localStorage.setItem("forex_required_margin", String(margin));
     }
   }, [latestTrade, riskAmount, leverage]);
 
-  // Animate margin
+  // ------------------------------------------------------------
+  // MARGIN ANIMATION
+  // ------------------------------------------------------------
   useEffect(() => {
     const oldVal = prevMargin.current;
     const newVal = requiredMargin;
@@ -148,11 +238,24 @@ export default function ForexAiCard() {
     }
   }, [requiredMargin]);
 
-  const toggleEnabled = () => {
-    setEnabled(!enabled);
-    setStatus(!enabled ? "Listening for breakouts…" : "Assistant disabled");
+  // ------------------------------------------------------------
+  // MUSIC TOGGLE + VOLUME
+  // ------------------------------------------------------------
+  const toggleMusic = () => {
+    const next = !musicEnabledState;
+    setMusicEnabledState(next);
+    setMusicEnabled(next);
   };
 
+  const handleMusicVolume = (v: number) => {
+    const vol = v / 100;
+    setMusicVolumeState(vol);
+    setMusicVolume(vol);
+  };
+
+  // ------------------------------------------------------------
+  // UI
+  // ------------------------------------------------------------
   return (
     <GTCard className="flex h-full flex-col gap-4">
 
@@ -178,7 +281,7 @@ export default function ForexAiCard() {
         </div>
       </div>
 
-      {/* TOGGLE */}
+      {/* AI VOICE ASSISTANT TOGGLE */}
       <div
         className={`
           flex items-center justify-between rounded-xl border border-emerald-500/20 p-3 transition-all
@@ -188,10 +291,16 @@ export default function ForexAiCard() {
         <h3 className="text-xs tracking-wide text-slate-400">AI VOICE ASSISTANT</h3>
 
         <div
-          onClick={toggleEnabled}
+          onClick={() => {
+            const next = !enabled;
+            setEnabled(next);
+            setStatus(next ? "Listening for breakouts…" : "Assistant disabled");
+          }}
           className={`
             flex h-6 w-11 cursor-pointer items-center rounded-full transition-all
-            ${enabled ? "bg-emerald-500 shadow-[0_0_6px_rgba(0,255,180,0.35)]" : "bg-slate-700"}
+            ${enabled
+              ? "bg-emerald-500 shadow-[0_0_6px_rgba(0,255,180,0.35)]"
+              : "bg-slate-700"}
           `}
         >
           <div
@@ -208,7 +317,9 @@ export default function ForexAiCard() {
         <p
           className={`
             text-sm tracking-wide transition-all
-            ${enabled ? "text-emerald-300 drop-shadow-[0_0_6px_rgba(0,255,180,0.35)]" : "text-slate-500"}
+            ${enabled
+              ? "text-emerald-300 drop-shadow-[0_0_6px_rgba(0,255,180,0.35)]"
+              : "text-slate-500"}
           `}
         >
           {status}

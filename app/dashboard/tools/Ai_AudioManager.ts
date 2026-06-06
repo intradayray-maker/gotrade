@@ -1,142 +1,159 @@
+// app/dashboard/tools/Ai_AudioManager.ts
+
 // ------------------------------------------------------------
-// AI AUDIO MANAGER
-// Handles:
-// - Background ambient music
-// - Fade in/out
-// - Voice playback (MP3 alerts)
-// - Auto-ducking (music lowers during voice)
-// - User volume persistence
+// GLOBAL AUDIO STATE
 // ------------------------------------------------------------
+let queue: Array<HTMLAudioElement> = []
+let isPlaying = false
 
-type AudioManagerConfig = {
-  musicVolume: number;      // default ambient volume
-  duckVolume: number;       // volume during voice playback
-  fadeSpeed: number;        // ms per fade step
-  musicSrc: string;         // ambient track
-};
+let music: HTMLAudioElement | null = null
+let musicEnabled = true
+let musicVolume = 0.35        // default
+let targetMusicVolume = 0.35  // used for fades
+let ducked = false
 
-const DEFAULT_CONFIG: AudioManagerConfig = {
-  musicVolume: 0.25,
-  duckVolume: 0.05,
-  fadeSpeed: 40,
-  musicSrc: "/audio/ambient_lowhum.mp3"
-};
+// ------------------------------------------------------------
+// INIT MUSIC ENGINE
+// ------------------------------------------------------------
+export function initBackgroundMusic() {
+  if (music) return
 
-class AiAudioManager {
-  private static instance: AiAudioManager;
+  music = new Audio("/voice/bgm/bgm.mp3")
+  music.loop = true
+  music.volume = 0
 
-  private music: HTMLAudioElement | null = null;
-  private voice: HTMLAudioElement | null = null;
+  const savedEnabled = localStorage.getItem("ai_music_enabled")
+  const savedVolume = localStorage.getItem("ai_music_volume")
 
-  private config: AudioManagerConfig = DEFAULT_CONFIG;
-  private isMusicEnabled = false;
-  private isVoicePlaying = false;
-
-  // ------------------------------------------------------------
-  // SINGLETON
-  // ------------------------------------------------------------
-  static getInstance() {
-    if (!AiAudioManager.instance) {
-      AiAudioManager.instance = new AiAudioManager();
-    }
-    return AiAudioManager.instance;
+  if (savedEnabled !== null) {
+    musicEnabled = savedEnabled === "true"
   }
 
-  // ------------------------------------------------------------
-  // INIT MUSIC
-  // ------------------------------------------------------------
-  initMusic() {
-    if (this.music) return;
-
-    this.music = new Audio(this.config.musicSrc);
-    this.music.loop = true;
-    this.music.volume = 0;
+  if (savedVolume !== null) {
+    musicVolume = parseFloat(savedVolume)
+    targetMusicVolume = musicVolume
   }
 
-  // ------------------------------------------------------------
-  // ENABLE / DISABLE MUSIC
-  // ------------------------------------------------------------
-  enableMusic() {
-    this.initMusic();
-    this.isMusicEnabled = true;
-    this.fadeTo(this.config.musicVolume);
-    this.music?.play();
-  }
-
-  disableMusic() {
-    this.isMusicEnabled = false;
-    this.fadeTo(0);
-  }
-
-  // ------------------------------------------------------------
-  // FADE LOGIC
-  // ------------------------------------------------------------
-  private fadeTo(targetVolume: number) {
-    if (!this.music) return;
-
-    const step = () => {
-      if (!this.music) return;
-
-      const diff = targetVolume - this.music.volume;
-      if (Math.abs(diff) < 0.01) {
-        this.music.volume = targetVolume;
-        return;
-      }
-
-      this.music.volume += diff * 0.1;
-      setTimeout(step, this.config.fadeSpeed);
-    };
-
-    step();
-  }
-
-  // ------------------------------------------------------------
-  // PLAY VOICE (MP3 ALERT)
-  // ------------------------------------------------------------
-  async playVoice(src: string) {
-    // Stop previous voice
-    if (this.voice) {
-      this.voice.pause();
-      this.voice.currentTime = 0;
-    }
-
-    this.voice = new Audio(src);
-    this.isVoicePlaying = true;
-
-    // Duck background music
-    if (this.isMusicEnabled) {
-      this.fadeTo(this.config.duckVolume);
-    }
-
-    await this.voice.play();
-
-    this.voice.onended = () => {
-      this.isVoicePlaying = false;
-
-      // Restore music volume
-      if (this.isMusicEnabled) {
-        this.fadeTo(this.config.musicVolume);
-      }
-    };
-  }
-
-  // ------------------------------------------------------------
-  // SET USER VOLUME
-  // ------------------------------------------------------------
-  setMusicVolume(vol: number) {
-    this.config.musicVolume = vol;
-    if (this.isMusicEnabled) {
-      this.fadeTo(vol);
-    }
-    localStorage.setItem("ai_music_volume", String(vol));
-  }
-
-  loadUserVolume() {
-    const saved = localStorage.getItem("ai_music_volume");
-    if (saved) {
-      this.config.musicVolume = Number(saved);
-    }
+  if (musicEnabled) {
+    music.play().catch(() => {})
+    fadeMusicIn()
   }
 }
 
-export const AudioManager = AiAudioManager.getInstance();
+// ------------------------------------------------------------
+// MUSIC CONTROLS
+// ------------------------------------------------------------
+export function setMusicEnabled(enabled: boolean) {
+  musicEnabled = enabled
+  localStorage.setItem("ai_music_enabled", String(enabled))
+
+  if (!music) return
+
+  if (enabled) {
+    music.play().catch(() => {})
+    fadeMusicIn()
+  } else {
+    fadeMusicOut()
+  }
+}
+
+export function setMusicVolume(vol: number) {
+  musicVolume = vol
+  targetMusicVolume = vol
+  localStorage.setItem("ai_music_volume", String(vol))
+
+  if (!music) return
+  if (!ducked) music.volume = vol
+}
+
+// ------------------------------------------------------------
+// MUSIC FADES
+// ------------------------------------------------------------
+function fadeMusicIn() {
+  if (!music) return
+
+  let step = () => {
+    if (!musicEnabled) return
+    if (!music) return
+
+    if (music.volume < targetMusicVolume) {
+      music.volume = Math.min(music.volume + 0.01, targetMusicVolume)
+      requestAnimationFrame(step)
+    }
+  }
+
+  requestAnimationFrame(step)
+}
+
+function fadeMusicOut() {
+  if (!music) return
+
+  let step = () => {
+    if (!music) return
+
+    if (music.volume > 0) {
+      music.volume = Math.max(music.volume - 0.01, 0)
+      requestAnimationFrame(step)
+    }
+  }
+
+  requestAnimationFrame(step)
+}
+
+// ------------------------------------------------------------
+// DUCKING (LOWER MUSIC DURING VOICE)
+// ------------------------------------------------------------
+function duckMusic() {
+  if (!music || ducked) return
+  ducked = true
+
+  let step = () => {
+    if (!music) return
+
+    if (music.volume > 0.05) {
+      music.volume = Math.max(music.volume - 0.02, 0.05)
+      requestAnimationFrame(step)
+    }
+  }
+
+  requestAnimationFrame(step)
+}
+
+function unduckMusic() {
+  if (!music) return
+  ducked = false
+  fadeMusicIn()
+}
+
+// ------------------------------------------------------------
+// VOICE QUEUE
+// ------------------------------------------------------------
+export function enqueueAudio(audio: HTMLAudioElement) {
+  queue.push(audio)
+  playNext()
+}
+
+function playNext() {
+  if (isPlaying) return
+  if (queue.length === 0) return
+
+  isPlaying = true
+  const audio = queue.shift()!
+
+  audio.volume = 1.0
+
+  duckMusic()
+
+  audio.onended = () => {
+    isPlaying = false
+    unduckMusic()
+    playNext()
+  }
+
+  audio.play().catch(err => {
+    console.error("Audio playback failed:", err)
+    isPlaying = false
+    unduckMusic()
+    playNext()
+  })
+}

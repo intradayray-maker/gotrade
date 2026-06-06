@@ -1,3 +1,5 @@
+// app/dashboard/tools/ForexNewsCard.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,8 +9,11 @@ import GTSlider from "@/app/components/ui/GTSlider";
 // AI persona text
 import { getRandomMessage } from "./Ai_Text";
 
-// Audio Manager
-import { AudioManager } from "./Ai_AudioManager";
+// GLOBAL AUDIO ENGINE
+import {
+  setMusicEnabled,
+  setMusicVolume,
+} from "./Ai_AudioManager";
 
 // ------------------------------------------------------------
 // TYPING EFFECT
@@ -52,23 +57,37 @@ export default function ForexNewsCard() {
   const { displayed, done } = useTypingEffect(aiMessage, 28, 600);
 
   // ------------------------------------------------------------
-  // MUSIC CONTROL STATE
+  // MUSIC CONTROL — UI + REAL AUDIO ENGINE
   // ------------------------------------------------------------
-  const [musicEnabled, setMusicEnabled] = useState(false);
-  const [musicVolume, setMusicVolume] = useState(0.25);
+  const [musicEnabledState, setMusicEnabledState] = useState(false);
+  const [musicVolumeState, setMusicVolumeState] = useState(0.25);
 
   useEffect(() => {
-    AudioManager.loadUserVolume();
-
     const savedVol = localStorage.getItem("ai_music_volume");
-    if (savedVol) setMusicVolume(Number(savedVol));
+    if (savedVol) {
+      const vol = Number(savedVol);
+      setMusicVolumeState(vol);
+      setMusicVolume(vol); // real engine
+    }
 
     const savedEnabled = localStorage.getItem("ai_music_enabled");
     if (savedEnabled === "true") {
-      setMusicEnabled(true);
-      AudioManager.enableMusic();
+      setMusicEnabledState(true);
+      setMusicEnabled(true); // real engine
     }
   }, []);
+
+  const toggleMusic = () => {
+    const next = !musicEnabledState;
+    setMusicEnabledState(next);
+    setMusicEnabled(next); // real engine
+  };
+
+  const handleMusicVolume = (v: number) => {
+    const vol = v / 100;
+    setMusicVolumeState(vol);
+    setMusicVolume(vol); // real engine
+  };
 
   // ------------------------------------------------------------
   // FETCH NEWS
@@ -203,7 +222,7 @@ export default function ForexNewsCard() {
         </div>
 
         {/* ------------------------------------------------------------
-            MUSIC CONTROL — EXACT MATCH TO ForexAiCard SLIDERS
+            MUSIC CONTROL — UI ONLY (REAL ENGINE CALLED ABOVE)
         ------------------------------------------------------------ */}
         <div className="rounded-xl border border-emerald-500/20 p-4 space-y-4">
 
@@ -214,29 +233,29 @@ export default function ForexNewsCard() {
             </span>
 
             <button
-              onClick={() => setMusicEnabled(!musicEnabled)}
+              onClick={toggleMusic}
               className={`
                 px-3 py-1 rounded-lg text-xs font-semibold transition-all
-                ${musicEnabled
+                ${musicEnabledState
                   ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"
                   : "bg-slate-700/30 text-slate-400 border border-slate-600/40"
                 }
               `}
             >
-              {musicEnabled ? "ON" : "OFF"}
+              {musicEnabledState ? "ON" : "OFF"}
             </button>
           </div>
 
           {/* Volume Slider */}
-          {musicEnabled && (
+          {musicEnabledState && (
             <div>
               <GTSlider
                 title="Atmosphere Level"
-                value={musicVolume * 100}
+                value={musicVolumeState * 100}
                 min={0}
                 max={100}
                 step={1}
-                onChange={(vol: number) => setMusicVolume(vol / 100)}
+                onChange={handleMusicVolume}
               />
             </div>
           )}
