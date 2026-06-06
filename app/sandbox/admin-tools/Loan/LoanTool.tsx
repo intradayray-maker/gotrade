@@ -17,10 +17,9 @@ export default function LoanTool() {
   const [tvBasic, setTvBasic] = useState(45);
   const [tvLiveData, setTvLiveData] = useState(30);
 
-  const [babybotTesting, setBabybotTesting] = useState(200);
-  const [nvdaRay, setNvdaRay] = useState(0);
-  const [nvdaChris, setNvdaChris] = useState(1000);
-  const [solEthTesting, setSolEthTesting] = useState(200);
+  const [babybotTesting, setBabybotTesting] = useState(200);   // Ray – BabyBot Budget
+  const [nvdaRay, setNvdaRay] = useState(0);                   // Misc
+  const [solEthTesting, setSolEthTesting] = useState(200);     // Chris – BabyBot Budget
 
   const [miscSurprises, setMiscSurprises] = useState(315);
 
@@ -35,7 +34,6 @@ export default function LoanTool() {
     tvLiveData +
     babybotTesting +
     nvdaRay +
-    nvdaChris +
     solEthTesting +
     miscSurprises;
 
@@ -47,54 +45,48 @@ export default function LoanTool() {
          ========================== */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 p-1">
 
+        {/* Domain */}
         <div className="rounded-lg border border-emerald-400/40 bg-black/20 p-2 shadow-[0_0_5px_rgba(16,185,129,0.35)]">
           <GTSlider title="Domain (GoTrade.one)" value={domainCost} min={0} max={50} step={1} onChange={setDomainCost} dollars />
         </div>
 
+        {/* Email */}
         <div className="rounded-lg border border-emerald-400/40 bg-black/20 p-2 shadow-[0_0_5px_rgba(16,185,129,0.35)]">
           <GTSlider title="Email" value={emailCost} min={0} max={200} step={5} onChange={setEmailCost} dollars />
         </div>
 
+        {/* Marketing */}
         <div className="rounded-lg border border-emerald-400/40 bg-black/20 p-2 shadow-[0_0_5px_rgba(16,185,129,0.35)]">
           <GTSlider title="Marketing (AI Videos)" value={marketingCost} min={0} max={1000} step={10} onChange={setMarketingCost} dollars />
         </div>
 
+        {/* TradingView Basic */}
         <div className="rounded-lg border border-emerald-400/40 bg-black/20 p-2 shadow-[0_0_5px_rgba(16,185,129,0.35)]">
           <GTSlider title="TradingView Basic" value={tvBasic} min={0} max={100} step={5} onChange={setTvBasic} dollars />
         </div>
 
+        {/* TradingView Live Data */}
         <div className="rounded-lg border border-emerald-400/40 bg-black/20 p-2 shadow-[0_0_5px_rgba(16,185,129,0.35)]">
           <GTSlider title="TradingView Live Data" value={tvLiveData} min={0} max={100} step={5} onChange={setTvLiveData} dollars />
         </div>
 
-        <div className="rounded-lg border border-emerald-400/40 bg-black/20 p-2 shadow-[0_0_5px_rgba(16,185,129,0.35)]">
-          <GTSlider title="SOL/ETH Large‑Cap Testing" value={solEthTesting} min={0} max={2000} step={50} onChange={setSolEthTesting} dollars />
+        {/* Chris – BabyBot Budget (formerly SOL/ETH Large-Cap Testing) */}
+        <div className="rounded-lg border border-red-400/40 bg-black/20 p-2 shadow-[0_0_5px_rgba(16,185,129,0.35)]">
+          <GTSlider title="Chris – BabyBot Budget" value={solEthTesting} min={0} max={2000} step={50} onChange={setSolEthTesting} dollars />
         </div>
 
-        <div className="rounded-lg border border-[rgb(84,33,33)] bg-black/20 p-4 shadow-[0_0_5px_rgba(84,33,33,0.35)]">
-          <GTSlider title="BabyBot Testing Budget" value={babybotTesting} min={0} max={2000} step={50} onChange={setBabybotTesting} dollars />
+        {/* Ray – BabyBot Budget (formerly BabyBot Testing Budget) */}
+        <div className="rounded-lg border border-red-400/40 bg-black/20 p-4 shadow-[0_0_5px_rgba(16,185,129,0.35)]">
+          <GTSlider title="Ray – BabyBot Budget" value={babybotTesting} min={0} max={2000} step={50} onChange={setBabybotTesting} dollars />
         </div>
 
-        <div className="rounded-lg border border-[rgb(84,33,33)] bg-black/20 p-4 shadow-[0_0_5px_rgba(84,33,33,0.35)]">
-          <GTSlider title="NVDA Testing (Ray)" value={nvdaRay} min={0} max={2000} step={50} onChange={setNvdaRay} dollars />
+        {/* Misc (formerly NVDA Testing (Ray)) — now BLUE border */}
+        <div className="rounded-lg border border-red-400/40 bg-black/20 p-4 shadow-[0_0_5px_rgba(59,130,246,0.35)]">
+          <GTSlider title="Misc" value={nvdaRay} min={0} max={2000} step={50} onChange={setNvdaRay} dollars />
         </div>
 
-        <div className="rounded-lg border border-[rgb(84,33,33)] bg-black/20 p-4 shadow-[0_0_5px_rgba(84,33,33,0.35)]">
-          <GTSlider title="NVDA Testing (Chris)" value={nvdaChris} min={0} max={5000} step={100} onChange={setNvdaChris} dollars />
-        </div>
-
-        <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-2 shadow-[0_0_5px_rgba(234,179,8,0.35)]">
-          <GTSlider
-            title="Misc"
-            value={miscSurprises}
-            min={0}
-            max={5000}
-            step={25}
-            onChange={setMiscSurprises}
-            dollars
-            titleClassName="text-yellow-300"
-          />
-        </div>
+        {/* Removed NVDA Testing (Chris) — leaves one empty slot */}
+        <div className="rounded-lg border border-transparent bg-transparent p-4"></div>
 
       </div>
 
@@ -129,4 +121,3 @@ export default function LoanTool() {
     </section>
   );
 }
-

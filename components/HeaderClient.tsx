@@ -1,5 +1,5 @@
-//components\HeaderClient.tsx
-// 
+//components/HeaderClient.tsx
+
 "use client";
 
 import Link from "next/link";
@@ -9,7 +9,7 @@ import {
   Bars3Icon,
   Cog6ToothIcon,
   CreditCardIcon,
-  ShieldCheckIcon,
+  WrenchScrewdriverIcon,
   Squares2X2Icon,
   UserIcon,
 } from "@heroicons/react/24/outline";
@@ -124,15 +124,16 @@ export default function HeaderClient({
 
               {isAdmin && (
                 <Link
-                  href="/dashboard/admin"
-                  title="Admin Panel"
+                  href="/sandbox/admin-tools"
+                  title="Admin Tools"
                   className={`relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 transition hover:bg-white/10 ${
                     pathname.startsWith("/dashboard/admin")
                       ? "text-white shadow-[0_0_12px_rgba(255,255,255,0.45)]"
                       : "text-white/60"
                   }`}
                 >
-                  <ShieldCheckIcon className="h-5 w-5" />
+                  <WrenchScrewdriverIcon className="h-5 w-5" />
+
                   {typeof window !== "undefined" && (window.__gotrade_errors ?? 0) > 0 && (
                     <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-red-500 shadow-[0_0_6px_rgba(255,0,0,0.8)]" />
                   )}
@@ -195,12 +196,12 @@ export default function HeaderClient({
               <>
                 <div className="my-2 h-px bg-white/10" />
                 <Link
-                  href="/dashboard/admin"
+                  href="/sandbox/admin-tools"
                   onClick={closeMobile}
                   className="flex items-center gap-3 py-3 text-white/90 transition hover:text-white"
                 >
-                  <ShieldCheckIcon className="h-6 w-6" />
-                  <span className="text-base">Admin Panel</span>
+                  <WrenchScrewdriverIcon className="h-6 w-6" />
+                  <span className="text-base">Admin Tools</span>
                 </Link>
               </>
             )}

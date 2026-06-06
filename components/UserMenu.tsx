@@ -116,15 +116,7 @@ export default function UserMenu({ user, isAdmin }: UserMenuProps) {
               Settings
             </Link>
 
-            {isAdmin && (
-              <Link
-                href="/dashboard/admin"
-                className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-200 transition hover:bg-white/5"
-              >
-                <ShieldCheckIcon className="h-5 w-5 text-slate-400" />
-                Admin Panel
-              </Link>
-            )}
+
 
             {isAdmin && (
               <Link

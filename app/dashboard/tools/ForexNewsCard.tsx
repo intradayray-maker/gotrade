@@ -2,6 +2,45 @@
 
 import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
+import GTSlider from "@/app/components/ui/GTSlider";
+
+// AI persona text
+import { getRandomMessage } from "./Ai_Text";
+
+// Audio Manager
+import { AudioManager } from "./Ai_AudioManager";
+
+// ------------------------------------------------------------
+// TYPING EFFECT
+// ------------------------------------------------------------
+function useTypingEffect(text: string, speed = 35, delay = 600) {
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    setDisplayed("");
+    setDone(false);
+
+    let i = 0;
+
+    const start = setTimeout(() => {
+      const tick = () => {
+        setDisplayed(text.slice(0, i));
+        i++;
+        if (i <= text.length) {
+          setTimeout(tick, speed);
+        } else {
+          setDone(true);
+        }
+      };
+      tick();
+    }, delay);
+
+    return () => clearTimeout(start);
+  }, [text, speed, delay]);
+
+  return { displayed, done };
+}
 
 export default function ForexNewsCard() {
   const [nextNewsTime, setNextNewsTime] = useState("None");
@@ -9,8 +48,30 @@ export default function ForexNewsCard() {
   const [windowActive, setWindowActive] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
+  const [aiMessage] = useState(getRandomMessage());
+  const { displayed, done } = useTypingEffect(aiMessage, 28, 600);
+
   // ------------------------------------------------------------
-  // FETCH NEWS FROM BACKEND
+  // MUSIC CONTROL STATE
+  // ------------------------------------------------------------
+  const [musicEnabled, setMusicEnabled] = useState(false);
+  const [musicVolume, setMusicVolume] = useState(0.25);
+
+  useEffect(() => {
+    AudioManager.loadUserVolume();
+
+    const savedVol = localStorage.getItem("ai_music_volume");
+    if (savedVol) setMusicVolume(Number(savedVol));
+
+    const savedEnabled = localStorage.getItem("ai_music_enabled");
+    if (savedEnabled === "true") {
+      setMusicEnabled(true);
+      AudioManager.enableMusic();
+    }
+  }, []);
+
+  // ------------------------------------------------------------
+  // FETCH NEWS
   // ------------------------------------------------------------
   useEffect(() => {
     let active = true;
@@ -43,37 +104,8 @@ export default function ForexNewsCard() {
     };
   }, []);
 
-  // ------------------------------------------------------------
-  // LIVE COUNTDOWN (ticks every second)
-  // ------------------------------------------------------------
-  useEffect(() => {
-    if (countdown <= 0) return;
-
-    const t = setInterval(() => {
-      setCountdown((c) => Math.max(0, c - 1));
-    }, 1000);
-
-    return () => clearInterval(t);
-  }, [countdown]);
-
-  // Format countdown
-  const formatCountdown = (sec: number) => {
-    if (sec <= 0) return "—";
-    const h = Math.floor(sec / 3600);
-    const m = Math.floor((sec % 3600) / 60);
-    const s = Math.floor(sec % 60);
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(
-      2,
-      "0"
-    )}:${String(s).padStart(2, "0")}`;
-  };
-
-  // Extract "Today, Jun 05 6:43PM" → "6:43PM"
   const cleanTime = nextNewsTime.replace("Today, ", "");
 
-  // ------------------------------------------------------------
-  // NEW FALLBACK LOGIC
-  // ------------------------------------------------------------
   const noEvents =
     nextNewsTime === "None" ||
     nextNewsTime === "" ||
@@ -81,6 +113,7 @@ export default function ForexNewsCard() {
 
   return (
     <GTCard className="flex h-full flex-col gap-4">
+
       {/* Header */}
       <p className="text-center text-xs uppercase tracking-wide text-slate-400">
         Daily News Status
@@ -88,55 +121,46 @@ export default function ForexNewsCard() {
 
       <div className="flex flex-1 flex-col space-y-3">
 
-        {/* Ticker + Source */}
+        {/* Ticker */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
           <span className="text-lg font-semibold text-slate-50">
             EURUSD • OANDA
           </span>
         </div>
 
-        {/* ------------------------------------------------------------
-            COMBINED NEWS CELL (all scenarios)
-        ------------------------------------------------------------ */}
+        {/* NEWS CELL */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center space-y-1">
 
-          {/* SCENARIO 1 — NEWS TODAY (UPCOMING) */}
           {newsToday && countdown > 0 && (
             <>
-              <span className="block text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
+              <span className="block text-xl font-semibold text-red-400">
                 ⚠️ NEWS TODAY
               </span>
-
               <span className="block text-lg font-semibold text-slate-50">
                 {cleanTime} est
               </span>
             </>
           )}
 
-          {/* SCENARIO 2 — NEWS TODAY (ALREADY PASSED) */}
           {newsToday && countdown === 0 && (
             <>
-              <span className="block text-xl font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
+              <span className="block text-xl font-semibold text-red-400">
                 ⚠️ NEWS WAS TODAY
               </span>
-
               <span className="block text-lg font-semibold text-slate-50">
                 Occurred at {cleanTime} est
               </span>
-
               <span className="block text-sm text-red-300 italic">
                 {noEvents ? "No upcoming events scheduled" : `next event: ${nextNewsTime} est`}
               </span>
             </>
           )}
 
-          {/* SCENARIO 3 — NO NEWS TODAY */}
           {!newsToday && (
             <>
               <span className="block text-xl font-semibold text-emerald-400">
                 ✓ No News Today
               </span>
-
               <span className="block text-sm text-slate-400 italic">
                 {noEvents ? "No upcoming events scheduled" : `next event: ${nextNewsTime} est`}
               </span>
@@ -145,39 +169,101 @@ export default function ForexNewsCard() {
 
         </div>
 
-        {/* Safe / Unsafe */}
+        {/* SAFE / UNSAFE */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
           {windowActive ? (
-            <span className="block text-lg font-semibold text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]">
+            <span className="block text-lg font-semibold text-red-400">
               ⚠️ Avoid trading — news window active
             </span>
           ) : (
-            <span className="block text-lg font-semibold text-emerald-400 drop-shadow-[0_0_6px_rgba(0,255,0,0.35)]">
+            <span className="block text-lg font-semibold text-emerald-400">
               🟢 Safe to take trades
             </span>
           )}
         </div>
 
-        {/* Countdown */}
-        <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
-          <span className="block text-lg font-semibold text-blue-300 drop-shadow-[0_0_6px_rgba(0,5,255,0.35)]">
-            {noEvents
-              ? "No upcoming events"
-              : `${formatCountdown(countdown)} until next event`}
-          </span>
-        </div>
+        {/* AI OUTPUT */}
+        <div className="rounded-xl border border-emerald-500/20 p-4 space-y-3 bg-[#050509]">
+          <div className="flex items-center space-x-2 opacity-80">
+            <div className="flex space-x-1">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse delay-150"></span>
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse delay-300"></span>
+            </div>
+            <span className="text-xs text-slate-400 tracking-wide">
+              AI is reflecting…
+            </span>
+          </div>
 
-        <div className="flex-1" />
-
-        {/* Instructions */}
-        <div className="mt-auto rounded-xl border border-emerald-500/20 p-3">
-          <p className="text-xs leading-relaxed text-slate-300">
-            {newsToday
-              ? "Exit all positions 15 minutes before news to avoid unexpected loss!"
-              : "Normal trading conditions."}
+          <p className="text-sm leading-relaxed text-slate-200 min-h-[48px] fade-in">
+            {displayed}
+            {!done && <span className="ml-1 animate-pulse">▌</span>}
+            {done && <span className="ml-1 animate-blink">▌</span>}
           </p>
         </div>
+
+        {/* ------------------------------------------------------------
+            MUSIC CONTROL — EXACT MATCH TO ForexAiCard SLIDERS
+        ------------------------------------------------------------ */}
+        <div className="rounded-xl border border-emerald-500/20 p-4 space-y-4">
+
+          {/* Toggle */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-slate-400 tracking-wide">
+              Deep Focus Mode
+            </span>
+
+            <button
+              onClick={() => setMusicEnabled(!musicEnabled)}
+              className={`
+                px-3 py-1 rounded-lg text-xs font-semibold transition-all
+                ${musicEnabled
+                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"
+                  : "bg-slate-700/30 text-slate-400 border border-slate-600/40"
+                }
+              `}
+            >
+              {musicEnabled ? "ON" : "OFF"}
+            </button>
+          </div>
+
+          {/* Volume Slider */}
+          {musicEnabled && (
+            <div>
+              <GTSlider
+                title="Atmosphere Level"
+                value={musicVolume * 100}
+                min={0}
+                max={100}
+                step={1}
+                onChange={(vol: number) => setMusicVolume(vol / 100)}
+              />
+            </div>
+          )}
+
+        </div>
+
       </div>
+
+      {/* Cursor blink animation */}
+      <style jsx>{`
+        @keyframes blink {
+          0% { opacity: 1; }
+          50% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+        .animate-blink {
+          animation: blink 1.2s infinite;
+        }
+        .fade-in {
+          animation: fadeIn 0.6s ease forwards;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
     </GTCard>
   );
 }

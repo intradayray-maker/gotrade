@@ -1,42 +1,88 @@
 "use client";
 
-import { goColors, goFont } from "@/lib/goTheme";
+import React from "react";
 
+// ------------------------------------------------------------
+// TYPES
+// ------------------------------------------------------------
 interface GTSliderProps {
-  label?: string;
   value: number;
-  onChange: (v: number) => void;
-  color?: "blue" | "gold";
+  onChange: (value: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  label?: string;
+  color?: string;
+  showTooltip?: boolean;
+  showNotches?: boolean;
+  waveform?: boolean;
 }
 
+// ------------------------------------------------------------
+// COMPONENT
+// ------------------------------------------------------------
 export default function GTSlider({
-  label,
   value,
   onChange,
-  color = "blue",
+  min = 0,
+  max = 100,
+  step = 1,
+  label,
+  color = "emerald",
+  showTooltip = true,
+  showNotches = true,
+  waveform = true
 }: GTSliderProps) {
-  const active =
-    color === "blue" ? goColors.blue : color === "gold" ? goColors.gold : goColors.blue;
+  const percent = (value - min) / (max - min);
 
   return (
-    <div className="flex flex-col gap-2" style={{ fontFamily: goFont }}>
+    <div className="w-full space-y-2 relative">
+
+      {/* Label */}
       {label && (
-        <label className="text-[13px]" style={{ color: goColors.lightGray }}>
-          {label} - {value}%
-        </label>
+        <p className="text-xs text-slate-400 tracking-wide">{label}</p>
       )}
 
-      <input
-        type="range"
-        min={0}
-        max={100}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full h-3 rounded-full appearance-none cursor-pointer"
-        style={{
-          background: `linear-gradient(to right, ${active} ${value}%, ${goColors.gray} ${value}%)`,
-        }}
-      />
+      {/* Tooltip */}
+      {showTooltip && (
+        <div
+          className="absolute -top-5 ai-tooltip"
+          style={{ left: `${percent * 100}%` }}
+        >
+          {Math.round(percent * 100)}%
+        </div>
+      )}
+
+      {/* Slider Container */}
+      <div className="relative w-full ai-slider-container">
+
+        {/* Notches */}
+        {showNotches && (
+          <div className="ai-slider-notches">
+            {Array.from({ length: 11 }).map((_, i) => (
+              <span key={i} />
+            ))}
+          </div>
+        )}
+
+        {/* Slider */}
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          style={{ "--value": percent } as React.CSSProperties}
+          className={`ai-gt-slider ${waveform ? "waveform" : ""}`}
+        />
+      </div>
+
+      {/* Min/Max */}
+      <div className="flex justify-between text-[10px] text-slate-500">
+        <span>{min}</span>
+        <span>{max}</span>
+      </div>
     </div>
   );
 }

@@ -13,7 +13,26 @@ export default async function DashboardLayout({ children }: { children: React.Re
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAdmin = isAdminUser(user ? { email: user.email } : undefined);
+  // Default admin detection via configured admin email
+  let isAdmin = isAdminUser(user ? { email: user.email } : undefined);
+
+  // Also check profiles table for `is_admin` flag (server-side authoritative)
+  try {
+    if (user?.id) {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .single();
+
+      if (!error && profile && (profile as any).is_admin) {
+        isAdmin = true;
+      }
+    }
+  } catch (err) {
+    // keep fallback isAdmin value
+    console.error("Failed to check profiles.is_admin:", err);
+  }
 
   return (
     <div className="min-h-screen bg-[#050509] text-slate-100">
