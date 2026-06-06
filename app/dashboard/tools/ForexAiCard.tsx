@@ -27,9 +27,9 @@ export default function ForexAiCard() {
   const [latestTrade, setLatestTrade] = useState<Trade | null>(null);
   const prevTradeRef = useRef<Trade | null>(null);
 
-  // 4‑minute cooldown
+  // cooldown only for FLAT
   const lastSpokeRef = useRef(0);
-  const COOLDOWN_MS = 240000; // 4 minutes
+  const FLAT_COOLDOWN_MS = 240000; // 4 minutes
 
   // ------------------------------------------------------------
   // INIT BACKGROUND MUSIC
@@ -76,7 +76,9 @@ export default function ForexAiCard() {
   }, []);
 
   // ------------------------------------------------------------
-  // AI VOICE LOGIC — STRICT CHANGE DETECTION + 4 MIN COOLDOWN
+  // AI VOICE LOGIC
+  // LONG/SHORT → ALWAYS SPEAK
+  // FLAT → SPEAK ONLY EVERY 4 MINUTES
   // ------------------------------------------------------------
   useEffect(() => {
     if (!latestTrade) return;
@@ -99,19 +101,31 @@ export default function ForexAiCard() {
     const now = Date.now();
     const elapsed = now - lastSpokeRef.current;
 
-    // enforce 4‑minute cooldown
-    if (elapsed < COOLDOWN_MS) return;
+    // -----------------------------------------
+    // ALWAYS SPEAK on new LONG or SHORT
+    // -----------------------------------------
+    if (latestTrade.side === "long" || latestTrade.side === "short") {
+      const clip =
+        latestTrade.side === "long"
+          ? getVoiceClip("long")
+          : getVoiceClip("short");
 
-    // choose voice clip
-    const clip =
-      latestTrade.side === "long"
-        ? getVoiceClip("long")
-        : latestTrade.side === "short"
-        ? getVoiceClip("short")
-        : getVoiceClip("flat");
+      enqueueAudio(clip);
+      lastSpokeRef.current = now;
+      return;
+    }
 
-    enqueueAudio(clip);
-    lastSpokeRef.current = now;
+    // -----------------------------------------
+    // FLAT MODE — speak only every 4 minutes
+    // -----------------------------------------
+    if (latestTrade.side === "flat") {
+      if (elapsed < FLAT_COOLDOWN_MS) return;
+
+      const clip = getVoiceClip("flat");
+      enqueueAudio(clip);
+      lastSpokeRef.current = now;
+      return;
+    }
   }, [latestTrade]);
 
   // ------------------------------------------------------------
