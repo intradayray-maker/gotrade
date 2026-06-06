@@ -26,11 +26,7 @@ type Trade = {
 // ------------------------------------------------------------
 // NOTIFICATION SOUND
 // ------------------------------------------------------------
-function playNotification() {
-  const audio = new Audio("/notification.mp3");
-  audio.volume = 1.0;
-  audio.play().catch((err) => console.error("Audio play failed:", err));
-}
+
 
 export default function ForexAiCard() {
   const [enabled, setEnabled] = useState(true);
@@ -173,7 +169,6 @@ export default function ForexAiCard() {
       prev.side !== latestTrade.side || prev.entry !== latestTrade.entry;
 
     if (isNew) {
-      playNotification();
 
       const clip =
         latestTrade.side === "long"
