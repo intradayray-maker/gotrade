@@ -18,7 +18,7 @@ let ducked = false
 export function initBackgroundMusic() {
   if (music) return
 
-  music = new Audio("/voice/bgm/bgm.mp3")
+  music = new Audio("/voice/bgm/backgroundMUSIC.mp3")
   music.loop = true
   music.volume = 0
 
