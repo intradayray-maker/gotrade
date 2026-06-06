@@ -1,7 +1,40 @@
+// app\dashboard\tools\ForexTradeOutputCard.tsx
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
+
+// ⭐ Inject AI Pulse Animations
+const pulseStyles = `
+@keyframes pulse-blue {
+  0% { box-shadow: 0 0 0px rgba(0,150,255,0.25); }
+  50% { box-shadow: 0 0 18px rgba(0,150,255,0.55); }
+  100% { box-shadow: 0 0 0px rgba(0,150,255,0.25); }
+}
+
+@keyframes pulse-red {
+  0% { box-shadow: 0 0 0px rgba(255,0,0,0.25); }
+  50% { box-shadow: 0 0 18px rgba(255,0,0,0.55); }
+  100% { box-shadow: 0 0 0px rgba(255,0,0,0.25); }
+}
+
+.ai-pulse-blue {
+  animation: pulse-blue 3.2s ease-in-out infinite;
+  border-color: rgba(0,150,255,0.45) !important;
+}
+
+.ai-pulse-red {
+  animation: pulse-red 3.2s ease-in-out infinite;
+  border-color: rgba(255,0,0,0.45) !important;
+}
+`;
+
+if (typeof document !== "undefined") {
+  const styleTag = document.createElement("style");
+  styleTag.innerHTML = pulseStyles;
+  document.head.appendChild(styleTag);
+}
 
 type Trade = {
   ticker: string;
@@ -58,7 +91,7 @@ export default function ForexTradeOutputCard() {
     navigator.clipboard.writeText(String(val));
   }
 
-  // ⭐ UPDATED COPY BUTTON WITH ANIMATION
+  // ⭐ COPY BUTTON
   const CopyBtn = ({ val }: { val: number }) => {
     const [copied, setCopied] = useState(false);
 
@@ -155,7 +188,7 @@ export default function ForexTradeOutputCard() {
     };
   }, []);
 
-  // Compute units + position value from AI margin
+  // Compute derived values
   const computeDerived = () => {
     if (!trade.entry || marginFromAi <= 0 || leverage <= 0) {
       return {
@@ -245,8 +278,15 @@ export default function ForexTradeOutputCard() {
     return "text-slate-500";
   };
 
+  // ⭐ FINAL RENDER WITH AI PULSE GLOW
   return (
-    <GTCard className="flex h-full flex-col gap-4">
+    <GTCard
+      className={`
+        flex h-full flex-col gap-4 border-2 rounded-xl transition-all
+        ${animTrade.side === "long" ? "ai-pulse-blue" : ""}
+        ${animTrade.side === "short" ? "ai-pulse-red" : ""}
+      `}
+    >
       <p className="text-center text-xs uppercase tracking-wide text-slate-400">
         Trade Execution Details
       </p>
