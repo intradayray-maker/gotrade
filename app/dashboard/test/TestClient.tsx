@@ -21,6 +21,8 @@ export default function TestClient() {
 
   useEffect(() => {
     load();
+    const id = setInterval(load, 1000);
+    return () => clearInterval(id);
   }, []);
 
   return (
