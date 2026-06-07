@@ -22,10 +22,11 @@ export async function POST(req: Request) {
       timestamp: new Date().toISOString(),
     };
 
+    // ALWAYS update the single row with id = 1
     const { error } = await supabase
       .from("trade_state")
       .update(payload)
-      .eq("id", (await getSingleId()));
+      .eq("id", 1);
 
     if (error) {
       console.error("SUPABASE BAR UPDATE ERROR:", error);
@@ -37,15 +38,4 @@ export async function POST(req: Request) {
     console.error("BAR WEBHOOK ERROR:", err);
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
   }
-}
-
-async function getSingleId() {
-  const { data, error } = await supabase
-    .from("trade_state")
-    .select("id")
-    .limit(1)
-    .single();
-
-  if (error || !data) throw new Error("trade_state row missing");
-  return data.id;
 }
