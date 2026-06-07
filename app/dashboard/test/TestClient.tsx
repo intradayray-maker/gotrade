@@ -6,7 +6,7 @@ export default function TestClient() {
   const [state, setState] = useState("loading...");
 
   async function send(side: string) {
-    await fetch("/dashboard/test/api", {
+    await fetch("/api/test-state", {
       method: "POST",
       body: JSON.stringify({ side }),
     });
@@ -14,7 +14,7 @@ export default function TestClient() {
   }
 
   async function load() {
-    const res = await fetch("/dashboard/test/api");
+    const res = await fetch("/api/test-state");
     const json = await res.json();
     setState(json.side);
   }
