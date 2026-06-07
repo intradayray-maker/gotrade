@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     // -----------------------------------------------------
-    // BAR UPDATE
+    // BAR UPDATE — IGNORE FOR TRADE LOGIC
     // -----------------------------------------------------
     if (body.type === "bar") {
       const { high, low } = body;
@@ -40,6 +40,13 @@ export async function POST(req: Request) {
       });
 
       return NextResponse.json({ status: "bar stored" });
+    }
+
+    // -----------------------------------------------------
+    // IGNORE ANYTHING THAT IS NOT A TRADE
+    // -----------------------------------------------------
+    if (body.type !== "trade") {
+      return NextResponse.json({ status: "ignored non-trade" });
     }
 
     // -----------------------------------------------------
