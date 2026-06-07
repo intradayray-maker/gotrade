@@ -39,7 +39,12 @@ export async function POST(req: Request) {
       // TRADE UPDATE
       // -----------------------------
       if (type === "trade") {
-        payload.side = body.side ?? existing.side;
+        // Normalize side
+        const rawSide = String(body.side || "").toLowerCase();
+        if (rawSide === "buy") payload.side = "long";
+        else if (rawSide === "sell") payload.side = "short";
+        else payload.side = existing.side;
+
         payload.ticker = body.ticker ?? existing.ticker;
 
         payload.entry = Number(body.entry) || existing.entry;
@@ -55,6 +60,13 @@ export async function POST(req: Request) {
       // BAR UPDATE
       // -----------------------------
       if (type === "bar") {
+
+        // DO NOT update bars during an active trade
+        if (existing.side !== "flat") {
+          console.log("BAR IGNORED — active position:", existing.side);
+          return;
+        }
+
         const high = Number(body.high);
         const low = Number(body.low);
 
