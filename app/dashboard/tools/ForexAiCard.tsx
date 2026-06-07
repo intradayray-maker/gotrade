@@ -14,6 +14,8 @@ import {
 } from "./Ai_AudioManager";
 
 import { getVoiceClip } from "./Ai_LocalVoice";
+import { useTradeStore } from "./useTradeStore";
+import { useTradePolling } from "./useTradePolling";
 
 type Trade = {
   ticker: string;
@@ -21,7 +23,7 @@ type Trade = {
   entry: number;
   stop: number;
   tp: number;
-  timestamp?: string; // ⭐ added
+  timestamp?: string;
 };
 
 const isSameTrade = (a: Trade | null, b: Trade) => {
@@ -36,6 +38,11 @@ const isSameTrade = (a: Trade | null, b: Trade) => {
 };
 
 export default function ForexAiCard() {
+  // start shared polling once
+  useTradePolling();
+
+  const latestTradeFromStore = useTradeStore((s) => s.trade);
+
   const [enabled, setEnabled] = useState(true);
 
   const [riskAmount, setRiskAmount] = useState(50);
@@ -63,9 +70,7 @@ export default function ForexAiCard() {
 
   const latestTradeRef = useRef<Trade | null>(null);
 
-  // ------------------------------------------------------------
   // LOAD SETTINGS
-  // ------------------------------------------------------------
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -92,9 +97,7 @@ export default function ForexAiCard() {
     }
   }, []);
 
-  // ------------------------------------------------------------
   // SAVE SETTINGS
-  // ------------------------------------------------------------
   useEffect(() => {
     window.localStorage.setItem("forex_dollar_risk", String(riskAmount));
     window.localStorage.setItem("forex_leverage", String(leverage));
@@ -105,64 +108,33 @@ export default function ForexAiCard() {
     window.localStorage.setItem("ai_music_volume", String(musicVolumeState));
   }, [musicEnabledState, musicVolumeState]);
 
-  // ------------------------------------------------------------
   // LIVE CLOCK
-  // ------------------------------------------------------------
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  // ------------------------------------------------------------
-  // POLL LATEST TRADE — now with timestamp guard
-  // ------------------------------------------------------------
-  // NOTE: this component only reads /api/trade. It does not write or mutate server trade storage.
+  // SUBSCRIBE TO SHARED TRADE (dedupe)
   useEffect(() => {
-    let active = true;
+    if (!latestTradeFromStore) return;
 
-    const fetchTrade = async () => {
-      try {
-        const res = await fetch("/api/trade", {
-          method: "GET",
-          cache: "no-store",
-        });
+    const t = latestTradeFromStore as Trade;
 
-        if (!res.ok) return;
-
-        const json = await res.json();
-        if (!active || !json.trade) return;
-
-        const t = json.trade as Trade;
-
-        if (
-          typeof t.entry === "number" &&
-          typeof t.stop === "number" &&
-          typeof t.tp === "number"
-        ) {
-          if (isSameTrade(latestTradeRef.current, t)) {
-            return;
-          }
-
-          latestTradeRef.current = t;
-          setLatestTradeState(t);
-        }
-      } catch (err) {
-        console.error("Latest trade fetch failed:", err);
+    if (
+      typeof t.entry === "number" &&
+      typeof t.stop === "number" &&
+      typeof t.tp === "number"
+    ) {
+      if (isSameTrade(latestTradeRef.current, t)) {
+        return;
       }
-    };
 
-    fetchTrade();
-    const interval = setInterval(fetchTrade, 2000);
+      latestTradeRef.current = t;
+      setLatestTradeState(t);
+    }
+  }, [latestTradeFromStore]);
 
-    return () => {
-      active = false;
-      clearInterval(interval);
-    };
-  }, []);
-
-  // ------------------------------------------------------------
-  // NEW TRADE DETECTION + VOICE + COOLDOWN LOGIC
-  // ------------------------------------------------------------
+  // NEW TRADE DETECTION + VOICE + COOLDOWN
   const prevTradeRef = useRef<Trade | null>(null);
   const lastSpokeRef = useRef(0);
   const FLAT_COOLDOWN_MS = 240000;
@@ -172,40 +144,39 @@ export default function ForexAiCard() {
 
     const prev = prevTradeRef.current;
 
-    // ⭐ Only react to REAL trade alerts
-    if (!prev || latestTradeState.timestamp === prev.timestamp || isSameTrade(prev, latestTradeState)) {
+    if (
+      !prev ||
+      latestTradeState.timestamp === prev.timestamp ||
+      isSameTrade(prev, latestTradeState)
+    ) {
       prevTradeRef.current = latestTradeState;
       return;
     }
 
     prevTradeRef.current = latestTradeState;
-    const now = Date.now();
-    const elapsed = now - lastSpokeRef.current;
+    const nowMs = Date.now();
+    const elapsed = nowMs - lastSpokeRef.current;
 
-    // LONG or SHORT → speak immediately
     if (latestTradeState.side === "long" || latestTradeState.side === "short") {
       enqueueAudio(
         latestTradeState.side === "long"
           ? getVoiceClip("long")
           : getVoiceClip("short")
       );
-      lastSpokeRef.current = now;
+      lastSpokeRef.current = nowMs;
       return;
     }
 
-    // FLAT → speak only every 4 minutes
     if (latestTradeState.side === "flat") {
       if (elapsed < FLAT_COOLDOWN_MS) return;
 
       enqueueAudio(getVoiceClip("flat"));
-      lastSpokeRef.current = now;
+      lastSpokeRef.current = nowMs;
       return;
     }
   }, [latestTradeState, enabled]);
 
-  // ------------------------------------------------------------
   // MARGIN CALCULATION
-  // ------------------------------------------------------------
   useEffect(() => {
     if (!latestTradeState) {
       setRequiredMargin(0);
@@ -227,9 +198,7 @@ export default function ForexAiCard() {
     }
   }, [latestTradeState, riskAmount, leverage]);
 
-  // ------------------------------------------------------------
   // MARGIN ANIMATION
-  // ------------------------------------------------------------
   useEffect(() => {
     const oldVal = prevMargin.current;
     const newVal = requiredMargin;
@@ -253,9 +222,7 @@ export default function ForexAiCard() {
     }
   }, [requiredMargin]);
 
-  // ------------------------------------------------------------
   // MUSIC TOGGLE + VOLUME
-  // ------------------------------------------------------------
   const toggleMusic = () => {
     const next = !musicEnabledState;
     setMusicEnabledState(next);
@@ -268,9 +235,7 @@ export default function ForexAiCard() {
     setMusicVolume(vol);
   };
 
-  // ------------------------------------------------------------
   // UI
-  // ------------------------------------------------------------
   return (
     <GTCard className="flex h-full flex-col gap-4">
       {/* DATE + TIME */}

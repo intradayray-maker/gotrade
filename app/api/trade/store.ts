@@ -17,11 +17,12 @@ export type TradeData = {
 };
 
 export let latestTrade: TradeData | null = null;
+export let tradeVersion = 0;
 
-// ⭐ Freeze trade object so repeated identical payloads do not cause unnecessary
-// React re-renders in clients that consume /api/trade.
+// ⭐ Freeze trade + bump version only on real change
 export const setLatestTrade = (trade: TradeData) => {
   latestTrade = Object.freeze(trade);
+  tradeVersion++;
 };
 
 export type BarData = {
@@ -39,7 +40,6 @@ export type BarData = {
 
 export let latestBar: BarData | null = null;
 
-// ⭐ Freeze bar object too (prevents unnecessary re-renders)
 export const setLatestBar = (bar: BarData) => {
   latestBar = Object.freeze(bar);
 };

@@ -1,405 +1,263 @@
-// app/dashboard/tools/ForexTradeOutputCard.tsx
+// app/dashboard/tools/ForexNewsCard.tsx
 
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
+import GTSlider from "@/app/components/ui/GTSlider";
 
-// ⭐ Inject AI Pulse Animations
-const pulseStyles = `
-@keyframes pulse-blue {
-  0% { box-shadow: 0 0 0px rgba(0,150,255,0.25); }
-  50% { box-shadow: 0 0 18px rgba(0,150,255,0.55); }
-  100% { box-shadow: 0 0 0px rgba(0,150,255,0.25); }
-}
+import { getRandomMessage } from "./Ai_Text";
+import { setMusicEnabled, setMusicVolume } from "./Ai_AudioManager";
 
-@keyframes pulse-red {
-  0% { box-shadow: 0 0 0px rgba(255,0,0,0.25); }
-  50% { box-shadow: 0 0 18px rgba(255,0,0,0.55); }
-  100% { box-shadow: 0 0 0px rgba(255,0,0,0.25); }
-}
+import { useTradeStore, TradeStore } from "./useTradeStore";
+import { useTradePolling } from "./useTradePolling";
 
-.ai-pulse-blue {
-  animation: pulse-blue 3.2s ease-in-out infinite;
-  border-color: rgba(0,150,255,0.45) !important;
-}
+// ------------------------------------------------------------
+// TYPING EFFECT
+// ------------------------------------------------------------
+function useTypingEffect(text: string, speed = 35, delay = 600) {
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
 
-.ai-pulse-red {
-  animation: pulse-red 3.2s ease-in-out infinite;
-  border-color: rgba(255,0,0,0.45) !important;
-}
-`;
-
-if (typeof document !== "undefined") {
-  const styleTag = document.createElement("style");
-  styleTag.innerHTML = pulseStyles;
-  document.head.appendChild(styleTag);
-}
-
-type Trade = {
-  ticker: string;
-  side: string;
-  entry: number;
-  tp: number;
-  stop: number;
-  timestamp?: string;
-};
-
-type Derived = {
-  units: number;
-  position_value: number;
-  required_margin: number;
-};
-
-export default function ForexTradeOutputCard() {
-  const [trade, setTrade] = useState<Trade>({
-    ticker: "",
-    side: "",
-    entry: 0,
-    tp: 0,
-    stop: 0,
-    timestamp: "",
-  });
-
-  const [derived, setDerived] = useState<Derived>({
-    units: 0,
-    position_value: 0,
-    required_margin: 0,
-  });
-
-  const [leverage, setLeverage] = useState<number>(1);
-  const [marginFromAi, setMarginFromAi] = useState<number>(0);
-
-  const [animTrade, setAnimTrade] = useState(trade);
-  const [animDerived, setAnimDerived] = useState(derived);
-
-  const prevTrade = useRef(trade);
-  const prevDerived = useRef(derived);
-
-  const [flash, setFlash] = useState("");
-
-  // ⭐ NEW — Prevent phantom side flips + repeated trade dedupe
-  const lastTimestampRef = useRef<string | null>(null);
-  const lastTradeRef = useRef<Trade | null>(null);
-
-  const isSameTrade = (a: Trade | null, b: Trade) => {
-    return (
-      a !== null &&
-      a.ticker === b.ticker &&
-      a.side === b.side &&
-      a.entry === b.entry &&
-      a.stop === b.stop &&
-      a.tp === b.tp
-    );
-  };
-
-  function fmtInt(n: number) {
-    return Math.round(n).toLocaleString("en-US");
-  }
-
-  function fmtPrice(n: number, decimals = 5) {
-    return n.toLocaleString("en-US", {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-    });
-  }
-
-  const CopyBtn = ({ val }: { val: number }) => {
-    const [copied, setCopied] = useState(false);
-
-    const handleCopy = async () => {
-      await navigator.clipboard.writeText(String(val));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    };
-
-    return (
-      <button
-        onClick={handleCopy}
-        className={`
-          relative ml-2 rounded-md px-2 py-1 text-xs font-medium transition-all
-          ${copied
-            ? "text-emerald-300 drop-shadow-[0_0_6px_rgba(0,255,0,0.45)] scale-105"
-            : "text-slate-300 bg-slate-700/40 hover:bg-slate-600/40 hover:text-white"
-          }
-        `}
-      >
-        {copied ? "✓ Copied!" : "Copy"}
-
-        {copied && (
-          <span className="absolute inset-0 rounded-md bg-emerald-400/20 animate-ping"></span>
-        )}
-      </button>
-    );
-  };
-
-  // Load leverage + margin from AI card
   useEffect(() => {
-    try {
-      const storedLev = localStorage.getItem("forex_leverage");
-      const storedMargin = localStorage.getItem("forex_required_margin");
+    setDisplayed("");
+    setDone(false);
 
-      if (storedLev) setLeverage(parseFloat(storedLev));
-      if (storedMargin) setMarginFromAi(parseFloat(storedMargin));
-    } catch {}
-  }, []);
+    let i = 0;
 
-  // Sync margin from AI card every second
-  useEffect(() => {
-    const interval = setInterval(() => {
-      try {
-        const storedMargin = localStorage.getItem("forex_required_margin");
-        if (storedMargin) {
-          const m = parseFloat(storedMargin);
-          setMarginFromAi((prev) => (prev !== m ? m : prev));
+    const start = setTimeout(() => {
+      const tick = () => {
+        setDisplayed(text.slice(0, i));
+        i++;
+        if (i <= text.length) {
+          setTimeout(tick, speed);
+        } else {
+          setDone(true);
         }
-      } catch {}
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // ⭐ POLL TRADE — now with timestamp guard
-  useEffect(() => {
-    // NOTE: this card reads the shared latest trade from /api/trade only.
-    // It does not perform any server-side writes to the trade store.
-    let active = true;
-
-    const pollTrade = async () => {
-      try {
-        const res = await fetch("/api/trade", {
-          method: "GET",
-          cache: "no-store",
-        });
-
-        if (!res.ok) return;
-
-        const json = await res.json();
-        if (!active || !json.trade) return;
-
-        const t = json.trade as Trade;
-
-        if (
-          typeof t.ticker === "string" &&
-          typeof t.side === "string" &&
-          typeof t.entry === "number" &&
-          typeof t.stop === "number" &&
-          typeof t.tp === "number"
-        ) {
-          if (isSameTrade(lastTradeRef.current, t)) {
-            return;
-          }
-
-          if (t.timestamp) {
-            lastTimestampRef.current = t.timestamp;
-          }
-
-          lastTradeRef.current = t;
-          setTrade(t);
-        }
-      } catch (err) {
-        console.error("Error polling /api/trade:", err);
-      }
-    };
-
-    pollTrade();
-    const interval = setInterval(pollTrade, 1000);
-
-    return () => {
-      active = false;
-      clearInterval(interval);
-    };
-  }, []);
-
-  // Compute derived values
-  const computeDerived = () => {
-    if (!trade.entry || marginFromAi <= 0 || leverage <= 0) {
-      return {
-        units: 0,
-        position_value: 0,
-        required_margin: marginFromAi,
       };
+      tick();
+    }, delay);
+
+    return () => clearTimeout(start);
+  }, [text, speed, delay]);
+
+  return { displayed, done };
+}
+
+export default function ForexNewsCard() {
+  // Start shared polling once
+  useTradePolling();
+
+  // Typed Zustand selector
+  const trade = useTradeStore((s: TradeStore) => s.trade);
+
+  const [nextNewsTime, setNextNewsTime] = useState("None");
+  const [newsToday, setNewsToday] = useState(false);
+  const [windowActive, setWindowActive] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+
+  const [aiMessage] = useState(getRandomMessage());
+  const { displayed, done } = useTypingEffect(aiMessage, 28, 600);
+
+  const [musicEnabledState, setMusicEnabledState] = useState(false);
+  const [musicVolumeState, setMusicVolumeState] = useState(0.25);
+
+  // Load music settings
+  useEffect(() => {
+    const savedVol = localStorage.getItem("ai_music_volume");
+    if (savedVol) {
+      const vol = Number(savedVol);
+      setMusicVolumeState(vol);
+      setMusicVolume(vol);
     }
 
-    const units = (marginFromAi * leverage) / trade.entry;
-    const positionValue = units * trade.entry;
-
-    return {
-      units,
-      position_value: positionValue,
-      required_margin: marginFromAi,
-    };
-  };
-
-  useEffect(() => {
-    setDerived(computeDerived());
-  }, [trade, marginFromAi, leverage]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDerived(computeDerived());
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, [trade, marginFromAi, leverage]);
-
-  // Animate transitions
-  useEffect(() => {
-    const oldT = prevTrade.current;
-    const newT = trade;
-    const oldD = prevDerived.current;
-    const newD = derived;
-
-    // ⭐ Only animate on REAL trade changes
-    if (newT.timestamp !== oldT.timestamp) {
-      setFlash(
-        newT.side === "long"
-          ? "flash-green"
-          : newT.side === "short"
-          ? "flash-red"
-          : ""
-      );
-      setTimeout(() => setFlash(""), 300);
-
-      const duration = 300;
-      const start = performance.now();
-
-      const animate = (time: number) => {
-        const progress = Math.min((time - start) / duration, 1);
-        const eased = progress * (2 - progress);
-
-        setAnimTrade({
-          ticker: newT.ticker,
-          side: newT.side,
-          entry: oldT.entry + (newT.entry - oldT.entry) * eased,
-          tp: oldT.tp + (newT.tp - oldT.tp) * eased,
-          stop: oldT.stop + (newT.stop - oldT.stop) * eased,
-          timestamp: newT.timestamp,
-        });
-
-        setAnimDerived({
-          units: oldD.units + (newD.units - oldD.units) * eased,
-          position_value:
-            oldD.position_value +
-            (newD.position_value - oldD.position_value) * eased,
-          required_margin:
-            oldD.required_margin +
-            (newD.required_margin - oldD.required_margin) * eased,
-        });
-
-        if (progress < 1) requestAnimationFrame(animate);
-      };
-
-      requestAnimationFrame(animate);
-      prevTrade.current = newT;
-      prevDerived.current = newD;
+    const savedEnabled = localStorage.getItem("ai_music_enabled");
+    if (savedEnabled === "true") {
+      setMusicEnabledState(true);
+      setMusicEnabled(true);
     }
-  }, [trade, derived]);
+  }, []);
 
-  const getSideColor = () => {
-    if (animTrade.side === "long")
-      return "text-emerald-400 drop-shadow-[0_0_6px_rgba(0,255,180,0.45)]";
-    if (animTrade.side === "short")
-      return "text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]";
-    return "text-slate-500";
+  const toggleMusic = () => {
+    const next = !musicEnabledState;
+    setMusicEnabledState(next);
+    setMusicEnabled(next);
   };
 
-  // ⭐ FINAL RENDER WITH AI PULSE GLOW
+  const handleMusicVolume = (v: number) => {
+    const vol = v / 100;
+    setMusicVolumeState(vol);
+    setMusicVolume(vol);
+  };
+
+  // React to shared trade updates
+  useEffect(() => {
+    if (!trade) return;
+
+    setNextNewsTime(trade.next_news_time ?? "None");
+    setNewsToday(Boolean(trade.news_today));
+    setWindowActive(Boolean(trade.news_window_active));
+    setCountdown(Number(trade.news_countdown ?? 0));
+  }, [trade]);
+
+  const cleanTime = nextNewsTime.replace("Today, ", "");
+
+  const noEvents =
+    nextNewsTime === "None" ||
+    nextNewsTime === "" ||
+    nextNewsTime === null;
+
   return (
-    <GTCard
-      className={`
-        flex h-full flex-col gap-4 border-2 rounded-xl transition-all
-        ${animTrade.side === "long" ? "ai-pulse-blue" : ""}
-        ${animTrade.side === "short" ? "ai-pulse-red" : ""}
-      `}
-    >
+    <GTCard className="flex h-full flex-col gap-4">
+
+      {/* Header */}
       <p className="text-center text-xs uppercase tracking-wide text-slate-400">
-        Trade Execution Details
+        Daily News Status
       </p>
 
-      <div className="space-y-3">
+      <div className="flex flex-1 flex-col space-y-3">
 
-        {/* SIDE */}
-        <div
-          className={`
-            flex items-center justify-between rounded-xl border border-emerald-500/20 p-3 transition-all
-            ${flash === "flash-green" ? "bg-emerald-950/30" : ""}
-            ${flash === "flash-red" ? "bg-red-950/30" : ""}
-          `}
-        >
-          <span className="text-slate-400">Side:</span>
-          <span className={`text-xl font-semibold capitalize tabular-nums ${getSideColor()}`}>
-            {animTrade.side || "--"}
+        {/* Ticker */}
+        <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
+          <span className="text-lg font-semibold text-slate-50">
+            EURUSD • OANDA
           </span>
         </div>
 
-        {/* TICKER */}
-        <div className="flex items-center justify-between rounded-xl border border-blue-500/20 p-3">
-          <span className="text-slate-400">Ticker:</span>
-          <span className="text-xl font-semibold tabular-nums text-blue-300 drop-shadow-[0_0_6px_rgba(0,150,255,0.45)]">
-            {animTrade.ticker || "--"}
-          </span>
+        {/* NEWS CELL */}
+        <div className="rounded-xl border border-emerald-500/20 p-3 text-center space-y-1">
+
+          {newsToday && countdown > 0 && (
+            <>
+              <span className="block text-xl font-semibold text-red-400">
+                ⚠️ NEWS TODAY
+              </span>
+              <span className="block text-lg font-semibold text-slate-50">
+                {cleanTime} est
+              </span>
+            </>
+          )}
+
+          {newsToday && countdown === 0 && (
+            <>
+              <span className="block text-xl font-semibold text-red-400">
+                ⚠️ NEWS WAS TODAY
+              </span>
+              <span className="block text-lg font-semibold text-slate-50">
+                Occurred at {cleanTime} est
+              </span>
+              <span className="block text-sm text-red-300 italic">
+                {noEvents
+                  ? "No upcoming events scheduled"
+                  : `next event: ${nextNewsTime} est`}
+              </span>
+            </>
+          )}
+
+          {!newsToday && (
+            <>
+              <span className="block text-xl font-semibold text-emerald-400">
+                ✓ No News Today
+              </span>
+              <span className="block text-sm text-slate-400 italic">
+                {noEvents
+                  ? "No upcoming events scheduled"
+                  : `next event: ${nextNewsTime} est`}
+              </span>
+            </>
+          )}
+
         </div>
 
-        {/* UNITS */}
-        <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
-          <span className="text-slate-400">Units:</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-200 flex items-center">
-            {animDerived.units ? fmtInt(animDerived.units) : "--"}
-            {animDerived.units > 0 && <CopyBtn val={Math.round(animDerived.units)} />}
-          </span>
+        {/* SAFE / UNSAFE */}
+        <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
+          {windowActive ? (
+            <span className="block text-lg font-semibold text-red-400">
+              ⚠️ Avoid trading — news window active
+            </span>
+          ) : (
+            <span className="block text-lg font-semibold text-emerald-400">
+              🟢 Safe to take trades
+            </span>
+          )}
         </div>
 
-        {/* POSITION VALUE */}
-        <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
-          <span className="text-slate-400">Trade Amount:</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-200 flex items-center">
-            {animDerived.position_value ? `$${fmtInt(animDerived.position_value)}` : "--"}
-            {animDerived.position_value > 0 && (
-              <CopyBtn val={Math.round(animDerived.position_value)} />
-            )}
-          </span>
+        {/* AI OUTPUT */}
+        <div className="rounded-xl border border-emerald-500/20 p-4 space-y-3 bg-[#050509]">
+          <div className="flex items-center space-x-2 opacity-80">
+            <div className="flex space-x-1">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse delay-150"></span>
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse delay-300"></span>
+            </div>
+            <span className="text-xs text-slate-400 tracking-wide">
+              AI is reflecting…
+            </span>
+          </div>
+
+          <p className="text-sm leading-relaxed text-slate-200 min-h-[48px] fade-in">
+            {displayed}
+            {!done && <span className="ml-1 animate-pulse">▌</span>}
+            {done && <span className="ml-1 animate-blink">▌</span>}
+          </p>
         </div>
 
-        {/* REQUIRED MARGIN */}
-        <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
-          <span className="text-slate-400">Required Margin:</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-200 flex items-center">
-            {animDerived.required_margin ? `$${fmtInt(animDerived.required_margin)}` : "--"}
-            {animDerived.required_margin > 0 && (
-              <CopyBtn val={Math.round(animDerived.required_margin)} />
-            )}
-          </span>
-        </div>
+        {/* MUSIC CONTROL */}
+        <div className="rounded-xl border border-emerald-500/20 p-4 space-y-4">
 
-        {/* ENTRY */}
-        <div className="flex items-center justify-between rounded-xl border border-blue-500/20 p-3">
-          <span className="text-slate-400">Entry Price:</span>
-          <span className="text-xl font-semibold tabular-nums text-blue-300 flex items-center">
-            {animTrade.entry ? fmtPrice(animTrade.entry) : "--"}
-            {animTrade.entry > 0 && <CopyBtn val={animTrade.entry} />}
-          </span>
-        </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-slate-400 tracking-wide">
+              Deep Focus Mode
+            </span>
 
-        {/* TP */}
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
-          <span className="text-slate-400">Take Profit:</span>
-          <span className="text-xl font-semibold tabular-nums text-emerald-400 flex items-center">
-            {animTrade.tp ? fmtPrice(animTrade.tp) : "--"}
-            {animTrade.tp > 0 && <CopyBtn val={animTrade.tp} />}
-          </span>
-        </div>
+            <button
+              onClick={toggleMusic}
+              className={`
+                px-3 py-1 rounded-lg text-xs font-semibold transition-all
+                ${
+                  musicEnabledState
+                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"
+                    : "bg-slate-700/30 text-slate-400 border border-slate-600/40"
+                }
+              `}
+            >
+              {musicEnabledState}
+            </button>
+          </div>
 
-        {/* STOP */}
-        <div className="flex items-center justify-between rounded-xl border border-red-500/20 p-3">
-          <span className="text-slate-400">Stop Loss:</span>
-          <span className="text-xl font-semibold tabular-nums text-red-400 flex items-center">
-            {animTrade.stop ? fmtPrice(animTrade.stop) : "--"}
-            {animTrade.stop > 0 && <CopyBtn val={animTrade.stop} />}
-          </span>
+          {musicEnabledState && (
+            <GTSlider
+              title="Atmosphere Level"
+              value={musicVolumeState * 100}
+              min={0}
+              max={100}
+              step={1}
+              onChange={handleMusicVolume}
+            />
+          )}
+
         </div>
 
       </div>
+
+      <style jsx>{`
+        @keyframes blink {
+          0% { opacity: 1; }
+          50% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+        .animate-blink {
+          animation: blink 1.2s infinite;
+        }
+        .fade-in {
+          animation: fadeIn 0.6s ease forwards;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
     </GTCard>
   );
 }

@@ -6,14 +6,11 @@ import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
 import GTSlider from "@/app/components/ui/GTSlider";
 
-// AI persona text
 import { getRandomMessage } from "./Ai_Text";
+import { setMusicEnabled, setMusicVolume } from "./Ai_AudioManager";
 
-// GLOBAL AUDIO ENGINE
-import {
-  setMusicEnabled,
-  setMusicVolume,
-} from "./Ai_AudioManager";
+import { useTradeStore, TradeStore } from "./useTradeStore";
+import { useTradePolling } from "./useTradePolling";
 
 // ------------------------------------------------------------
 // TYPING EFFECT
@@ -48,6 +45,12 @@ function useTypingEffect(text: string, speed = 35, delay = 600) {
 }
 
 export default function ForexNewsCard() {
+  // Start shared polling once
+  useTradePolling();
+
+  // Typed Zustand selector
+  const trade = useTradeStore((s: TradeStore) => s.trade);
+
   const [nextNewsTime, setNextNewsTime] = useState("None");
   const [newsToday, setNewsToday] = useState(false);
   const [windowActive, setWindowActive] = useState(false);
@@ -56,72 +59,46 @@ export default function ForexNewsCard() {
   const [aiMessage] = useState(getRandomMessage());
   const { displayed, done } = useTypingEffect(aiMessage, 28, 600);
 
-  // ------------------------------------------------------------
-  // MUSIC CONTROL — UI + REAL AUDIO ENGINE
-  // ------------------------------------------------------------
   const [musicEnabledState, setMusicEnabledState] = useState(false);
   const [musicVolumeState, setMusicVolumeState] = useState(0.25);
 
+  // Load music settings
   useEffect(() => {
     const savedVol = localStorage.getItem("ai_music_volume");
     if (savedVol) {
       const vol = Number(savedVol);
       setMusicVolumeState(vol);
-      setMusicVolume(vol); // real engine
+      setMusicVolume(vol);
     }
 
     const savedEnabled = localStorage.getItem("ai_music_enabled");
     if (savedEnabled === "true") {
       setMusicEnabledState(true);
-      setMusicEnabled(true); // real engine
+      setMusicEnabled(true);
     }
   }, []);
 
   const toggleMusic = () => {
     const next = !musicEnabledState;
     setMusicEnabledState(next);
-    setMusicEnabled(next); // real engine
+    setMusicEnabled(next);
   };
 
   const handleMusicVolume = (v: number) => {
     const vol = v / 100;
     setMusicVolumeState(vol);
-    setMusicVolume(vol); // real engine
+    setMusicVolume(vol);
   };
 
-  // ------------------------------------------------------------
-  // FETCH NEWS
-  // ------------------------------------------------------------
+  // React to shared trade updates
   useEffect(() => {
-    let active = true;
+    if (!trade) return;
 
-    const fetchNews = async () => {
-      try {
-        const res = await fetch("/api/trade", { cache: "no-store" });
-        if (!res.ok) return;
-
-        const json = await res.json();
-        const trade = json?.trade ?? json;
-
-        if (!trade || typeof trade !== "object") return;
-        if (!active) return;
-
-        setNextNewsTime(trade.next_news_time ?? "None");
-        setNewsToday(Boolean(trade.news_today));
-        setWindowActive(Boolean(trade.news_window_active));
-        setCountdown(Number(trade.news_countdown ?? 0));
-      } catch (err) {
-        console.error("Failed to fetch news", err);
-      }
-    };
-
-    fetchNews();
-    const interval = setInterval(fetchNews, 60000);
-    return () => {
-      active = false;
-      clearInterval(interval);
-    };
-  }, []);
+    setNextNewsTime(trade.next_news_time ?? "None");
+    setNewsToday(Boolean(trade.news_today));
+    setWindowActive(Boolean(trade.news_window_active));
+    setCountdown(Number(trade.news_countdown ?? 0));
+  }, [trade]);
 
   const cleanTime = nextNewsTime.replace("Today, ", "");
 
@@ -170,7 +147,9 @@ export default function ForexNewsCard() {
                 Occurred at {cleanTime} est
               </span>
               <span className="block text-sm text-red-300 italic">
-                {noEvents ? "No upcoming events scheduled" : `next event: ${nextNewsTime} est`}
+                {noEvents
+                  ? "No upcoming events scheduled"
+                  : `next event: ${nextNewsTime} est`}
               </span>
             </>
           )}
@@ -181,7 +160,9 @@ export default function ForexNewsCard() {
                 ✓ No News Today
               </span>
               <span className="block text-sm text-slate-400 italic">
-                {noEvents ? "No upcoming events scheduled" : `next event: ${nextNewsTime} est`}
+                {noEvents
+                  ? "No upcoming events scheduled"
+                  : `next event: ${nextNewsTime} est`}
               </span>
             </>
           )}
@@ -221,12 +202,9 @@ export default function ForexNewsCard() {
           </p>
         </div>
 
-        {/* ------------------------------------------------------------
-            MUSIC CONTROL — UI ONLY (REAL ENGINE CALLED ABOVE)
-        ------------------------------------------------------------ */}
+        {/* MUSIC CONTROL */}
         <div className="rounded-xl border border-emerald-500/20 p-4 space-y-4">
 
-          {/* Toggle */}
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-400 tracking-wide">
               Deep Focus Mode
@@ -236,35 +214,32 @@ export default function ForexNewsCard() {
               onClick={toggleMusic}
               className={`
                 px-3 py-1 rounded-lg text-xs font-semibold transition-all
-                ${musicEnabledState
-                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"
-                  : "bg-slate-700/30 text-slate-400 border border-slate-600/40"
+                ${
+                  musicEnabledState
+                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"
+                    : "bg-slate-700/30 text-slate-400 border border-slate-600/40"
                 }
               `}
             >
-              {musicEnabledState ? "ON" : "OFF"}
+              {musicEnabledState}
             </button>
           </div>
 
-          {/* Volume Slider */}
           {musicEnabledState && (
-            <div>
-              <GTSlider
-                title="Atmosphere Level"
-                value={musicVolumeState * 100}
-                min={0}
-                max={100}
-                step={1}
-                onChange={handleMusicVolume}
-              />
-            </div>
+            <GTSlider
+              title="Atmosphere Level"
+              value={musicVolumeState * 100}
+              min={0}
+              max={100}
+              step={1}
+              onChange={handleMusicVolume}
+            />
           )}
 
         </div>
 
       </div>
 
-      {/* Cursor blink animation */}
       <style jsx>{`
         @keyframes blink {
           0% { opacity: 1; }

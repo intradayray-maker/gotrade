@@ -7,6 +7,7 @@ import {
   setLatestTrade,
   setLatestBar,
   TradeData,
+  tradeVersion,
 } from "./store";
 
 const validSides = new Set(["long", "short", "flat"]);
@@ -25,32 +26,25 @@ const isSameTrade = (a: TradeData | null, b: TradeData) => {
   );
 };
 
-// ---------------------------------------------------------
-// POST — TradingView Webhook Handler
-// ---------------------------------------------------------
-// NOTE: this is the only server-side writer for latestTrade in the app.
-// frontend components only poll /api/trade and never mutate the shared trade store.
 export async function POST(req: Request) {
   try {
-    // ⭐ INSTANCE LOGGER — IDENTIFY WHICH LAMBDA IS RUNNING
     console.log("🔥 INSTANCE:", Math.random());
 
     const webhookSecret = process.env.TRADINGVIEW_WEBHOOK_SECRET;
     if (webhookSecret) {
       const headerSecret = req.headers.get("x-webhook-secret");
       if (headerSecret !== webhookSecret) {
-        return NextResponse.json({ error: "Unauthorized webhook" }, { status: 401 });
+        return NextResponse.json(
+          { error: "Unauthorized webhook" },
+          { status: 401 }
+        );
       }
     }
 
     const body = await req.json();
-
-    // ⭐ LOG EVERY PAYLOAD RECEIVED
     console.log("🔥 WEBHOOK RECEIVED:", body);
 
-    // -----------------------------------------------------
-    // BAR UPDATE — IGNORE FOR TRADE LOGIC
-    // -----------------------------------------------------
+    // BAR UPDATE
     if (body.type === "bar") {
       const { high, low } = body;
 
@@ -74,16 +68,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: "bar stored" });
     }
 
-    // -----------------------------------------------------
-    // IGNORE ANYTHING THAT IS NOT A TRADE
-    // -----------------------------------------------------
+    // IGNORE NON-TRADE
     if (body.type !== "trade") {
       return NextResponse.json({ status: "ignored non-trade" });
     }
 
-    // -----------------------------------------------------
     // TRADE UPDATE
-    // -----------------------------------------------------
     if (typeof body.ticker !== "string" || !body.ticker.trim()) {
       return NextResponse.json({ error: "Invalid ticker" }, { status: 400 });
     }
@@ -131,12 +121,10 @@ export async function POST(req: Request) {
   }
 }
 
-// ---------------------------------------------------------
-// GET — Return Latest Trade + Bar
-// ---------------------------------------------------------
 export async function GET() {
   return NextResponse.json({
     trade: latestTrade,
     bar: latestBar,
+    version: tradeVersion,
   });
 }
