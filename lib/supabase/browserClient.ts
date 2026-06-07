@@ -1,3 +1,6 @@
+//lib\supabase\browserClient.ts
+
+
 "use client";
 
 import { supabaseBrowserClient } from "@/utils/supabase/client";
