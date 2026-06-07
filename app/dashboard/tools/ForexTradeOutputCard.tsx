@@ -1,4 +1,4 @@
-// app\dashboard\tools\ForexTradeOutputCard.tsx
+// app/dashboard/tools/ForexTradeOutputCard.tsx
 
 "use client";
 
@@ -42,6 +42,7 @@ type Trade = {
   entry: number;
   tp: number;
   stop: number;
+  timestamp?: string;
 };
 
 type Derived = {
@@ -57,6 +58,7 @@ export default function ForexTradeOutputCard() {
     entry: 0,
     tp: 0,
     stop: 0,
+    timestamp: "",
   });
 
   const [derived, setDerived] = useState<Derived>({
@@ -76,6 +78,9 @@ export default function ForexTradeOutputCard() {
 
   const [flash, setFlash] = useState("");
 
+  // ⭐ NEW — Prevent phantom side flips
+  const lastTimestampRef = useRef<string | null>(null);
+
   function fmtInt(n: number) {
     return Math.round(n).toLocaleString("en-US");
   }
@@ -87,11 +92,6 @@ export default function ForexTradeOutputCard() {
     });
   }
 
-  function copy(val: number) {
-    navigator.clipboard.writeText(String(val));
-  }
-
-  // ⭐ COPY BUTTON
   const CopyBtn = ({ val }: { val: number }) => {
     const [copied, setCopied] = useState(false);
 
@@ -147,7 +147,7 @@ export default function ForexTradeOutputCard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Poll trade every second
+  // ⭐ POLL TRADE — now with timestamp guard
   useEffect(() => {
     let active = true;
 
@@ -172,7 +172,11 @@ export default function ForexTradeOutputCard() {
           typeof t.stop === "number" &&
           typeof t.tp === "number"
         ) {
-          setTrade(t);
+          // ⭐ Ignore stale trades — only update when timestamp changes
+          if (t.timestamp && t.timestamp !== lastTimestampRef.current) {
+            lastTimestampRef.current = t.timestamp;
+            setTrade(t);
+          }
         }
       } catch (err) {
         console.error("Error polling /api/trade:", err);
@@ -208,12 +212,10 @@ export default function ForexTradeOutputCard() {
     };
   };
 
-  // Instant update when trade or margin changes
   useEffect(() => {
     setDerived(computeDerived());
   }, [trade, marginFromAi, leverage]);
 
-  // Heartbeat refresh every 60 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setDerived(computeDerived());
@@ -229,11 +231,15 @@ export default function ForexTradeOutputCard() {
     const oldD = prevDerived.current;
     const newD = derived;
 
-    if (
-      JSON.stringify(oldT) !== JSON.stringify(newT) ||
-      JSON.stringify(oldD) !== JSON.stringify(newD)
-    ) {
-      setFlash(newT.side === "long" ? "flash-green" : newT.side === "short" ? "flash-red" : "");
+    // ⭐ Only animate on REAL trade changes
+    if (newT.timestamp !== oldT.timestamp) {
+      setFlash(
+        newT.side === "long"
+          ? "flash-green"
+          : newT.side === "short"
+          ? "flash-red"
+          : ""
+      );
       setTimeout(() => setFlash(""), 300);
 
       const duration = 300;
@@ -249,6 +255,7 @@ export default function ForexTradeOutputCard() {
           entry: oldT.entry + (newT.entry - oldT.entry) * eased,
           tp: oldT.tp + (newT.tp - oldT.tp) * eased,
           stop: oldT.stop + (newT.stop - oldT.stop) * eased,
+          timestamp: newT.timestamp,
         });
 
         setAnimDerived({

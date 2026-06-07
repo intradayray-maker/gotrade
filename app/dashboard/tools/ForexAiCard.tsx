@@ -21,11 +21,8 @@ type Trade = {
   entry: number;
   stop: number;
   tp: number;
+  timestamp?: string; // ⭐ added
 };
-
-// ------------------------------------------------------------
-// NOTIFICATION SOUND (disabled)
-// ------------------------------------------------------------
 
 export default function ForexAiCard() {
   const [enabled, setEnabled] = useState(true);
@@ -46,15 +43,15 @@ export default function ForexAiCard() {
   const [status, setStatus] = useState("Listening for breakouts…");
   const [now, setNow] = useState(new Date());
 
-  // ------------------------------------------------------------
-  // BACKGROUND MUSIC STATE
-  // ------------------------------------------------------------
   const [musicEnabledState, setMusicEnabledState] = useState(false);
   const [musicVolumeState, setMusicVolumeState] = useState(0.25);
 
   function formatMoney(n: number) {
     return Math.round(n).toLocaleString("en-US");
   }
+
+  // ⭐ NEW — timestamp guard
+  const lastTimestampRef = useRef<string | null>(null);
 
   // ------------------------------------------------------------
   // LOAD SETTINGS
@@ -107,7 +104,7 @@ export default function ForexAiCard() {
   }, []);
 
   // ------------------------------------------------------------
-  // POLL LATEST TRADE
+  // POLL LATEST TRADE — now with timestamp guard
   // ------------------------------------------------------------
   useEffect(() => {
     let active = true;
@@ -131,7 +128,11 @@ export default function ForexAiCard() {
           typeof t.stop === "number" &&
           typeof t.tp === "number"
         ) {
-          setLatestTrade(t);
+          // ⭐ Ignore stale trades
+          if (t.timestamp && t.timestamp !== lastTimestampRef.current) {
+            lastTimestampRef.current = t.timestamp;
+            setLatestTrade(t);
+          }
         }
       } catch (err) {
         console.error("Latest trade fetch failed:", err);
@@ -149,12 +150,10 @@ export default function ForexAiCard() {
 
   // ------------------------------------------------------------
   // NEW TRADE DETECTION + VOICE + COOLDOWN LOGIC
-  // LONG/SHORT → ALWAYS SPEAK
-  // FLAT → SPEAK ONLY EVERY 4 MINUTES
   // ------------------------------------------------------------
   const prevTradeRef = useRef<Trade | null>(null);
   const lastSpokeRef = useRef(0);
-  const FLAT_COOLDOWN_MS = 240000; // 4 minutes
+  const FLAT_COOLDOWN_MS = 240000;
 
   useEffect(() => {
     if (!latestTrade || !enabled) return;
@@ -162,29 +161,19 @@ export default function ForexAiCard() {
     const prev = prevTradeRef.current;
     prevTradeRef.current = latestTrade;
 
-    if (!prev) return;
-
-    // strict change detection
-    const isNew =
-      prev.ticker !== latestTrade.ticker ||
-      prev.side !== latestTrade.side ||
-      prev.entry !== latestTrade.entry ||
-      prev.stop !== latestTrade.stop ||
-      prev.tp !== latestTrade.tp;
-
-    if (!isNew) return;
+    // ⭐ Only react to REAL trade alerts
+    if (!prev || latestTrade.timestamp === prev.timestamp) return;
 
     const now = Date.now();
     const elapsed = now - lastSpokeRef.current;
 
     // LONG or SHORT → speak immediately
     if (latestTrade.side === "long" || latestTrade.side === "short") {
-      const clip =
+      enqueueAudio(
         latestTrade.side === "long"
           ? getVoiceClip("long")
-          : getVoiceClip("short");
-
-      enqueueAudio(clip);
+          : getVoiceClip("short")
+      );
       lastSpokeRef.current = now;
       return;
     }
@@ -193,8 +182,7 @@ export default function ForexAiCard() {
     if (latestTrade.side === "flat") {
       if (elapsed < FLAT_COOLDOWN_MS) return;
 
-      const clip = getVoiceClip("flat");
-      enqueueAudio(clip);
+      enqueueAudio(getVoiceClip("flat"));
       lastSpokeRef.current = now;
       return;
     }
@@ -270,7 +258,6 @@ export default function ForexAiCard() {
   // ------------------------------------------------------------
   return (
     <GTCard className="flex h-full flex-col gap-4">
-
       {/* DATE + TIME */}
       <div className="grid grid-cols-2 gap-2 text-center">
         <div className="flex flex-col">
@@ -300,19 +287,25 @@ export default function ForexAiCard() {
           ${enabled ? "shadow-[0_0_8px_rgba(0,255,180,0.15)]" : ""}
         `}
       >
-        <h3 className="text-xs tracking-wide text-slate-400">AI VOICE ASSISTANT</h3>
+        <h3 className="text-xs tracking-wide text-slate-400">
+          AI VOICE ASSISTANT
+        </h3>
 
         <div
           onClick={() => {
             const next = !enabled;
             setEnabled(next);
-            setStatus(next ? "Listening for breakouts…" : "Assistant disabled");
+            setStatus(
+              next ? "Listening for breakouts…" : "Assistant disabled"
+            );
           }}
           className={`
             flex h-6 w-11 cursor-pointer items-center rounded-full transition-all
-            ${enabled
-              ? "bg-emerald-500 shadow-[0_0_6px_rgba(0,255,180,0.35)]"
-              : "bg-slate-700"}
+            ${
+              enabled
+                ? "bg-emerald-500 shadow-[0_0_6px_rgba(0,255,180,0.35)]"
+                : "bg-slate-700"
+            }
           `}
         >
           <div
@@ -329,9 +322,11 @@ export default function ForexAiCard() {
         <p
           className={`
             text-sm tracking-wide transition-all
-            ${enabled
-              ? "text-emerald-300 drop-shadow-[0_0_6px_rgba(0,255,180,0.35)]"
-              : "text-slate-500"}
+            ${
+              enabled
+                ? "text-emerald-300 drop-shadow-[0_0_6px_rgba(0,255,180,0.35)]"
+                : "text-slate-500"
+            }
           `}
         >
           {status}
@@ -376,7 +371,6 @@ export default function ForexAiCard() {
           ${formatMoney(displayMargin)}
         </span>
       </div>
-
     </GTCard>
   );
 }
