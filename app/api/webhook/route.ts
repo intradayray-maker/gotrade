@@ -1,5 +1,5 @@
 // app/api/webhook/route.ts
-// NODE RUNTIME — stable, no waitUntil, no edge quirks
+// NODE RUNTIME — updates 3 single-row EURUSD tables
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -9,7 +9,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? ""
 );
 
-const ROW_ID = "65f3ad34-2fd0-4dab-91c2-80fc676198e9";
+// Your actual row IDs
+const TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
+const BAR_ROW_ID   = "87b8c55f-52c7-4824-9fc7-98febbbdb02d";
+const NEWS_ROW_ID  = "d1c4f448-a9f9-4938-ac75-14398ee7aa40";
 
 export async function POST(req: Request) {
   try {
@@ -30,134 +33,90 @@ export async function POST(req: Request) {
     const type = String(body.type ?? "").toLowerCase();
     console.log("[WEBHOOK] Received:", type, body);
 
-    // Fetch existing row
-    const { data: existing, error: fetchError } = await supabase
-      .from("trade_state")
-      .select("*")
-      .eq("id", ROW_ID)
-      .single();
-
-    if (fetchError) {
-      console.warn("[WEBHOOK] Fetch warning:", fetchError);
-    }
-
-    // Start payload from existing row to avoid resets
-    const payload: any = existing ? { ...existing } : { id: ROW_ID };
-
-    const has = (k: string) => Object.prototype.hasOwnProperty.call(body, k);
-
-    const normalizeSide = (s: any) => {
-      if (!s) return undefined;
-      const v = String(s).toLowerCase();
-      if (v === "buy") return "long";
-      if (v === "sell") return "short";
-      if (v === "long" || v === "short" || v === "flat") return v;
-      return undefined;
-    };
-
     // -----------------------------
     // TRADE UPDATE
     // -----------------------------
     if (type === "trade") {
-      console.log("[WEBHOOK] Processing TRADE");
+      const normalizeSide = (s: any) => {
+        if (!s) return "flat";
+        const v = String(s).toLowerCase();
+        if (v === "buy") return "long";
+        if (v === "sell") return "short";
+        if (["long", "short", "flat"].includes(v)) return v;
+        return "flat";
+      };
 
-      const mapped = normalizeSide(body.side);
-      if (mapped) payload.side = mapped;
+      const payload = {
+        side: normalizeSide(body.side),
+        entry: Number(body.entry) || null,
+        stop: Number(body.stop) || null,
+        tp: Number(body.tp) || null,
+        timestamp: new Date().toISOString()
+      };
 
-      if (has("ticker") && typeof body.ticker === "string") {
-        payload.ticker = body.ticker.trim();
-      }
-
-      if (has("entry")) {
-        const v = Number(body.entry);
-        if (Number.isFinite(v)) payload.entry = v;
-      }
-
-      if (has("stop")) {
-        const v = Number(body.stop);
-        if (Number.isFinite(v)) payload.stop = v;
-      }
-
-      if (has("tp")) {
-        const v = Number(body.tp);
-        if (Number.isFinite(v)) payload.tp = v;
-      }
-
-      // Optional news fields
-      if (has("news_today")) payload.news_today = Boolean(body.news_today);
-      if (has("news_message")) payload.news_message = body.news_message;
-      if (has("next_news_time")) payload.next_news_time = body.next_news_time;
-      if (has("news_window_active")) payload.news_window_active = Boolean(body.news_window_active);
-      if (has("news_countdown")) {
-        const v = Number(body.news_countdown);
-        if (Number.isFinite(v)) payload.news_countdown = v;
-      }
-
-      payload.timestamp = new Date().toISOString();
-
-      // Write to Supabase
-      const { error: updateError } = await supabase
-        .from("trade_state")
+      const { error } = await supabase
+        .from("EURUSD_trades_state")
         .update(payload)
-        .eq("id", ROW_ID);
+        .eq("id", TRADE_ROW_ID);
 
-      if (updateError) {
-        console.error("[WEBHOOK] Trade update error:", updateError);
-      } else {
-        console.log("[WEBHOOK] Trade updated");
+      if (error) {
+        console.error("[WEBHOOK] Trade update error:", error);
+        return NextResponse.json({ ok: false, error: "trade update failed" }, { status: 400 });
       }
 
-      return NextResponse.json({ ok: true, status: "trade processed" });
+      console.log("[WEBHOOK] Trade updated:", payload);
+      return NextResponse.json({ ok: true, status: "trade updated" });
     }
 
     // -----------------------------
     // BAR UPDATE
     // -----------------------------
     if (type === "bar") {
-      console.log("[WEBHOOK] Processing BAR");
+      const payload = {
+        high: Number(body.high) || null,
+        low: Number(body.low) || null,
+        timestamp: new Date().toISOString()
+      };
 
-      const currentSide = existing?.side ?? "flat";
-
-      // Ignore bar updates during active trades
-      if (currentSide !== "flat") {
-        console.log("[WEBHOOK] BAR ignored — active position:", currentSide);
-        return NextResponse.json({ ok: true, status: "bar ignored" });
-      }
-
-      if (has("high")) {
-        const v = Number(body.high);
-        if (Number.isFinite(v)) payload.high = v;
-      }
-
-      if (has("low")) {
-        const v = Number(body.low);
-        if (Number.isFinite(v)) payload.low = v;
-      }
-
-      // Optional news fields
-      if (has("news_today")) payload.news_today = Boolean(body.news_today);
-      if (has("news_message")) payload.news_message = body.news_message;
-      if (has("next_news_time")) payload.next_news_time = body.next_news_time;
-      if (has("news_window_active")) payload.news_window_active = Boolean(body.news_window_active);
-      if (has("news_countdown")) {
-        const v = Number(body.news_countdown);
-        if (Number.isFinite(v)) payload.news_countdown = v;
-      }
-
-      payload.timestamp = new Date().toISOString();
-
-      const { error: updateError } = await supabase
-        .from("trade_state")
+      const { error } = await supabase
+        .from("EURUSD_bar_state")
         .update(payload)
-        .eq("id", ROW_ID);
+        .eq("id", BAR_ROW_ID);
 
-      if (updateError) {
-        console.error("[WEBHOOK] Bar update error:", updateError);
-      } else {
-        console.log("[WEBHOOK] Bar updated");
+      if (error) {
+        console.error("[WEBHOOK] Bar update error:", error);
+        return NextResponse.json({ ok: false, error: "bar update failed" }, { status: 400 });
       }
 
-      return NextResponse.json({ ok: true, status: "bar processed" });
+      console.log("[WEBHOOK] Bar updated:", payload);
+      return NextResponse.json({ ok: true, status: "bar updated" });
+    }
+
+    // -----------------------------
+    // NEWS UPDATE
+    // -----------------------------
+    if (type === "news") {
+      const payload = {
+        news_today: Boolean(body.news_today),
+        news_message: body.news_message ?? null,
+        next_news_time: body.next_news_time ?? null,
+        news_window_active: Boolean(body.news_window_active),
+        news_countdown: Number(body.news_countdown) || null,
+        timestamp: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from("EURUSD_news_state")
+        .update(payload)
+        .eq("id", NEWS_ROW_ID);
+
+      if (error) {
+        console.error("[WEBHOOK] News update error:", error);
+        return NextResponse.json({ ok: false, error: "news update failed" }, { status: 400 });
+      }
+
+      console.log("[WEBHOOK] News updated:", payload);
+      return NextResponse.json({ ok: true, status: "news updated" });
     }
 
     // Unknown type
