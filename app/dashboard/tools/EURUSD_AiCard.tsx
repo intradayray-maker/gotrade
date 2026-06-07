@@ -42,8 +42,9 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// EURUSD single-row ID (matches webhook)
+// Single-row IDs
 const EURUSD_TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
+const EURUSD_BAR_ROW_ID = "b7a2b0e4-8c9f-4c8e-9e8e-0f7c2d1a9f33"; // <-- your bar row ID
 
 // ------------------------------------------------------------
 // COMPONENT
@@ -122,19 +123,19 @@ export default function EURUSD_AiCard() {
   }, []);
 
   // ------------------------------------------------------------
-  // SUPABASE: INITIAL FETCH + REALTIME SUBSCRIPTION
+  // SUPABASE: TRADE STATE (ENTRY/STOP/TP)
   // ------------------------------------------------------------
   useEffect(() => {
     let mounted = true;
 
     const fetchInitial = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("EURUSD_trades_state")
         .select("ticker, side, entry, stop, tp, timestamp")
         .eq("id", EURUSD_TRADE_ROW_ID)
         .single();
 
-      if (!mounted || error || !data) return;
+      if (!mounted || !data) return;
 
       const t: Trade = {
         ticker: data.ticker,
@@ -145,10 +146,8 @@ export default function EURUSD_AiCard() {
         timestamp: data.timestamp,
       };
 
-      if (!isSameTrade(latestTradeRef.current, t)) {
-        latestTradeRef.current = t;
-        setLatestTradeState(t);
-      }
+      latestTradeRef.current = t;
+      setLatestTradeState(t);
     };
 
     fetchInitial();
@@ -177,10 +176,8 @@ export default function EURUSD_AiCard() {
             timestamp: d.timestamp,
           };
 
-          if (!isSameTrade(latestTradeRef.current, t)) {
-            latestTradeRef.current = t;
-            setLatestTradeState(t);
-          }
+          latestTradeRef.current = t;
+          setLatestTradeState(t);
         }
       )
       .subscribe();
@@ -235,15 +232,10 @@ export default function EURUSD_AiCard() {
   }, [latestTradeState, enabled]);
 
   // ------------------------------------------------------------
-  // MARGIN CALCULATION
+  // MARGIN CALCULATION (TRADE-BASED)
   // ------------------------------------------------------------
   useEffect(() => {
-    if (!latestTradeState) {
-      setRequiredMargin(0);
-      setSize(0);
-      setRiskDistance(0);
-      return;
-    }
+    if (!latestTradeState) return;
 
     const rd = Math.abs(latestTradeState.entry - latestTradeState.stop);
     const sz = rd > 0 ? riskAmount / rd : 0;
@@ -255,6 +247,52 @@ export default function EURUSD_AiCard() {
 
     localStorage.setItem("forex_required_margin", String(margin));
   }, [latestTradeState, riskAmount, leverage]);
+
+  // ------------------------------------------------------------
+  // BAR-BASED MARGIN UPDATES WHEN FLAT
+  // ------------------------------------------------------------
+  useEffect(() => {
+    let mounted = true;
+
+    const channel = supabase
+      .channel("eurusd-bar-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "EURUSD_bar_state",
+          filter: `id=eq.${EURUSD_BAR_ROW_ID}`,
+        },
+        (payload) => {
+          if (!mounted || !payload.new) return;
+
+          // Only update margin when FLAT
+          if (latestTradeRef.current?.side !== "flat") return;
+
+          const bar = payload.new;
+
+          const entry = bar.high;
+          const stop = bar.low; // Pine already applied pip cushion
+          const rd = Math.abs(entry - stop);
+
+          const sz = rd > 0 ? riskAmount / rd : 0;
+          const margin = leverage > 0 ? (sz * entry) / leverage : 0;
+
+          setRiskDistance(rd);
+          setSize(sz);
+          setRequiredMargin(margin);
+
+          localStorage.setItem("forex_required_margin", String(margin));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, [riskAmount, leverage, latestTradeState]);
 
   // ------------------------------------------------------------
   // MARGIN ANIMATION
