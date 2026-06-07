@@ -1,32 +1,51 @@
 // app/api/bar/route.ts
 
 import { NextResponse } from "next/server";
-import { setLatestBar } from "@/app/api/trade/store";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { high, low } = body;
 
-    if (typeof high !== "number" || typeof low !== "number") {
+    if (typeof body.high !== "number" || typeof body.low !== "number") {
       return NextResponse.json({ error: "Invalid bar data" }, { status: 400 });
     }
 
-    setLatestBar({
-      high,
-      low,
-      updated_at: new Date().toISOString(),
+    const payload = {
+      high: body.high,
+      low: body.low,
+      timestamp: new Date().toISOString(),
+    };
 
-      news_today: Boolean(body.news_today),
-      news_message: body.news_message ?? "",
-      next_news_time: body.next_news_time ?? "None",
+    const { error } = await supabase
+      .from("trade_state")
+      .update(payload)
+      .eq("id", (await getSingleId()));
 
-      news_window_active: Boolean(body.news_window_active),
-      news_countdown: Number(body.news_countdown ?? 0),
-    });
+    if (error) {
+      console.error("SUPABASE BAR UPDATE ERROR:", error);
+      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    }
 
-    return NextResponse.json({ status: "bar stored" });
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    console.error("BAR WEBHOOK ERROR:", err);
+    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
   }
+}
+
+async function getSingleId() {
+  const { data, error } = await supabase
+    .from("trade_state")
+    .select("id")
+    .limit(1)
+    .single();
+
+  if (error || !data) throw new Error("trade_state row missing");
+  return data.id;
 }

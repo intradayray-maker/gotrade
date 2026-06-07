@@ -1,3 +1,5 @@
+// app/api/trade/route.ts
+
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -10,45 +12,37 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    // body from Pine:
-    // type: "trade" | "bar"
-    // side, ticker, entry, stop, tp, timestamp
-    // news_today, news_message, next_news_time,
-    // news_window_active, news_countdown,
-    // high, low
-
+    // Extract fields TradingView sends
     const payload = {
-      side: body.side,
-      ticker: body.ticker,
-      entry: body.entry,
-      stop: body.stop,
-      tp: body.tp,
-      timestamp: body.timestamp,
+      side: body.side ?? null,
+      ticker: body.ticker ?? null,
+      entry: body.entry ?? null,
+      stop: body.stop ?? null,
+      tp: body.tp ?? null,
+      timestamp: body.timestamp ?? new Date().toISOString(),
 
-      news_today: body.news_today,
-      news_message: body.news_message,
-      next_news_time: body.next_news_time,
-      news_window_active: body.news_window_active,
-      news_countdown: body.news_countdown,
-
-      high: body.high,
-      low: body.low
+      news_today: body.news_today ?? null,
+      news_message: body.news_message ?? null,
+      next_news_time: body.next_news_time ?? null,
+      news_window_active: body.news_window_active ?? null,
+      news_countdown: body.news_countdown ?? null,
     };
 
+    // Update the single row
     const { error } = await supabase
       .from("trade_state")
       .update(payload)
       .eq("id", (await getSingleId()));
 
     if (error) {
-      console.error("SUPA UPDATE ERROR", error);
+      console.error("SUPABASE TRADE UPDATE ERROR:", error);
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true });
-  } catch (e: any) {
-    console.error("WEBHOOK ERROR", e);
-    return NextResponse.json({ ok: false, error: e.message }, { status: 500 });
+  } catch (err: any) {
+    console.error("TRADE WEBHOOK ERROR:", err);
+    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
   }
 }
 

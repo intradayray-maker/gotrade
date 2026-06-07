@@ -5,13 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
 
-import {
-  useTradeStore,
-  TradeStore,
-  Trade,
-} from "./useTradeStore";
-
-import { useTradePolling } from "./useTradePolling";
+import { createClient } from "@supabase/supabase-js";
 
 // ------------------------------------------------------------
 // AI PULSE STYLES
@@ -49,6 +43,15 @@ if (typeof document !== "undefined") {
 // ------------------------------------------------------------
 // TYPES
 // ------------------------------------------------------------
+type Trade = {
+  ticker: string;
+  side: string;
+  entry: number;
+  tp: number;
+  stop: number;
+  timestamp?: string;
+};
+
 type Derived = {
   units: number;
   position_value: number;
@@ -56,14 +59,20 @@ type Derived = {
 };
 
 // ------------------------------------------------------------
+// SUPABASE CLIENT
+// ------------------------------------------------------------
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+// ------------------------------------------------------------
 // COMPONENT
 // ------------------------------------------------------------
 export default function ForexTradeOutputCard() {
-  // Start shared polling once
-  useTradePolling();
-
-  // Typed Zustand selector
-  const tradeFromStore = useTradeStore((s: TradeStore) => s.trade);
+  // REMOVE OLD POLLING + STORE
+  // useTradePolling();
+  // const tradeFromStore = useTradeStore((s: TradeStore) => s.trade);
 
   const [trade, setTrade] = useState<Trade>({
     ticker: "",
@@ -172,28 +181,71 @@ export default function ForexTradeOutputCard() {
   }, []);
 
   // ------------------------------------------------------------
-  // REACT TO SHARED TRADE
+  // SUPABASE: INITIAL FETCH + REALTIME SUBSCRIPTION
   // ------------------------------------------------------------
   useEffect(() => {
-    if (!tradeFromStore) return;
+    let mounted = true;
 
-    const t = tradeFromStore;
+    const fetchInitial = async () => {
+      const { data, error } = await supabase
+        .from("trade_state")
+        .select("ticker, side, entry, stop, tp, timestamp")
+        .limit(1)
+        .single();
 
-    if (
-      typeof t.ticker === "string" &&
-      typeof t.side === "string" &&
-      typeof t.entry === "number" &&
-      typeof t.stop === "number" &&
-      typeof t.tp === "number"
-    ) {
+      if (!mounted || error || !data) return;
+
+      const t: Trade = {
+        ticker: data.ticker,
+        side: data.side,
+        entry: data.entry ?? 0,
+        stop: data.stop ?? 0,
+        tp: data.tp ?? 0,
+        timestamp: data.timestamp,
+      };
+
       if (isSameTrade(lastTradeRef.current, t)) return;
 
-      if (t.timestamp) lastTimestampRef.current = t.timestamp;
-
       lastTradeRef.current = t;
+      lastTimestampRef.current = t.timestamp ?? null;
       setTrade(t);
-    }
-  }, [tradeFromStore]);
+    };
+
+    fetchInitial();
+
+    const channel = supabase
+      .channel("trade_state_output_realtime")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "trade_state" },
+        (payload) => {
+          if (!mounted || !payload.new) return;
+
+          const d: any = payload.new;
+
+          const t: Trade = {
+            ticker: d.ticker,
+            side: d.side,
+            entry: d.entry ?? 0,
+            stop: d.stop ?? 0,
+            tp: d.tp ?? 0,
+            timestamp: d.timestamp,
+          };
+
+          if (isSameTrade(lastTradeRef.current, t)) return;
+
+          lastTradeRef.current = t;
+          lastTimestampRef.current = t.timestamp ?? null;
+          setTrade(t);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // ------------------------------------------------------------
   // DERIVED CALCULATION

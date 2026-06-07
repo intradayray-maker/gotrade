@@ -14,8 +14,7 @@ import {
 } from "./Ai_AudioManager";
 
 import { getVoiceClip } from "./Ai_LocalVoice";
-import { useTradeStore } from "./useTradeStore";
-import { useTradePolling } from "./useTradePolling";
+import { createClient } from "@supabase/supabase-js";
 
 type Trade = {
   ticker: string;
@@ -37,12 +36,11 @@ const isSameTrade = (a: Trade | null, b: Trade) => {
   );
 };
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 export default function ForexAiCard() {
-  // start shared polling once
-  useTradePolling();
-
-  const latestTradeFromStore = useTradeStore((s) => s.trade);
-
   const [enabled, setEnabled] = useState(true);
 
   const [riskAmount, setRiskAmount] = useState(50);
@@ -114,25 +112,68 @@ export default function ForexAiCard() {
     return () => clearInterval(t);
   }, []);
 
-  // SUBSCRIBE TO SHARED TRADE (dedupe)
+  // SUPABASE: INITIAL FETCH + REALTIME SUBSCRIPTION
   useEffect(() => {
-    if (!latestTradeFromStore) return;
+    let mounted = true;
 
-    const t = latestTradeFromStore as Trade;
+    const fetchInitial = async () => {
+      const { data, error } = await supabase
+        .from("trade_state")
+        .select("ticker, side, entry, stop, tp, timestamp")
+        .limit(1)
+        .single();
 
-    if (
-      typeof t.entry === "number" &&
-      typeof t.stop === "number" &&
-      typeof t.tp === "number"
-    ) {
-      if (isSameTrade(latestTradeRef.current, t)) {
-        return;
-      }
+      if (error || !data || !mounted) return;
+
+      const t: Trade = {
+        ticker: data.ticker,
+        side: data.side,
+        entry: data.entry ?? 0,
+        stop: data.stop ?? 0,
+        tp: data.tp ?? 0,
+        timestamp: data.timestamp,
+      };
+
+      if (isSameTrade(latestTradeRef.current, t)) return;
 
       latestTradeRef.current = t;
       setLatestTradeState(t);
-    }
-  }, [latestTradeFromStore]);
+    };
+
+    fetchInitial();
+
+    const channel = supabase
+      .channel("trade_state_realtime")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "trade_state" },
+        (payload) => {
+          if (!mounted || !payload.new) return;
+
+          const d: any = payload.new;
+
+          const t: Trade = {
+            ticker: d.ticker,
+            side: d.side,
+            entry: d.entry ?? 0,
+            stop: d.stop ?? 0,
+            tp: d.tp ?? 0,
+            timestamp: d.timestamp,
+          };
+
+          if (isSameTrade(latestTradeRef.current, t)) return;
+
+          latestTradeRef.current = t;
+          setLatestTradeState(t);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // NEW TRADE DETECTION + VOICE + COOLDOWN
   const prevTradeRef = useRef<Trade | null>(null);
@@ -249,7 +290,6 @@ export default function ForexAiCard() {
             })}
           </span>
         </div>
-
         <div className="flex flex-col">
           <span className="text-[20px] font-semibold tracking-wide text-slate-400">
             {now.toLocaleTimeString("en-US", {

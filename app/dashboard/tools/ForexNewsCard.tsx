@@ -9,8 +9,7 @@ import GTSlider from "@/app/components/ui/GTSlider";
 import { getRandomMessage } from "./Ai_Text";
 import { setMusicEnabled, setMusicVolume } from "./Ai_AudioManager";
 
-import { useTradeStore, TradeStore } from "./useTradeStore";
-import { useTradePolling } from "./useTradePolling";
+import { createClient } from "@supabase/supabase-js";
 
 // ------------------------------------------------------------
 // TYPING EFFECT
@@ -44,12 +43,18 @@ function useTypingEffect(text: string, speed = 35, delay = 600) {
   return { displayed, done };
 }
 
-export default function ForexNewsCard() {
-  // Start shared polling once
-  useTradePolling();
+// ------------------------------------------------------------
+// SUPABASE CLIENT
+// ------------------------------------------------------------
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-  // Typed Zustand selector
-  const trade = useTradeStore((s: TradeStore) => s.trade);
+export default function ForexNewsCard() {
+  // REMOVE OLD POLLING + STORE
+  // useTradePolling();
+  // const trade = useTradeStore((s: TradeStore) => s.trade);
 
   const [nextNewsTime, setNextNewsTime] = useState("None");
   const [newsToday, setNewsToday] = useState(false);
@@ -62,7 +67,9 @@ export default function ForexNewsCard() {
   const [musicEnabledState, setMusicEnabledState] = useState(false);
   const [musicVolumeState, setMusicVolumeState] = useState(0.25);
 
-  // Load music settings
+  // ------------------------------------------------------------
+  // LOAD MUSIC SETTINGS
+  // ------------------------------------------------------------
   useEffect(() => {
     const savedVol = localStorage.getItem("ai_music_volume");
     if (savedVol) {
@@ -90,16 +97,58 @@ export default function ForexNewsCard() {
     setMusicVolume(vol);
   };
 
-  // React to shared trade updates
+  // ------------------------------------------------------------
+  // SUPABASE: INITIAL FETCH + REALTIME SUBSCRIPTION
+  // ------------------------------------------------------------
   useEffect(() => {
-    if (!trade) return;
+    let mounted = true;
 
-    setNextNewsTime(trade.next_news_time ?? "None");
-    setNewsToday(Boolean(trade.news_today));
-    setWindowActive(Boolean(trade.news_window_active));
-    setCountdown(Number(trade.news_countdown ?? 0));
-  }, [trade]);
+    const fetchInitial = async () => {
+      const { data, error } = await supabase
+        .from("trade_state")
+        .select(
+          "next_news_time, news_today, news_window_active, news_countdown"
+        )
+        .limit(1)
+        .single();
 
+      if (!mounted || error || !data) return;
+
+      setNextNewsTime(data.next_news_time ?? "None");
+      setNewsToday(Boolean(data.news_today));
+      setWindowActive(Boolean(data.news_window_active));
+      setCountdown(Number(data.news_countdown ?? 0));
+    };
+
+    fetchInitial();
+
+    const channel = supabase
+      .channel("trade_state_news_realtime")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "trade_state" },
+        (payload) => {
+          if (!mounted || !payload.new) return;
+
+          const d: any = payload.new;
+
+          setNextNewsTime(d.next_news_time ?? "None");
+          setNewsToday(Boolean(d.news_today));
+          setWindowActive(Boolean(d.news_window_active));
+          setCountdown(Number(d.news_countdown ?? 0));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // ------------------------------------------------------------
+  // CLEAN TIME
+  // ------------------------------------------------------------
   const cleanTime = nextNewsTime.replace("Today, ", "");
 
   const noEvents =
@@ -107,6 +156,9 @@ export default function ForexNewsCard() {
     nextNewsTime === "" ||
     nextNewsTime === null;
 
+  // ------------------------------------------------------------
+  // UI
+  // ------------------------------------------------------------
   return (
     <GTCard className="flex h-full flex-col gap-4">
 
