@@ -1,5 +1,7 @@
 // app/api/webhook/route.ts
 
+export const runtime = "edge"; // <--- ADD THIS LINE
+
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -8,105 +10,106 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Your single-row UUID
 const ROW_ID = "65f3ad34-2fd0-4dab-91c2-80fc676198e9";
 
 export async function POST(req: Request) {
-  // Respond to TradingView immediately
-  const response = NextResponse.json({ ok: true });
+  const body = await req.json();
 
-  // Process asynchronously
-  (async () => {
-    try {
-      const body = await req.json();
-      const type = body.type;
+// @ts-ignore - waitUntil exists in Edge Runtime
+  req.waitUntil(handleWebhook(body));
 
-      // Fetch existing row so we never overwrite fields
-      const { data: existing, error: fetchError } = await supabase
-        .from("trade_state")
-        .select("*")
-        .eq("id", ROW_ID)
-        .single();
+  return NextResponse.json({ ok: true });
+}
 
-      if (fetchError || !existing) {
-        console.error("FETCH ERROR:", fetchError);
+async function handleWebhook(body: any) {
+  try {
+    const type = body.type;
+
+    const { data: existing, error: fetchError } = await supabase
+      .from("trade_state")
+      .select("*")
+      .eq("id", ROW_ID)
+      .single();
+
+    if (fetchError || !existing) {
+      console.error("FETCH ERROR:", fetchError);
+      return;
+    }
+
+    let payload = { ...existing };
+
+    // -----------------------------
+    // TRADE UPDATE
+    // -----------------------------
+    if (type === "trade") {
+      console.log("TRADE BLOCK HIT:", body);
+
+      const rawSide = String(body.side || "").toLowerCase();
+
+      if (rawSide === "buy" || rawSide === "long") payload.side = "long";
+      else if (rawSide === "sell" || rawSide === "short") payload.side = "short";
+      else payload.side = existing.side;
+
+      payload.ticker = body.ticker ?? existing.ticker;
+
+      payload.entry = Number(body.entry) || existing.entry;
+      payload.stop = Number(body.stop) || existing.stop;
+
+      const tp = Number(body.tp);
+      payload.tp = isNaN(tp) ? existing.tp : tp;
+
+      payload.timestamp = new Date().toISOString();
+    }
+
+    // -----------------------------
+    // BAR UPDATE
+    // -----------------------------
+    if (type === "bar") {
+      if (existing.side !== "flat") {
+        console.log("BAR IGNORED — active position:", existing.side);
         return;
       }
 
-      let payload = { ...existing };
+      console.log("BAR BLOCK HIT:", body);
 
-      // -----------------------------
-      // TRADE UPDATE
-      // -----------------------------
-      if (type === "trade") {
-        // Normalize side
-        const rawSide = String(body.side || "").toLowerCase();
-        if (rawSide === "buy") payload.side = "long";
-        else if (rawSide === "sell") payload.side = "short";
-        else payload.side = existing.side;
+      const high = Number(body.high);
+      const low = Number(body.low);
 
-        payload.ticker = body.ticker ?? existing.ticker;
+      if (!isNaN(high)) payload.high = high;
+      if (!isNaN(low)) payload.low = low;
 
-        payload.entry = Number(body.entry) || existing.entry;
-        payload.stop = Number(body.stop) || existing.stop;
+      payload.timestamp = new Date().toISOString();
 
-        const tp = Number(body.tp);
-        payload.tp = isNaN(tp) ? existing.tp : tp;
+      if (body.news_today !== undefined)
+        payload.news_today = Boolean(body.news_today);
 
-        payload.timestamp = new Date().toISOString();
-      }
+      if (body.news_message !== undefined)
+        payload.news_message = body.news_message;
 
-      // -----------------------------
-      // BAR UPDATE
-      // -----------------------------
-      if (type === "bar") {
+      if (body.next_news_time !== undefined)
+        payload.next_news_time = body.next_news_time;
 
-        // DO NOT update bars during an active trade
-        if (existing.side !== "flat") {
-          console.log("BAR IGNORED — active position:", existing.side);
-          return;
-        }
+      if (body.news_window_active !== undefined)
+        payload.news_window_active = Boolean(body.news_window_active);
 
-        const high = Number(body.high);
-        const low = Number(body.low);
-
-        if (!isNaN(high)) payload.high = high;
-        if (!isNaN(low)) payload.low = low;
-
-        payload.timestamp = new Date().toISOString();
-
-        // Optional: update news fields if present
-        if (body.news_today !== undefined)
-          payload.news_today = Boolean(body.news_today);
-
-        if (body.news_message !== undefined)
-          payload.news_message = body.news_message;
-
-        if (body.next_news_time !== undefined)
-          payload.next_news_time = body.next_news_time;
-
-        if (body.news_window_active !== undefined)
-          payload.news_window_active = Boolean(body.news_window_active);
-
-        if (body.news_countdown !== undefined)
-          payload.news_countdown = Number(body.news_countdown);
-      }
-
-      // -----------------------------
-      // WRITE MERGED PAYLOAD
-      // -----------------------------
-      const { error: updateError } = await supabase
-        .from("trade_state")
-        .update(payload)
-        .eq("id", ROW_ID);
-
-      if (updateError) {
-        console.error("UPDATE ERROR:", updateError);
-      }
-    } catch (err) {
-      console.error("WEBHOOK ERROR:", err);
+      if (body.news_countdown !== undefined)
+        payload.news_countdown = Number(body.news_countdown);
     }
-  })();
 
-  return response;
+    // -----------------------------
+    // WRITE MERGED PAYLOAD
+    // -----------------------------
+    const { error: updateError } = await supabase
+      .from("trade_state")
+      .update(payload)
+      .eq("id", ROW_ID);
+
+    if (updateError) {
+      console.error("UPDATE ERROR:", updateError);
+    } else {
+      console.log("SUPABASE UPDATED:", payload);
+    }
+  } catch (err) {
+    console.error("WEBHOOK ERROR:", err);
+  }
 }
