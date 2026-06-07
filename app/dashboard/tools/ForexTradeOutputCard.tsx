@@ -78,8 +78,20 @@ export default function ForexTradeOutputCard() {
 
   const [flash, setFlash] = useState("");
 
-  // ⭐ NEW — Prevent phantom side flips
+  // ⭐ NEW — Prevent phantom side flips + repeated trade dedupe
   const lastTimestampRef = useRef<string | null>(null);
+  const lastTradeRef = useRef<Trade | null>(null);
+
+  const isSameTrade = (a: Trade | null, b: Trade) => {
+    return (
+      a !== null &&
+      a.ticker === b.ticker &&
+      a.side === b.side &&
+      a.entry === b.entry &&
+      a.stop === b.stop &&
+      a.tp === b.tp
+    );
+  };
 
   function fmtInt(n: number) {
     return Math.round(n).toLocaleString("en-US");
@@ -172,11 +184,16 @@ export default function ForexTradeOutputCard() {
           typeof t.stop === "number" &&
           typeof t.tp === "number"
         ) {
-          // ⭐ Ignore stale trades — only update when timestamp changes
-          if (t.timestamp && t.timestamp !== lastTimestampRef.current) {
-            lastTimestampRef.current = t.timestamp;
-            setTrade(t);
+          if (isSameTrade(lastTradeRef.current, t)) {
+            return;
           }
+
+          if (t.timestamp) {
+            lastTimestampRef.current = t.timestamp;
+          }
+
+          lastTradeRef.current = t;
+          setTrade(t);
         }
       } catch (err) {
         console.error("Error polling /api/trade:", err);

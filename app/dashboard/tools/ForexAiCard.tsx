@@ -24,6 +24,17 @@ type Trade = {
   timestamp?: string; // ⭐ added
 };
 
+const isSameTrade = (a: Trade | null, b: Trade) => {
+  return (
+    a !== null &&
+    a.ticker === b.ticker &&
+    a.side === b.side &&
+    a.entry === b.entry &&
+    a.stop === b.stop &&
+    a.tp === b.tp
+  );
+};
+
 export default function ForexAiCard() {
   const [enabled, setEnabled] = useState(true);
 
@@ -50,8 +61,9 @@ export default function ForexAiCard() {
     return Math.round(n).toLocaleString("en-US");
   }
 
-  // ⭐ NEW — timestamp guard
+  // ⭐ NEW — timestamp guard + repeated trade dedupe
   const lastTimestampRef = useRef<string | null>(null);
+  const latestTradeRef = useRef<Trade | null>(null);
 
   // ------------------------------------------------------------
   // LOAD SETTINGS
@@ -128,11 +140,16 @@ export default function ForexAiCard() {
           typeof t.stop === "number" &&
           typeof t.tp === "number"
         ) {
-          // ⭐ Ignore stale trades
-          if (t.timestamp && t.timestamp !== lastTimestampRef.current) {
-            lastTimestampRef.current = t.timestamp;
-            setLatestTrade(t);
+          if (isSameTrade(latestTradeRef.current, t)) {
+            return;
           }
+
+          if (t.timestamp) {
+            lastTimestampRef.current = t.timestamp;
+          }
+
+          latestTradeRef.current = t;
+          setLatestTrade(t);
         }
       } catch (err) {
         console.error("Latest trade fetch failed:", err);
@@ -159,11 +176,14 @@ export default function ForexAiCard() {
     if (!latestTrade || !enabled) return;
 
     const prev = prevTradeRef.current;
-    prevTradeRef.current = latestTrade;
 
     // ⭐ Only react to REAL trade alerts
-    if (!prev || latestTrade.timestamp === prev.timestamp) return;
+    if (!prev || latestTrade.timestamp === prev.timestamp || isSameTrade(prev, latestTrade)) {
+      prevTradeRef.current = latestTrade;
+      return;
+    }
 
+    prevTradeRef.current = latestTrade;
     const now = Date.now();
     const elapsed = now - lastSpokeRef.current;
 
