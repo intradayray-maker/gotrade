@@ -8,25 +8,30 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const ROW_ID = "65f3ad34-2fd0-4dab-91c2-80fc676198e9";
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    if (typeof body.high !== "number" || typeof body.low !== "number") {
+    // Convert strings → numbers
+    const high = Number(body.high);
+    const low = Number(body.low);
+
+    if (isNaN(high) || isNaN(low)) {
       return NextResponse.json({ error: "Invalid bar data" }, { status: 400 });
     }
 
     const payload = {
-      high: body.high,
-      low: body.low,
+      high,
+      low,
       timestamp: new Date().toISOString(),
     };
 
-    // ALWAYS update the single row with id = 1
     const { error } = await supabase
       .from("trade_state")
       .update(payload)
-      .eq("id", 1);
+      .eq("id", ROW_ID);
 
     if (error) {
       console.error("SUPABASE BAR UPDATE ERROR:", error);
