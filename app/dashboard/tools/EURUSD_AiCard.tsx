@@ -1,5 +1,3 @@
-// app/dashboard/tools/ForexAiCard.tsx
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -16,6 +14,9 @@ import {
 import { getVoiceClip } from "./Ai_LocalVoice";
 import { createClient } from "@supabase/supabase-js";
 
+// ------------------------------------------------------------
+// TYPES
+// ------------------------------------------------------------
 type Trade = {
   ticker: string;
   side: string;
@@ -25,22 +26,29 @@ type Trade = {
   timestamp?: string;
 };
 
-const isSameTrade = (a: Trade | null, b: Trade) => {
-  return (
-    a !== null &&
-    a.ticker === b.ticker &&
-    a.side === b.side &&
-    a.entry === b.entry &&
-    a.stop === b.stop &&
-    a.tp === b.tp
-  );
-};
+const isSameTrade = (a: Trade | null, b: Trade) =>
+  a &&
+  a.ticker === b.ticker &&
+  a.side === b.side &&
+  a.entry === b.entry &&
+  a.stop === b.stop &&
+  a.tp === b.tp;
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// ------------------------------------------------------------
+// SUPABASE
+// ------------------------------------------------------------
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-export default function ForexAiCard() {
+// EURUSD single-row ID (matches webhook)
+const EURUSD_TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
+
+// ------------------------------------------------------------
+// COMPONENT
+// ------------------------------------------------------------
+export default function EURUSD_AiCard() {
   const [enabled, setEnabled] = useState(true);
 
   const [riskAmount, setRiskAmount] = useState(50);
@@ -62,28 +70,29 @@ export default function ForexAiCard() {
   const [musicEnabledState, setMusicEnabledState] = useState(false);
   const [musicVolumeState, setMusicVolumeState] = useState(0.25);
 
-  function formatMoney(n: number) {
-    return Math.round(n).toLocaleString("en-US");
-  }
-
   const latestTradeRef = useRef<Trade | null>(null);
 
+  const formatMoney = (n: number) =>
+    Math.round(n).toLocaleString("en-US");
+
+  // ------------------------------------------------------------
   // LOAD SETTINGS
+  // ------------------------------------------------------------
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const savedRisk = window.localStorage.getItem("forex_dollar_risk");
-    const savedLeverage = window.localStorage.getItem("forex_leverage");
+    const savedRisk = localStorage.getItem("forex_dollar_risk");
+    const savedLeverage = localStorage.getItem("forex_leverage");
 
-    const savedMusicEnabled = window.localStorage.getItem("ai_music_enabled");
-    const savedMusicVolume = window.localStorage.getItem("ai_music_volume");
+    const savedMusicEnabled = localStorage.getItem("ai_music_enabled");
+    const savedMusicVolume = localStorage.getItem("ai_music_volume");
 
-    if (savedRisk !== null) setRiskAmount(Number(savedRisk));
-    if (savedLeverage !== null) setLeverage(Number(savedLeverage));
+    if (savedRisk) setRiskAmount(Number(savedRisk));
+    if (savedLeverage) setLeverage(Number(savedLeverage));
 
     initBackgroundMusic();
 
-    if (savedMusicVolume !== null) {
+    if (savedMusicVolume) {
       const vol = Number(savedMusicVolume);
       setMusicVolumeState(vol);
       setMusicVolume(vol);
@@ -97,13 +106,13 @@ export default function ForexAiCard() {
 
   // SAVE SETTINGS
   useEffect(() => {
-    window.localStorage.setItem("forex_dollar_risk", String(riskAmount));
-    window.localStorage.setItem("forex_leverage", String(leverage));
+    localStorage.setItem("forex_dollar_risk", String(riskAmount));
+    localStorage.setItem("forex_leverage", String(leverage));
   }, [riskAmount, leverage]);
 
   useEffect(() => {
-    window.localStorage.setItem("ai_music_enabled", String(musicEnabledState));
-    window.localStorage.setItem("ai_music_volume", String(musicVolumeState));
+    localStorage.setItem("ai_music_enabled", String(musicEnabledState));
+    localStorage.setItem("ai_music_volume", String(musicVolumeState));
   }, [musicEnabledState, musicVolumeState]);
 
   // LIVE CLOCK
@@ -112,18 +121,20 @@ export default function ForexAiCard() {
     return () => clearInterval(t);
   }, []);
 
+  // ------------------------------------------------------------
   // SUPABASE: INITIAL FETCH + REALTIME SUBSCRIPTION
+  // ------------------------------------------------------------
   useEffect(() => {
     let mounted = true;
 
     const fetchInitial = async () => {
       const { data, error } = await supabase
-        .from("trade_state")
+        .from("EURUSD_trades_state")
         .select("ticker, side, entry, stop, tp, timestamp")
-        .limit(1)
+        .eq("id", EURUSD_TRADE_ROW_ID)
         .single();
 
-      if (error || !data || !mounted) return;
+      if (!mounted || error || !data) return;
 
       const t: Trade = {
         ticker: data.ticker,
@@ -134,23 +145,28 @@ export default function ForexAiCard() {
         timestamp: data.timestamp,
       };
 
-      if (isSameTrade(latestTradeRef.current, t)) return;
-
-      latestTradeRef.current = t;
-      setLatestTradeState(t);
+      if (!isSameTrade(latestTradeRef.current, t)) {
+        latestTradeRef.current = t;
+        setLatestTradeState(t);
+      }
     };
 
     fetchInitial();
 
     const channel = supabase
-      .channel("trade_state_realtime")
+      .channel("eurusd-ai-trade-realtime")
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "trade_state" },
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "EURUSD_trades_state",
+          filter: `id=eq.${EURUSD_TRADE_ROW_ID}`,
+        },
         (payload) => {
           if (!mounted || !payload.new) return;
 
-          const d: any = payload.new;
+          const d = payload.new;
 
           const t: Trade = {
             ticker: d.ticker,
@@ -161,10 +177,10 @@ export default function ForexAiCard() {
             timestamp: d.timestamp,
           };
 
-          if (isSameTrade(latestTradeRef.current, t)) return;
-
-          latestTradeRef.current = t;
-          setLatestTradeState(t);
+          if (!isSameTrade(latestTradeRef.current, t)) {
+            latestTradeRef.current = t;
+            setLatestTradeState(t);
+          }
         }
       )
       .subscribe();
@@ -175,7 +191,9 @@ export default function ForexAiCard() {
     };
   }, []);
 
-  // NEW TRADE DETECTION + VOICE + COOLDOWN
+  // ------------------------------------------------------------
+  // NEW TRADE DETECTION + VOICE
+  // ------------------------------------------------------------
   const prevTradeRef = useRef<Trade | null>(null);
   const lastSpokeRef = useRef(0);
   const FLAT_COOLDOWN_MS = 240000;
@@ -195,6 +213,7 @@ export default function ForexAiCard() {
     }
 
     prevTradeRef.current = latestTradeState;
+
     const nowMs = Date.now();
     const elapsed = nowMs - lastSpokeRef.current;
 
@@ -210,14 +229,14 @@ export default function ForexAiCard() {
 
     if (latestTradeState.side === "flat") {
       if (elapsed < FLAT_COOLDOWN_MS) return;
-
       enqueueAudio(getVoiceClip("flat"));
       lastSpokeRef.current = nowMs;
-      return;
     }
   }, [latestTradeState, enabled]);
 
+  // ------------------------------------------------------------
   // MARGIN CALCULATION
+  // ------------------------------------------------------------
   useEffect(() => {
     if (!latestTradeState) {
       setRequiredMargin(0);
@@ -234,12 +253,12 @@ export default function ForexAiCard() {
     setSize(sz);
     setRequiredMargin(margin);
 
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("forex_required_margin", String(margin));
-    }
+    localStorage.setItem("forex_required_margin", String(margin));
   }, [latestTradeState, riskAmount, leverage]);
 
+  // ------------------------------------------------------------
   // MARGIN ANIMATION
+  // ------------------------------------------------------------
   useEffect(() => {
     const oldVal = prevMargin.current;
     const newVal = requiredMargin;
@@ -263,7 +282,9 @@ export default function ForexAiCard() {
     }
   }, [requiredMargin]);
 
+  // ------------------------------------------------------------
   // MUSIC TOGGLE + VOLUME
+  // ------------------------------------------------------------
   const toggleMusic = () => {
     const next = !musicEnabledState;
     setMusicEnabledState(next);
@@ -276,7 +297,9 @@ export default function ForexAiCard() {
     setMusicVolume(vol);
   };
 
+  // ------------------------------------------------------------
   // UI
+  // ------------------------------------------------------------
   return (
     <GTCard className="flex h-full flex-col gap-4">
       {/* DATE + TIME */}

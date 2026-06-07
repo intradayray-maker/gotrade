@@ -1,8 +1,8 @@
 // app/dashboard/page.tsx
 
-import ForexAiCard from "./tools/ForexAiCard";
-import ForexNewsCard from "./tools/ForexNewsCard";
-import ForexTradeOutputCard from "./tools/ForexTradeOutputCard";
+import ForexAiCard from "./tools/EURUSD_AiCard";
+import ForexNewsCard from "./tools/EURUSD_NewsCard";
+import ForexTradeOutputCard from "./tools/EURUSD_TradeOutputCard";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
 
 export const dynamic = "force-dynamic";

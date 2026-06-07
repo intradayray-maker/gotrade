@@ -1,5 +1,3 @@
-// app/dashboard/tools/ForexNewsCard.tsx
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -51,11 +49,10 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export default function ForexNewsCard() {
-  // REMOVE OLD POLLING + STORE
-  // useTradePolling();
-  // const trade = useTradeStore((s: TradeStore) => s.trade);
+// EURUSD NEWS ROW ID
+const EURUSD_NEWS_ROW_ID = "d1c4f448-a9f9-4938-ac75-14398ee7aa40";
 
+export default function EURUSD_NewsCard() {
   const [nextNewsTime, setNextNewsTime] = useState("None");
   const [newsToday, setNewsToday] = useState(false);
   const [windowActive, setWindowActive] = useState(false);
@@ -105,11 +102,11 @@ export default function ForexNewsCard() {
 
     const fetchInitial = async () => {
       const { data, error } = await supabase
-        .from("trade_state")
+        .from("EURUSD_news_state")
         .select(
           "next_news_time, news_today, news_window_active, news_countdown"
         )
-        .limit(1)
+        .eq("id", EURUSD_NEWS_ROW_ID)
         .single();
 
       if (!mounted || error || !data) return;
@@ -123,14 +120,19 @@ export default function ForexNewsCard() {
     fetchInitial();
 
     const channel = supabase
-      .channel("trade_state_news_realtime")
+      .channel("eurusd-news-realtime")
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "trade_state" },
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "EURUSD_news_state",
+          filter: `id=eq.${EURUSD_NEWS_ROW_ID}`,
+        },
         (payload) => {
           if (!mounted || !payload.new) return;
 
-          const d: any = payload.new;
+          const d = payload.new;
 
           setNextNewsTime(d.next_news_time ?? "None");
           setNewsToday(Boolean(d.news_today));

@@ -1,10 +1,9 @@
-// app/dashboard/tools/ForexTradeOutputCard.tsx
+// app/dashboard/tools/EURUSD_TradeOutputCard.tsx
 
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
-
 import { createClient } from "@supabase/supabase-js";
 
 // ------------------------------------------------------------
@@ -66,14 +65,13 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// EURUSD single-row ID (matches webhook)
+const EURUSD_TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
+
 // ------------------------------------------------------------
 // COMPONENT
 // ------------------------------------------------------------
-export default function ForexTradeOutputCard() {
-  // REMOVE OLD POLLING + STORE
-  // useTradePolling();
-  // const tradeFromStore = useTradeStore((s: TradeStore) => s.trade);
-
+export default function EURUSD_TradeOutputCard() {
   const [trade, setTrade] = useState<Trade>({
     ticker: "",
     side: "",
@@ -144,7 +142,6 @@ export default function ForexTradeOutputCard() {
         `}
       >
         {copied ? "✓ Copied!" : "Copy"}
-
         {copied && (
           <span className="absolute inset-0 rounded-md bg-emerald-400/20 animate-ping"></span>
         )}
@@ -188,9 +185,9 @@ export default function ForexTradeOutputCard() {
 
     const fetchInitial = async () => {
       const { data, error } = await supabase
-        .from("trade_state")
+        .from("EURUSD_trades_state")
         .select("ticker, side, entry, stop, tp, timestamp")
-        .limit(1)
+        .eq("id", EURUSD_TRADE_ROW_ID)
         .single();
 
       if (!mounted || error || !data) return;
@@ -214,10 +211,15 @@ export default function ForexTradeOutputCard() {
     fetchInitial();
 
     const channel = supabase
-      .channel("trade_state_output_realtime")
+      .channel("eurusd-trade-state-output-realtime")
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "trade_state" },
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "EURUSD_trades_state",
+          filter: `id=eq.${EURUSD_TRADE_ROW_ID}`,
+        },
         (payload) => {
           if (!mounted || !payload.new) return;
 
@@ -364,7 +366,6 @@ export default function ForexTradeOutputCard() {
       </p>
 
       <div className="space-y-3">
-
         {/* SIDE */}
         <div
           className={`
@@ -392,7 +393,9 @@ export default function ForexTradeOutputCard() {
           <span className="text-slate-400">Units:</span>
           <span className="text-xl font-semibold tabular-nums text-slate-200 flex items-center">
             {animDerived.units ? fmtInt(animDerived.units) : "--"}
-            {animDerived.units > 0 && <CopyBtn val={Math.round(animDerived.units)} />}
+            {animDerived.units > 0 && (
+              <CopyBtn val={Math.round(animDerived.units)} />
+            )}
           </span>
         </div>
 
@@ -444,7 +447,6 @@ export default function ForexTradeOutputCard() {
             {animTrade.stop > 0 && <CopyBtn val={animTrade.stop} />}
           </span>
         </div>
-
       </div>
     </GTCard>
   );
