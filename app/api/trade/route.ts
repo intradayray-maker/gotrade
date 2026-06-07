@@ -12,12 +12,12 @@ import {
 
 
 
+// ---------------------------------------------------------
+// POST — TradingView Webhook Handler
+// ---------------------------------------------------------
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
-    // ⭐ MUST BE HERE — LOG EVERYTHING
-    console.log("🔥 WEBHOOK RECEIVED:", body);
 
     // -----------------------------------------------------
     // BAR UPDATE — IGNORE FOR TRADE LOGIC
@@ -77,4 +77,14 @@ export async function POST(req: Request) {
   } catch (err) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
+}
+
+// ---------------------------------------------------------
+// GET — Return Latest Trade + Bar
+// ---------------------------------------------------------
+export async function GET() {
+  return NextResponse.json({
+    trade: latestTrade,
+    bar: latestBar,
+  });
 }
