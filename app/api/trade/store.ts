@@ -18,8 +18,9 @@ export type TradeData = {
 
 export let latestTrade: TradeData | null = null;
 
+// ⭐ Freeze object so React doesn't treat identical trades as "new"
 export const setLatestTrade = (trade: TradeData) => {
-  latestTrade = trade;
+  latestTrade = Object.freeze(trade);
 };
 
 export type BarData = {
@@ -37,6 +38,7 @@ export type BarData = {
 
 export let latestBar: BarData | null = null;
 
+// ⭐ Freeze bar object too (prevents unnecessary re-renders)
 export const setLatestBar = (bar: BarData) => {
-  latestBar = bar;
+  latestBar = Object.freeze(bar);
 };
