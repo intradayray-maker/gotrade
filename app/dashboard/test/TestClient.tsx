@@ -1,29 +1,41 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function TestClient() {
-  const [state, setState] = useState("loading...");
-
-  async function send(side: string) {
-    await fetch("/api/test-state", {
-      method: "POST",
-      body: JSON.stringify({ side }),
-    });
-    load();
-  }
-
-  async function load() {
-    const res = await fetch("/api/test-state");
-    const json = await res.json();
-    setState(json.side);
-  }
+  const [state, setState] = useState<any>(null);
 
   useEffect(() => {
-    load();
-    const id = setInterval(load, 1000);
-    return () => clearInterval(id);
+    supabase
+      .from("trade_state")
+      .select("*")
+      .limit(1)
+      .single()
+      .then(({ data }) => setState(data));
+
+    const channel = supabase
+      .channel("trade_state_changes")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "trade_state" },
+        (payload) => {
+          setState(payload.new);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  const side = state?.side ?? "flat";
 
   return (
     <div className="space-y-6">
@@ -31,29 +43,15 @@ export default function TestClient() {
         Current State:{" "}
         <span
           className={
-            state === "long"
+            side === "long"
               ? "text-emerald-400"
-              : state === "short"
+              : side === "short"
               ? "text-red-400"
               : "text-slate-400"
           }
         >
-          {state}
+          {side}
         </span>
-      </div>
-
-      <div className="flex gap-4">
-        <button onClick={() => send("long")} className="px-4 py-2 bg-emerald-600 rounded">
-          Long
-        </button>
-
-        <button onClick={() => send("short")} className="px-4 py-2 bg-red-600 rounded">
-          Short
-        </button>
-
-        <button onClick={() => send("flat")} className="px-4 py-2 bg-slate-600 rounded">
-          Flat
-        </button>
       </div>
     </div>
   );
