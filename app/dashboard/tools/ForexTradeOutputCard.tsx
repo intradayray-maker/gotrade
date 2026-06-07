@@ -161,6 +161,8 @@ export default function ForexTradeOutputCard() {
 
   // ⭐ POLL TRADE — now with timestamp guard
   useEffect(() => {
+    // NOTE: this card reads the shared latest trade from /api/trade only.
+    // It does not perform any server-side writes to the trade store.
     let active = true;
 
     const pollTrade = async () => {

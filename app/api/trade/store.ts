@@ -18,7 +18,8 @@ export type TradeData = {
 
 export let latestTrade: TradeData | null = null;
 
-// ⭐ Freeze object so React doesn't treat identical trades as "new"
+// ⭐ Freeze trade object so repeated identical payloads do not cause unnecessary
+// React re-renders in clients that consume /api/trade.
 export const setLatestTrade = (trade: TradeData) => {
   latestTrade = Object.freeze(trade);
 };

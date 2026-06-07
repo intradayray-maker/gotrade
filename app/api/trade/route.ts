@@ -9,15 +9,44 @@ import {
   TradeData,
 } from "./store";
 
+const validSides = new Set(["long", "short", "flat"]);
 
+const isValidTradeSide = (side: unknown): side is "long" | "short" | "flat" =>
+  typeof side === "string" && validSides.has(side.toLowerCase());
 
+const isSameTrade = (a: TradeData | null, b: TradeData) => {
+  return (
+    a !== null &&
+    a.ticker === b.ticker &&
+    a.side === b.side &&
+    a.entry === b.entry &&
+    a.stop === b.stop &&
+    a.tp === b.tp
+  );
+};
 
 // ---------------------------------------------------------
 // POST — TradingView Webhook Handler
 // ---------------------------------------------------------
+// NOTE: this is the only server-side writer for latestTrade in the app.
+// frontend components only poll /api/trade and never mutate the shared trade store.
 export async function POST(req: Request) {
   try {
+    // ⭐ INSTANCE LOGGER — IDENTIFY WHICH LAMBDA IS RUNNING
+    console.log("🔥 INSTANCE:", Math.random());
+
+    const webhookSecret = process.env.TRADINGVIEW_WEBHOOK_SECRET;
+    if (webhookSecret) {
+      const headerSecret = req.headers.get("x-webhook-secret");
+      if (headerSecret !== webhookSecret) {
+        return NextResponse.json({ error: "Unauthorized webhook" }, { status: 401 });
+      }
+    }
+
     const body = await req.json();
+
+    // ⭐ LOG EVERY PAYLOAD RECEIVED
+    console.log("🔥 WEBHOOK RECEIVED:", body);
 
     // -----------------------------------------------------
     // BAR UPDATE — IGNORE FOR TRADE LOGIC
@@ -55,12 +84,31 @@ export async function POST(req: Request) {
     // -----------------------------------------------------
     // TRADE UPDATE
     // -----------------------------------------------------
+    if (typeof body.ticker !== "string" || !body.ticker.trim()) {
+      return NextResponse.json({ error: "Invalid ticker" }, { status: 400 });
+    }
+
+    if (!isValidTradeSide(body.side)) {
+      return NextResponse.json({ error: "Invalid side" }, { status: 400 });
+    }
+
+    if (
+      typeof body.entry !== "number" ||
+      typeof body.stop !== "number" ||
+      typeof body.tp !== "number" ||
+      !Number.isFinite(body.entry) ||
+      !Number.isFinite(body.stop) ||
+      !Number.isFinite(body.tp)
+    ) {
+      return NextResponse.json({ error: "Invalid trade values" }, { status: 400 });
+    }
+
     const trade: TradeData = {
-      ticker: String(body.ticker ?? ""),
-      side: String(body.side ?? ""),
-      entry: Number(body.entry ?? 0),
-      stop: Number(body.stop ?? 0),
-      tp: Number(body.tp ?? 0),
+      ticker: body.ticker.trim(),
+      side: String(body.side).toLowerCase(),
+      entry: body.entry,
+      stop: body.stop,
+      tp: body.tp,
       timestamp: String(body.timestamp ?? ""),
 
       news_today: Boolean(body.news_today),
@@ -70,6 +118,10 @@ export async function POST(req: Request) {
       news_window_active: Boolean(body.news_window_active),
       news_countdown: Number(body.news_countdown ?? 0),
     };
+
+    if (isSameTrade(latestTrade, trade)) {
+      return NextResponse.json({ status: "duplicate trade ignored" });
+    }
 
     setLatestTrade(trade);
 

@@ -46,7 +46,7 @@ export default function ForexAiCard() {
   const [size, setSize] = useState(0);
   const [riskDistance, setRiskDistance] = useState(0);
 
-  const [latestTrade, setLatestTrade] = useState<Trade | null>(null);
+  const [latestTradeState, setLatestTradeState] = useState<Trade | null>(null);
 
   const [flashColor, setFlashColor] = useState("");
   const prevMargin = useRef(0);
@@ -61,8 +61,6 @@ export default function ForexAiCard() {
     return Math.round(n).toLocaleString("en-US");
   }
 
-  // ⭐ NEW — timestamp guard + repeated trade dedupe
-  const lastTimestampRef = useRef<string | null>(null);
   const latestTradeRef = useRef<Trade | null>(null);
 
   // ------------------------------------------------------------
@@ -118,6 +116,7 @@ export default function ForexAiCard() {
   // ------------------------------------------------------------
   // POLL LATEST TRADE — now with timestamp guard
   // ------------------------------------------------------------
+  // NOTE: this component only reads /api/trade. It does not write or mutate server trade storage.
   useEffect(() => {
     let active = true;
 
@@ -144,12 +143,8 @@ export default function ForexAiCard() {
             return;
           }
 
-          if (t.timestamp) {
-            lastTimestampRef.current = t.timestamp;
-          }
-
           latestTradeRef.current = t;
-          setLatestTrade(t);
+          setLatestTradeState(t);
         }
       } catch (err) {
         console.error("Latest trade fetch failed:", err);
@@ -173,24 +168,24 @@ export default function ForexAiCard() {
   const FLAT_COOLDOWN_MS = 240000;
 
   useEffect(() => {
-    if (!latestTrade || !enabled) return;
+    if (!latestTradeState || !enabled) return;
 
     const prev = prevTradeRef.current;
 
     // ⭐ Only react to REAL trade alerts
-    if (!prev || latestTrade.timestamp === prev.timestamp || isSameTrade(prev, latestTrade)) {
-      prevTradeRef.current = latestTrade;
+    if (!prev || latestTradeState.timestamp === prev.timestamp || isSameTrade(prev, latestTradeState)) {
+      prevTradeRef.current = latestTradeState;
       return;
     }
 
-    prevTradeRef.current = latestTrade;
+    prevTradeRef.current = latestTradeState;
     const now = Date.now();
     const elapsed = now - lastSpokeRef.current;
 
     // LONG or SHORT → speak immediately
-    if (latestTrade.side === "long" || latestTrade.side === "short") {
+    if (latestTradeState.side === "long" || latestTradeState.side === "short") {
       enqueueAudio(
-        latestTrade.side === "long"
+        latestTradeState.side === "long"
           ? getVoiceClip("long")
           : getVoiceClip("short")
       );
@@ -199,29 +194,29 @@ export default function ForexAiCard() {
     }
 
     // FLAT → speak only every 4 minutes
-    if (latestTrade.side === "flat") {
+    if (latestTradeState.side === "flat") {
       if (elapsed < FLAT_COOLDOWN_MS) return;
 
       enqueueAudio(getVoiceClip("flat"));
       lastSpokeRef.current = now;
       return;
     }
-  }, [latestTrade, enabled]);
+  }, [latestTradeState, enabled]);
 
   // ------------------------------------------------------------
   // MARGIN CALCULATION
   // ------------------------------------------------------------
   useEffect(() => {
-    if (!latestTrade) {
+    if (!latestTradeState) {
       setRequiredMargin(0);
       setSize(0);
       setRiskDistance(0);
       return;
     }
 
-    const rd = Math.abs(latestTrade.entry - latestTrade.stop);
+    const rd = Math.abs(latestTradeState.entry - latestTradeState.stop);
     const sz = rd > 0 ? riskAmount / rd : 0;
-    const margin = leverage > 0 ? (sz * latestTrade.entry) / leverage : 0;
+    const margin = leverage > 0 ? (sz * latestTradeState.entry) / leverage : 0;
 
     setRiskDistance(rd);
     setSize(sz);
@@ -230,7 +225,7 @@ export default function ForexAiCard() {
     if (typeof window !== "undefined") {
       window.localStorage.setItem("forex_required_margin", String(margin));
     }
-  }, [latestTrade, riskAmount, leverage]);
+  }, [latestTradeState, riskAmount, leverage]);
 
   // ------------------------------------------------------------
   // MARGIN ANIMATION
