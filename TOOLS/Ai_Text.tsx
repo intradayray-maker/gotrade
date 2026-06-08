@@ -15,9 +15,24 @@ export const AI_MESSAGES = [
   "A quiet day… the kind that teaches patience more than action."
 ];
 
+export const AI_MESSAGES_ETH = [
+  "The flow rises… a quiet pressure building beneath the surface.",
+  "Volatility breathes in slow waves… the market exhales in its own rhythm.",
+  "The tape stirs… subtle motion, but motion nonetheless.",
+  "Energy gathers at the edges… the kind that precedes direction.",
+  "The pulse is steady… yet something beneath it shifts.",
+  "Momentum drifts… not loud, but present.",
+  "A soft swell forms… traders who listen can feel it.",
+  "The current thickens… liquidity moves like a tide."
+];
+
 // ------------------------------------------------------------
 // RANDOM SELECTOR
 // ------------------------------------------------------------
 export function getRandomMessage() {
   return AI_MESSAGES[Math.floor(Math.random() * AI_MESSAGES.length)];
+}
+
+export function getRandomMessageETH() {
+  return AI_MESSAGES_ETH[Math.floor(Math.random() * AI_MESSAGES_ETH.length)];
 }

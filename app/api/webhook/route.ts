@@ -1,5 +1,5 @@
 // app/api/webhook/route.ts
-// NODE RUNTIME — updates 3 single-row EURUSD tables
+// NODE RUNTIME — EURUSD unchanged + ETHUSDT.P added
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -9,68 +9,95 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? ""
 );
 
-// Your actual row IDs
+// -----------------------------
+// EURUSD — your original row IDs
+// -----------------------------
 const TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
 const BAR_ROW_ID   = "87b8c55f-52c7-4824-9fc7-98febbbdb02d";
 const NEWS_ROW_ID  = "d1c4f448-a9f9-4938-ac75-14398ee7aa40";
 
+// -----------------------------
+// ETHUSDT.P — new row IDs
+// -----------------------------
+const ETH_TRADE_ROW = "0fee5c83-f233-4487-bc5f-f7e703a14024";
+const ETH_BAR_ROW   = "530ef4a6-e3be-4c19-b34e-1d84062170cb";
+const ETH_NEWS_ROW  = "40d28923-8f43-464f-8147-244d63141587";
+
+// -----------------------------
+function normalizeSide(s: any) {
+  if (!s) return "flat";
+  const v = String(s).toLowerCase();
+  if (v === "buy") return "long";
+  if (v === "sell") return "short";
+  if (["long", "short", "flat"].includes(v)) return v;
+  return "flat";
+}
+
+function getTables(ticker: string) {
+  const t = ticker.toUpperCase();
+
+  if (t === "EURUSD") {
+    return {
+      tradeTable: "EURUSD_trades_state",
+      barTable:   "EURUSD_bar_state",
+      newsTable:  "EURUSD_news_state",
+      tradeRow: TRADE_ROW_ID,
+      barRow:   BAR_ROW_ID,
+      newsRow:  NEWS_ROW_ID
+    };
+  }
+
+  if (t === "ETHUSDT.P") {
+    return {
+      tradeTable: "ETHUSDT_trades_state",
+      barTable:   "ETHUSDT_bar_state",
+      newsTable:  "ETHUSDT_news_state",
+      tradeRow: ETH_TRADE_ROW,
+      barRow:   ETH_BAR_ROW,
+      newsRow:  ETH_NEWS_ROW
+    };
+  }
+
+  return null;
+}
+
+// -----------------------------
 export async function POST(req: Request) {
   try {
-    // Parse JSON safely
     let body: any;
+
     try {
       body = await req.json();
-    } catch (err) {
-      console.error("[WEBHOOK] Invalid JSON:", err);
+    } catch {
       return NextResponse.json({ ok: false, error: "invalid json" }, { status: 400 });
     }
 
-    if (!body || typeof body !== "object") {
-      console.warn("[WEBHOOK] Empty or invalid body");
-      return NextResponse.json({ ok: false, error: "empty body" }, { status: 400 });
+    const type = String(body.type ?? "").toLowerCase();
+    const ticker = String(body.ticker ?? "").toUpperCase();
+
+    const tables = getTables(ticker);
+    if (!tables) {
+      return NextResponse.json({ ok: true, status: "unknown ticker" });
     }
 
-    const type = String(body.type ?? "").toLowerCase();
-    console.log("[WEBHOOK] Received:", type, body);
-
     // -----------------------------
-    // TRADE UPDATE (entry_long, entry_short, sl, tp)
+    // TRADE UPDATE
     // -----------------------------
-    if (
-      type === "entry_long" ||
-      type === "entry_short" ||
-      type === "sl" ||
-      type === "tp"
-    ) {
-      const normalizeSide = (s: any) => {
-        if (!s) return "flat";
-        const v = String(s).toLowerCase();
-        if (v === "buy") return "long";
-        if (v === "sell") return "short";
-        if (["long", "short", "flat"].includes(v)) return v;
-        return "flat";
-      };
-
+    if (["entry_long", "entry_short", "sl", "tp"].includes(type)) {
       const payload = {
-        type: body.type,                                // <--- NEW
-        side: normalizeSide(body.side),                 // long / short / flat
+        type: body.type,
+        side: normalizeSide(body.side),
         entry: Number(body.entry) || null,
         stop: Number(body.stop) || null,
         tp: Number(body.tp) || null,
         timestamp: new Date().toISOString()
       };
 
-      const { error } = await supabase
-        .from("EURUSD_trades_state")
+      await supabase
+        .from(tables.tradeTable)
         .update(payload)
-        .eq("id", TRADE_ROW_ID);
+        .eq("id", tables.tradeRow);
 
-      if (error) {
-        console.error("[WEBHOOK] Trade update error:", error);
-        return NextResponse.json({ ok: false, error: "trade update failed" }, { status: 400 });
-      }
-
-      console.log("[WEBHOOK] Trade updated:", payload);
       return NextResponse.json({ ok: true, status: "trade updated" });
     }
 
@@ -84,17 +111,11 @@ export async function POST(req: Request) {
         timestamp: new Date().toISOString()
       };
 
-      const { error } = await supabase
-        .from("EURUSD_bar_state")
+      await supabase
+        .from(tables.barTable)
         .update(payload)
-        .eq("id", BAR_ROW_ID);
+        .eq("id", tables.barRow);
 
-      if (error) {
-        console.error("[WEBHOOK] Bar update error:", error);
-        return NextResponse.json({ ok: false, error: "bar update failed" }, { status: 400 });
-      }
-
-      console.log("[WEBHOOK] Bar updated:", payload);
       return NextResponse.json({ ok: true, status: "bar updated" });
     }
 
@@ -111,26 +132,18 @@ export async function POST(req: Request) {
         timestamp: new Date().toISOString()
       };
 
-      const { error } = await supabase
-        .from("EURUSD_news_state")
+      await supabase
+        .from(tables.newsTable)
         .update(payload)
-        .eq("id", NEWS_ROW_ID);
+        .eq("id", tables.newsRow);
 
-      if (error) {
-        console.error("[WEBHOOK] News update error:", error);
-        return NextResponse.json({ ok: false, error: "news update failed" }, { status: 400 });
-      }
-
-      console.log("[WEBHOOK] News updated:", payload);
       return NextResponse.json({ ok: true, status: "news updated" });
     }
 
-    // Unknown type
-    console.log("[WEBHOOK] Unknown type:", type);
-    return NextResponse.json({ ok: true, status: "ignored unknown type" });
+    return NextResponse.json({ ok: true, status: "ignored" });
 
   } catch (err) {
-    console.error("[WEBHOOK] Unexpected error:", err);
+    console.error(err);
     return NextResponse.json({ ok: false, error: "unexpected error" }, { status: 400 });
   }
 }

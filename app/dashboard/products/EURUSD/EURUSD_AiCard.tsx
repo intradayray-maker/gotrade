@@ -10,9 +10,9 @@ import {
   setMusicEnabled,
   setMusicVolume,
   enqueueAudio,
-} from "./Ai_AudioManager";
+} from "@/TOOLS/Ai_AudioManager";
 
-import { getVoiceClip } from "./Ai_LocalVoice";
+import { getVoiceClip } from "@/TOOLS/Ai_LocalVoice";
 import { createClient } from "@supabase/supabase-js";
 
 // ------------------------------------------------------------
@@ -389,7 +389,7 @@ export default function EURUSD_AiCard() {
             flex h-6 w-11 cursor-pointer items-center rounded-full transition-all
             ${
               enabled
-                ? "bg-emerald-500 shadow-[0_0_6px_rgba(0,255,180,0.35)]"
+                ? "bg-[#0A4B78] shadow-[0_0_6px_rgba(0,255,180,0.35)]"
                 : "bg-slate-700"
             }
           `}
@@ -405,18 +405,19 @@ export default function EURUSD_AiCard() {
 
       {/* STATUS */}
       <div className="rounded-xl border border-emerald-500/20 p-3">
-        <p
-          className={`
-            text-sm tracking-wide transition-all
-            ${
-              enabled
-                ? "text-emerald-300 drop-shadow-[0_0_6px_rgba(0,255,180,0.35)]"
-                : "text-slate-500"
-            }
-          `}
-        >
-          {status}
-        </p>
+<p
+  className={`
+    text-sm tracking-wide transition-all
+    ${
+      enabled
+        ? "text-[rgb(0,166,116)] drop-shadow-[0_0_4px_rgba(0,255,180,0.25)]"
+        : "text-slate-500"
+    }
+  `}
+>
+  {status}
+</p>
+
       </div>
 
       {/* RISK SLIDER */}
