@@ -44,7 +44,7 @@ const supabase = createClient(
 );
 
 const EURUSD_TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
-const EURUSD_BAR_ROW_ID = "b7a2b0e4-8c9f-4c8e-9e8e-0f7c2d1a9f33";
+const EURUSD_BAR_ROW_ID = "87b8c55f-52c7-4824-9fc7-98febbbdb02d";
 
 // ------------------------------------------------------------
 // COMPONENT
@@ -57,6 +57,11 @@ export default function EURUSD_AiCard() {
 
   const [requiredMargin, setRequiredMargin] = useState(0);
   const [displayMargin, setDisplayMargin] = useState(0);
+  const [barState, setBarState] = useState<{
+    high: number;
+    low: number;
+    timestamp?: string;
+  } | null>(null);
 
   const [latestTradeState, setLatestTradeState] = useState<Trade | null>(null);
 
@@ -223,24 +228,28 @@ export default function EURUSD_AiCard() {
   }, [latestTradeState, enabled]);
 
   // ------------------------------------------------------------
-  // MARGIN CALCULATION (TRADE-BASED)
-  // ------------------------------------------------------------
-  useEffect(() => {
-    if (!latestTradeState) return;
-
-    const rd = Math.abs(latestTradeState.entry - latestTradeState.stop);
-    const sz = rd > 0 ? riskAmount / rd : 0;
-    const margin = leverage > 0 ? (sz * latestTradeState.entry) / leverage : 0;
-
-    setRequiredMargin(margin);
-    localStorage.setItem("forex_required_margin", String(margin));
-  }, [latestTradeState, riskAmount, leverage]);
-
-  // ------------------------------------------------------------
-  // BAR-BASED MARGIN UPDATES (ALWAYS)
+  // BAR STATE MARGIN CALCULATION
   // ------------------------------------------------------------
   useEffect(() => {
     let mounted = true;
+
+    const fetchBarState = async () => {
+      const { data, error } = await supabase
+        .from("EURUSD_bar_state")
+        .select("high, low, timestamp")
+        .eq("id", EURUSD_BAR_ROW_ID)
+        .single();
+
+      if (!mounted || error || !data) return;
+
+      setBarState({
+        high: Number(data.high) || 0,
+        low: Number(data.low) || 0,
+        timestamp: data.timestamp,
+      });
+    };
+
+    fetchBarState();
 
     const channel = supabase
       .channel("eurusd-bar-realtime")
@@ -256,16 +265,11 @@ export default function EURUSD_AiCard() {
           if (!mounted || !payload.new) return;
 
           const bar = payload.new;
-
-          const entry = bar.high;
-          const stop = bar.low;
-          const rd = Math.abs(entry - stop);
-
-          const sz = rd > 0 ? riskAmount / rd : 0;
-          const margin = leverage > 0 ? (sz * entry) / leverage : 0;
-
-          setRequiredMargin(margin);
-          localStorage.setItem("forex_required_margin", String(margin));
+          setBarState({
+            high: Number(bar.high) || 0,
+            low: Number(bar.low) || 0,
+            timestamp: bar.timestamp,
+          });
         }
       )
       .subscribe();
@@ -274,7 +278,20 @@ export default function EURUSD_AiCard() {
       mounted = false;
       supabase.removeChannel(channel);
     };
-  }, [riskAmount, leverage]);
+  }, []);
+
+  useEffect(() => {
+    if (!barState) return;
+
+    const entry = barState.high;
+    const stop = barState.low;
+    const rd = Math.abs(entry - stop);
+    const sz = rd > 0 ? riskAmount / rd : 0;
+    const margin = leverage > 0 ? (sz * entry) / leverage : 0;
+
+    setRequiredMargin(margin);
+    localStorage.setItem("forex_required_margin", String(margin));
+  }, [barState, riskAmount, leverage]);
 
   // ------------------------------------------------------------
   // MARGIN ANIMATION
