@@ -13,10 +13,21 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // If no user, treat as locked
+  if (!user) {
+    return (
+      <DashboardClient
+        canEUR={false}
+        canETH={false}
+      />
+    );
+  }
+
+  // Safe: user.id is guaranteed to exist here
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
-    .eq("id", user?.id)
+    .eq("id", user.id)
     .single();
 
   const isAdmin = profile?.is_admin === true;
@@ -29,7 +40,6 @@ export default async function DashboardPage() {
     <DashboardClient
       canEUR={canEUR}
       canETH={canETH}
-      initialAdmin={isAdmin}
     />
   );
 }
