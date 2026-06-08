@@ -1,5 +1,3 @@
-//app\dashboard\tools\EURUSD_AiCard.tsx
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -20,7 +18,7 @@ import { createClient } from "@supabase/supabase-js";
 // TYPES
 // ------------------------------------------------------------
 type Trade = {
-  type?: string;     // <--- NEW (entry_long, entry_short, sl, tp, bar, news)
+  type?: string; // entry_long, entry_short, sl, tp, bar, news
   ticker: string;
   side: string;
   entry: number;
