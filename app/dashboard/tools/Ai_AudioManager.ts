@@ -50,7 +50,7 @@ export function initAudioUnlock() {
 export function initBackgroundMusic() {
   if (music) return
 
-  music = new Audio("/voice/bgm/backgroundMUSIC_v2.mp3")
+  music = new Audio("/voice/bgm/backgroundMUSIC_v3.mp3")
   music.loop = true
   music.volume = musicVolume
 
