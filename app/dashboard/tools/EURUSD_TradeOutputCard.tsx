@@ -1,5 +1,3 @@
-// app/dashboard/tools/EURUSD_TradeOutputCard.tsx
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -7,7 +5,7 @@ import GTCard from "@/components/ui/GTCard";
 import { createClient } from "@supabase/supabase-js";
 
 // ------------------------------------------------------------
-// AI PULSE STYLES
+// AI PULSE STYLES (MATCHING EXISTING THEME)
 // ------------------------------------------------------------
 const pulseStyles = `
 @keyframes pulse-blue {
@@ -16,10 +14,22 @@ const pulseStyles = `
   100% { box-shadow: 0 0 0px rgba(0,150,255,0.25); }
 }
 
+@keyframes pulse-orange {
+  0% { box-shadow: 0 0 0px rgba(255,140,0,0.25); }
+  50% { box-shadow: 0 0 18px rgba(255,140,0,0.55); }
+  100% { box-shadow: 0 0 0px rgba(255,140,0,0.25); }
+}
+
 @keyframes pulse-red {
   0% { box-shadow: 0 0 0px rgba(255,0,0,0.25); }
   50% { box-shadow: 0 0 18px rgba(255,0,0,0.55); }
   100% { box-shadow: 0 0 0px rgba(255,0,0,0.25); }
+}
+
+@keyframes pulse-green {
+  0% { box-shadow: 0 0 0px rgba(0,255,180,0.25); }
+  50% { box-shadow: 0 0 18px rgba(0,255,180,0.55); }
+  100% { box-shadow: 0 0 0px rgba(0,255,180,0.25); }
 }
 
 .ai-pulse-blue {
@@ -27,9 +37,19 @@ const pulseStyles = `
   border-color: rgba(0,150,255,0.45) !important;
 }
 
+.ai-pulse-orange {
+  animation: pulse-orange 3.2s ease-in-out infinite;
+  border-color: rgba(255,140,0,0.45) !important;
+}
+
 .ai-pulse-red {
   animation: pulse-red 3.2s ease-in-out infinite;
   border-color: rgba(255,0,0,0.45) !important;
+}
+
+.ai-pulse-green {
+  animation: pulse-green 3.2s ease-in-out infinite;
+  border-color: rgba(0,255,180,0.45) !important;
 }
 `;
 
@@ -49,6 +69,7 @@ type Trade = {
   tp: number;
   stop: number;
   timestamp?: string;
+  type?: string; // NEW
 };
 
 type Derived = {
@@ -65,7 +86,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// EURUSD single-row ID (matches webhook)
 const EURUSD_TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
 
 // ------------------------------------------------------------
@@ -79,6 +99,7 @@ export default function EURUSD_TradeOutputCard() {
     tp: 0,
     stop: 0,
     timestamp: "",
+    type: "",
   });
 
   const [derived, setDerived] = useState<Derived>({
@@ -107,7 +128,8 @@ export default function EURUSD_TradeOutputCard() {
     a.side === b.side &&
     a.entry === b.entry &&
     a.stop === b.stop &&
-    a.tp === b.tp;
+    a.tp === b.tp &&
+    a.type === b.type;
 
   const fmtInt = (n: number) => Math.round(n).toLocaleString("en-US");
 
@@ -186,7 +208,7 @@ export default function EURUSD_TradeOutputCard() {
     const fetchInitial = async () => {
       const { data, error } = await supabase
         .from("EURUSD_trades_state")
-        .select("ticker, side, entry, stop, tp, timestamp")
+        .select("ticker, side, entry, stop, tp, timestamp, type")
         .eq("id", EURUSD_TRADE_ROW_ID)
         .single();
 
@@ -199,6 +221,7 @@ export default function EURUSD_TradeOutputCard() {
         stop: data.stop ?? 0,
         tp: data.tp ?? 0,
         timestamp: data.timestamp,
+        type: data.type,
       };
 
       if (isSameTrade(lastTradeRef.current, t)) return;
@@ -232,6 +255,7 @@ export default function EURUSD_TradeOutputCard() {
             stop: d.stop ?? 0,
             tp: d.tp ?? 0,
             timestamp: d.timestamp,
+            type: d.type,
           };
 
           if (isSameTrade(lastTradeRef.current, t)) return;
@@ -284,6 +308,39 @@ export default function EURUSD_TradeOutputCard() {
   }, [trade, marginFromAi, leverage]);
 
   // ------------------------------------------------------------
+  // EVENT → PULSE + FLASH LOGIC
+  // ------------------------------------------------------------
+  const getPulseClass = () => {
+    switch (animTrade.type) {
+      case "entry_long":
+        return "ai-pulse-blue";
+      case "entry_short":
+        return "ai-pulse-orange";
+      case "sl":
+        return "ai-pulse-red";
+      case "tp":
+        return "ai-pulse-green";
+      default:
+        return "";
+    }
+  };
+
+  const getFlashClass = () => {
+    switch (animTrade.type) {
+      case "entry_long":
+        return "bg-blue-950/30";
+      case "entry_short":
+        return "bg-orange-950/30";
+      case "sl":
+        return "bg-red-950/30";
+      case "tp":
+        return "bg-emerald-950/30";
+      default:
+        return "";
+    }
+  };
+
+  // ------------------------------------------------------------
   // ANIMATION ON REAL TRADE CHANGE
   // ------------------------------------------------------------
   useEffect(() => {
@@ -292,16 +349,11 @@ export default function EURUSD_TradeOutputCard() {
     const oldD = prevDerived.current;
     const newD = derived;
 
-    if (newT.timestamp !== oldT.timestamp) {
-      setFlash(
-        newT.side === "long"
-          ? "flash-green"
-          : newT.side === "short"
-          ? "flash-red"
-          : ""
-      );
-
-      setTimeout(() => setFlash(""), 300);
+    if (newT.timestamp !== oldT.timestamp || newT.type !== oldT.type) {
+      if (newT.type !== "bar") {
+        setFlash(getFlashClass());
+        setTimeout(() => setFlash(""), 300);
+      }
 
       const duration = 300;
       const start = performance.now();
@@ -317,6 +369,7 @@ export default function EURUSD_TradeOutputCard() {
           tp: oldT.tp + (newT.tp - oldT.tp) * eased,
           stop: oldT.stop + (newT.stop - oldT.stop) * eased,
           timestamp: newT.timestamp,
+          type: newT.type,
         });
 
         setAnimDerived({
@@ -340,14 +393,26 @@ export default function EURUSD_TradeOutputCard() {
   }, [trade, derived]);
 
   // ------------------------------------------------------------
-  // SIDE COLOR
+  // SIDE COLOR (WHITE TEXT + GLOW)
   // ------------------------------------------------------------
-  const getSideColor = () => {
+const getSideGlow = () => {
+  if (animTrade.side === "long")
+    return "text-[#4da3ff] drop-shadow-[0_0_6px_rgba(0,150,255,0.55)] uppercase";
+  if (animTrade.side === "short")
+    return "text-orange-400 drop-shadow-[0_0_6px_rgba(255,140,0,0.55)] uppercase";
+  return "text-slate-500 uppercase";
+};
+
+
+  // ------------------------------------------------------------
+  // ENTRY PRICE BORDER GLOW
+  // ------------------------------------------------------------
+  const getEntryBorderGlow = () => {
     if (animTrade.side === "long")
-      return "text-emerald-400 drop-shadow-[0_0_6px_rgba(0,255,180,0.45)]";
+      return "border-blue-500/40 shadow-[0_0_8px_rgba(0,150,255,0.45)]";
     if (animTrade.side === "short")
-      return "text-red-400 drop-shadow-[0_0_6px_rgba(255,0,0,0.45)]";
-    return "text-slate-500";
+      return "border-orange-500/40 shadow-[0_0_8px_rgba(255,140,0,0.45)]";
+    return "border-slate-600/20";
   };
 
   // ------------------------------------------------------------
@@ -357,8 +422,7 @@ export default function EURUSD_TradeOutputCard() {
     <GTCard
       className={`
         flex h-full flex-col gap-4 border-2 rounded-xl transition-all
-        ${animTrade.side === "long" ? "ai-pulse-blue" : ""}
-        ${animTrade.side === "short" ? "ai-pulse-red" : ""}
+        ${getPulseClass()}
       `}
     >
       <p className="text-center text-xs uppercase tracking-wide text-slate-400">
@@ -366,24 +430,25 @@ export default function EURUSD_TradeOutputCard() {
       </p>
 
       <div className="space-y-3">
-        {/* SIDE */}
-        <div
-          className={`
-            flex items-center justify-between rounded-xl border border-emerald-500/20 p-3 transition-all
-            ${flash === "flash-green" ? "bg-emerald-950/30" : ""}
-            ${flash === "flash-red" ? "bg-red-950/30" : ""}
-          `}
-        >
-          <span className="text-slate-400">Side:</span>
-          <span className={`text-xl font-semibold capitalize tabular-nums ${getSideColor()}`}>
-            {animTrade.side || "--"}
-          </span>
-        </div>
+
+{/* POSITION */}
+<div
+  className={`
+    flex items-center justify-between rounded-xl border border-slate-600/20 p-3 transition-all
+    ${flash}
+  `}
+>
+  <span className="text-slate-400">Position:</span>
+  <span className={`text-xl font-semibold tabular-nums ${getSideGlow()}`}>
+    {animTrade.side || "--"}
+  </span>
+</div>
+
 
         {/* TICKER */}
-        <div className="flex items-center justify-between rounded-xl border border-blue-500/20 p-3">
+        <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
           <span className="text-slate-400">Ticker:</span>
-          <span className="text-xl font-semibold tabular-nums text-blue-300 drop-shadow-[0_0_6px_rgba(0,150,255,0.45)]">
+          <span className="text-xl font-semibold tabular-nums text-white">
             {animTrade.ticker || "--"}
           </span>
         </div>
@@ -391,7 +456,7 @@ export default function EURUSD_TradeOutputCard() {
         {/* UNITS */}
         <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
           <span className="text-slate-400">Units:</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-200 flex items-center">
+          <span className="text-xl font-semibold tabular-nums text-white flex items-center">
             {animDerived.units ? fmtInt(animDerived.units) : "--"}
             {animDerived.units > 0 && (
               <CopyBtn val={Math.round(animDerived.units)} />
@@ -399,10 +464,10 @@ export default function EURUSD_TradeOutputCard() {
           </span>
         </div>
 
-        {/* POSITION VALUE */}
+        {/* TRADE AMOUNT */}
         <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
           <span className="text-slate-400">Trade Amount:</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-200 flex items-center">
+          <span className="text-xl font-semibold tabular-nums text-white flex items-center">
             {animDerived.position_value ? `$${fmtInt(animDerived.position_value)}` : "--"}
             {animDerived.position_value > 0 && (
               <CopyBtn val={Math.round(animDerived.position_value)} />
@@ -413,7 +478,7 @@ export default function EURUSD_TradeOutputCard() {
         {/* REQUIRED MARGIN */}
         <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
           <span className="text-slate-400">Required Margin:</span>
-          <span className="text-xl font-semibold tabular-nums text-slate-200 flex items-center">
+          <span className="text-xl font-semibold tabular-nums text-white flex items-center">
             {animDerived.required_margin ? `$${fmtInt(animDerived.required_margin)}` : "--"}
             {animDerived.required_margin > 0 && (
               <CopyBtn val={Math.round(animDerived.required_margin)} />
@@ -421,30 +486,35 @@ export default function EURUSD_TradeOutputCard() {
           </span>
         </div>
 
-        {/* ENTRY */}
-        <div className="flex items-center justify-between rounded-xl border border-blue-500/20 p-3">
+        {/* ENTRY PRICE */}
+        <div
+          className={`
+            flex items-center justify-between rounded-xl p-3 transition-all
+            ${getEntryBorderGlow()}
+          `}
+        >
           <span className="text-slate-400">Entry Price:</span>
-          <span className="text-xl font-semibold tabular-nums text-blue-300 flex items-center">
+          <span className="text-xl font-semibold tabular-nums text-white flex items-center">
             {animTrade.entry ? fmtPrice(animTrade.entry) : "--"}
             {animTrade.entry > 0 && <CopyBtn val={animTrade.entry} />}
           </span>
         </div>
 
-        {/* TP */}
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
-          <span className="text-slate-400">Take Profit:</span>
-          <span className="text-xl font-semibold tabular-nums text-emerald-400 flex items-center">
-            {animTrade.tp ? fmtPrice(animTrade.tp) : "--"}
-            {animTrade.tp > 0 && <CopyBtn val={animTrade.tp} />}
-          </span>
-        </div>
-
-        {/* STOP */}
+          {/* STOP LOSS */}
         <div className="flex items-center justify-between rounded-xl border border-red-500/20 p-3">
           <span className="text-slate-400">Stop Loss:</span>
           <span className="text-xl font-semibold tabular-nums text-red-400 flex items-center">
             {animTrade.stop ? fmtPrice(animTrade.stop) : "--"}
             {animTrade.stop > 0 && <CopyBtn val={animTrade.stop} />}
+          </span>
+        </div>
+
+        {/* TAKE PROFIT */}
+        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
+          <span className="text-slate-400">Take Profit:</span>
+          <span className="text-xl font-semibold tabular-nums text-emerald-400 flex items-center">
+            {animTrade.tp ? fmtPrice(animTrade.tp) : "--"}
+            {animTrade.tp > 0 && <CopyBtn val={animTrade.tp} />}
           </span>
         </div>
       </div>

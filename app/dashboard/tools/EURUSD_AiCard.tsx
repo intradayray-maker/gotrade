@@ -1,3 +1,5 @@
+//app\dashboard\tools\EURUSD_AiCard.tsx
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -18,6 +20,7 @@ import { createClient } from "@supabase/supabase-js";
 // TYPES
 // ------------------------------------------------------------
 type Trade = {
+  type?: string;     // <--- NEW (entry_long, entry_short, sl, tp, bar, news)
   ticker: string;
   side: string;
   entry: number;
@@ -42,9 +45,8 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Single-row IDs
 const EURUSD_TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
-const EURUSD_BAR_ROW_ID = "b7a2b0e4-8c9f-4c8e-9e8e-0f7c2d1a9f33"; // <-- your bar row ID
+const EURUSD_BAR_ROW_ID = "b7a2b0e4-8c9f-4c8e-9e8e-0f7c2d1a9f33";
 
 // ------------------------------------------------------------
 // COMPONENT
@@ -57,8 +59,6 @@ export default function EURUSD_AiCard() {
 
   const [requiredMargin, setRequiredMargin] = useState(0);
   const [displayMargin, setDisplayMargin] = useState(0);
-  const [size, setSize] = useState(0);
-  const [riskDistance, setRiskDistance] = useState(0);
 
   const [latestTradeState, setLatestTradeState] = useState<Trade | null>(null);
 
@@ -70,8 +70,6 @@ export default function EURUSD_AiCard() {
 
   const [musicEnabledState, setMusicEnabledState] = useState(false);
   const [musicVolumeState, setMusicVolumeState] = useState(0.25);
-
-  const latestTradeRef = useRef<Trade | null>(null);
 
   const formatMoney = (n: number) =>
     Math.round(n).toLocaleString("en-US");
@@ -123,7 +121,7 @@ export default function EURUSD_AiCard() {
   }, []);
 
   // ------------------------------------------------------------
-  // SUPABASE: TRADE STATE (ENTRY/STOP/TP)
+  // SUPABASE: TRADE STATE
   // ------------------------------------------------------------
   useEffect(() => {
     let mounted = true;
@@ -131,13 +129,14 @@ export default function EURUSD_AiCard() {
     const fetchInitial = async () => {
       const { data } = await supabase
         .from("EURUSD_trades_state")
-        .select("ticker, side, entry, stop, tp, timestamp")
+        .select("type, ticker, side, entry, stop, tp, timestamp")
         .eq("id", EURUSD_TRADE_ROW_ID)
         .single();
 
       if (!mounted || !data) return;
 
       const t: Trade = {
+        type: data.type,
         ticker: data.ticker,
         side: data.side,
         entry: data.entry ?? 0,
@@ -146,7 +145,6 @@ export default function EURUSD_AiCard() {
         timestamp: data.timestamp,
       };
 
-      latestTradeRef.current = t;
       setLatestTradeState(t);
     };
 
@@ -168,6 +166,7 @@ export default function EURUSD_AiCard() {
           const d = payload.new;
 
           const t: Trade = {
+            type: d.type,
             ticker: d.ticker,
             side: d.side,
             entry: d.entry ?? 0,
@@ -176,7 +175,6 @@ export default function EURUSD_AiCard() {
             timestamp: d.timestamp,
           };
 
-          latestTradeRef.current = t;
           setLatestTradeState(t);
         }
       )
@@ -189,46 +187,41 @@ export default function EURUSD_AiCard() {
   }, []);
 
   // ------------------------------------------------------------
-  // NEW TRADE DETECTION + VOICE
+  // AI VOICE LOGIC — EXPLICIT EVENT TYPES
   // ------------------------------------------------------------
-  const prevTradeRef = useRef<Trade | null>(null);
-  const lastSpokeRef = useRef(0);
-  const FLAT_COOLDOWN_MS = 240000;
+  const prevEventRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!latestTradeState || !enabled) return;
 
-    const prev = prevTradeRef.current;
+    const eventType = latestTradeState.type;
+    if (!eventType) return;
 
-    if (
-      !prev ||
-      latestTradeState.timestamp === prev.timestamp ||
-      isSameTrade(prev, latestTradeState)
-    ) {
-      prevTradeRef.current = latestTradeState;
+    // Prevent duplicate triggers
+    if (prevEventRef.current === eventType) return;
+    prevEventRef.current = eventType;
+
+    if (eventType === "entry_long") {
+      enqueueAudio(getVoiceClip("long"));
       return;
     }
 
-    prevTradeRef.current = latestTradeState;
-
-    const nowMs = Date.now();
-    const elapsed = nowMs - lastSpokeRef.current;
-
-    if (latestTradeState.side === "long" || latestTradeState.side === "short") {
-      enqueueAudio(
-        latestTradeState.side === "long"
-          ? getVoiceClip("long")
-          : getVoiceClip("short")
-      );
-      lastSpokeRef.current = nowMs;
+    if (eventType === "entry_short") {
+      enqueueAudio(getVoiceClip("short"));
       return;
     }
 
-    if (latestTradeState.side === "flat") {
-      if (elapsed < FLAT_COOLDOWN_MS) return;
-      enqueueAudio(getVoiceClip("flat"));
-      lastSpokeRef.current = nowMs;
+    if (eventType === "tp") {
+      enqueueAudio(getVoiceClip("tp"));
+      return;
     }
+
+    if (eventType === "sl") {
+      enqueueAudio(getVoiceClip("sl"));
+      return;
+    }
+
+    // Ignore: bar, news, flat, heartbeat
   }, [latestTradeState, enabled]);
 
   // ------------------------------------------------------------
@@ -241,15 +234,12 @@ export default function EURUSD_AiCard() {
     const sz = rd > 0 ? riskAmount / rd : 0;
     const margin = leverage > 0 ? (sz * latestTradeState.entry) / leverage : 0;
 
-    setRiskDistance(rd);
-    setSize(sz);
     setRequiredMargin(margin);
-
     localStorage.setItem("forex_required_margin", String(margin));
   }, [latestTradeState, riskAmount, leverage]);
 
   // ------------------------------------------------------------
-  // BAR-BASED MARGIN UPDATES WHEN FLAT
+  // BAR-BASED MARGIN UPDATES (ALWAYS)
   // ------------------------------------------------------------
   useEffect(() => {
     let mounted = true;
@@ -267,22 +257,16 @@ export default function EURUSD_AiCard() {
         (payload) => {
           if (!mounted || !payload.new) return;
 
-          // Only update margin when FLAT
-          if (latestTradeRef.current?.side !== "flat") return;
-
           const bar = payload.new;
 
           const entry = bar.high;
-          const stop = bar.low; // Pine already applied pip cushion
+          const stop = bar.low;
           const rd = Math.abs(entry - stop);
 
           const sz = rd > 0 ? riskAmount / rd : 0;
           const margin = leverage > 0 ? (sz * entry) / leverage : 0;
 
-          setRiskDistance(rd);
-          setSize(sz);
           setRequiredMargin(margin);
-
           localStorage.setItem("forex_required_margin", String(margin));
         }
       )
@@ -292,7 +276,7 @@ export default function EURUSD_AiCard() {
       mounted = false;
       supabase.removeChannel(channel);
     };
-  }, [riskAmount, leverage, latestTradeState]);
+  }, [riskAmount, leverage]);
 
   // ------------------------------------------------------------
   // MARGIN ANIMATION

@@ -256,28 +256,36 @@ export default function EURUSD_NewsCard() {
           </p>
         </div>
 
-        {/* MUSIC CONTROL */}
-        <div className="rounded-xl border border-emerald-500/20 p-4 space-y-4">
+{/* MUSIC CONTROL */}
+<div className="relative rounded-xl border border-emerald-500/20 p-4 pb-10 space-y-4">
 
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400 tracking-wide">
-              Deep Focus Mode
-            </span>
+  {/* FLOATING BUTTON */}
+  <button
+    onClick={toggleMusic}
+    className={`
+      absolute
+      bottom-3
+      right-3
 
-            <button
-              onClick={toggleMusic}
-              className={`
-                px-3 py-1 rounded-lg text-xs font-semibold transition-all
-                ${
-                  musicEnabledState
-                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"
-                    : "bg-slate-700/30 text-slate-400 border border-slate-600/40"
-                }
-              `}
-            >
-              {musicEnabledState}
-            </button>
-          </div>
+      px-3
+      py-1
+      rounded-lg
+      text-xs
+      font-semibold
+
+      transition-colors
+      transition-shadow
+      duration-300
+
+      ${
+        musicEnabledState
+          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 shadow-[0_0_12px_rgba(16,185,129,0.35)]"
+          : "bg-slate-700/30 text-slate-400 border border-slate-600/40 shadow-none"
+      }
+    `}
+  >
+    {musicEnabledState ? "ON" : "DEEP FOCUS MODE OFF"}
+  </button>
 
           {musicEnabledState && (
             <GTSlider

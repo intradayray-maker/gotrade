@@ -34,9 +34,14 @@ export async function POST(req: Request) {
     console.log("[WEBHOOK] Received:", type, body);
 
     // -----------------------------
-    // TRADE UPDATE
+    // TRADE UPDATE (entry_long, entry_short, sl, tp)
     // -----------------------------
-    if (type === "trade") {
+    if (
+      type === "entry_long" ||
+      type === "entry_short" ||
+      type === "sl" ||
+      type === "tp"
+    ) {
       const normalizeSide = (s: any) => {
         if (!s) return "flat";
         const v = String(s).toLowerCase();
@@ -47,7 +52,8 @@ export async function POST(req: Request) {
       };
 
       const payload = {
-        side: normalizeSide(body.side),
+        type: body.type,                                // <--- NEW
+        side: normalizeSide(body.side),                 // long / short / flat
         entry: Number(body.entry) || null,
         stop: Number(body.stop) || null,
         tp: Number(body.tp) || null,

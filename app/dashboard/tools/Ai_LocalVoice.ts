@@ -79,6 +79,38 @@ const shortClips = [
 ]
 
 // ------------------------------------------------------------
+// STOP LOSS (NEW)
+// ------------------------------------------------------------
+const slClips = [
+  "/voice/sl/sl_01.mp3",
+  "/voice/sl/sl_02.mp3",
+  "/voice/sl/sl_03.mp3",
+  "/voice/sl/sl_04.mp3",
+  "/voice/sl/sl_05.mp3",
+  "/voice/sl/sl_06.mp3",
+  "/voice/sl/sl_07.mp3",
+  "/voice/sl/sl_08.mp3",
+  "/voice/sl/sl_09.mp3",
+  "/voice/sl/sl_10.mp3",
+]
+
+// ------------------------------------------------------------
+// TAKE PROFIT (NEW)
+// ------------------------------------------------------------
+const tpClips = [
+  "/voice/tp/tp_01.mp3",
+  "/voice/tp/tp_02.mp3",
+  "/voice/tp/tp_03.mp3",
+  "/voice/tp/tp_04.mp3",
+  "/voice/tp/tp_05.mp3",
+  "/voice/tp/tp_06.mp3",
+  "/voice/tp/tp_07.mp3",
+  "/voice/tp/tp_08.mp3",
+  "/voice/tp/tp_09.mp3",
+  "/voice/tp/tp_10.mp3",
+]
+
+// ------------------------------------------------------------
 // RISK
 // ------------------------------------------------------------
 const riskClips = [
@@ -139,13 +171,24 @@ function pick(list: string[]) {
 }
 
 // ------------------------------------------------------------
-// PUBLIC API
+// PUBLIC API — UPDATED TYPES
 // ------------------------------------------------------------
-export function getVoiceClip(type: "flat" | "long" | "short" | "risk" | "persona") {
+export type VoiceCategory =
+  | "flat"
+  | "long"
+  | "short"
+  | "sl"
+  | "tp"
+  | "risk"
+  | "persona"
+
+export function getVoiceClip(type: VoiceCategory) {
   const list =
     type === "flat" ? flatClips :
     type === "long" ? longClips :
     type === "short" ? shortClips :
+    type === "sl" ? slClips :
+    type === "tp" ? tpClips :
     type === "risk" ? riskClips :
     personaClips
 
