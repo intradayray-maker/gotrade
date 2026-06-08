@@ -477,7 +477,7 @@ const getSideGlow = () => {
 
         {/* REQUIRED MARGIN */}
         <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
-          <span className="text-slate-400">Required Margin:</span>
+          <span className="text-slate-400">Margin Used:</span>
           <span className="text-xl font-semibold tabular-nums text-white flex items-center">
             {animDerived.required_margin ? `$${fmtInt(animDerived.required_margin)}` : "--"}
             {animDerived.required_margin > 0 && (
