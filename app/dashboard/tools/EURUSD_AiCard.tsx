@@ -5,6 +5,7 @@ import GTSlider from "@/app/components/ui/GTSlider";
 import GTCard from "@/components/ui/GTCard";
 
 import {
+  initAudioUnlock,
   initBackgroundMusic,
   setMusicEnabled,
   setMusicVolume,
@@ -18,7 +19,7 @@ import { createClient } from "@supabase/supabase-js";
 // TYPES
 // ------------------------------------------------------------
 type Trade = {
-  type?: string; // entry_long, entry_short, sl, tp, bar, news
+  type?: string;
   ticker: string;
   side: string;
   entry: number;
@@ -72,7 +73,7 @@ export default function EURUSD_AiCard() {
   const [now, setNow] = useState(new Date());
 
   const [musicEnabledState, setMusicEnabledState] = useState(false);
-  const [musicVolumeState, setMusicVolumeState] = useState(0.25);
+  const [musicVolumeState, setMusicVolumeState] = useState(0.53);
 
   const formatMoney = (n: number) =>
     Math.round(n).toLocaleString("en-US");
@@ -81,10 +82,13 @@ export default function EURUSD_AiCard() {
     trade?.type === "entry_long" || trade?.type === "entry_short";
 
   // ------------------------------------------------------------
-  // LOAD SETTINGS
+  // AUDIO UNLOCK + LOAD SETTINGS
   // ------------------------------------------------------------
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // 🔥 REQUIRED: enable audio unlock listener
+    initAudioUnlock();
 
     const savedRisk = localStorage.getItem("forex_dollar_risk");
     const savedLeverage = localStorage.getItem("forex_leverage");
@@ -95,6 +99,7 @@ export default function EURUSD_AiCard() {
     if (savedRisk) setRiskAmount(Number(savedRisk));
     if (savedLeverage) setLeverage(Number(savedLeverage));
 
+    // 🔥 Initialize background music engine (but it won't play until unlocked)
     initBackgroundMusic();
 
     if (savedMusicVolume) {
@@ -105,7 +110,7 @@ export default function EURUSD_AiCard() {
 
     if (savedMusicEnabled === "true") {
       setMusicEnabledState(true);
-      setMusicEnabled(true);
+      setMusicEnabled(true); // safe: Ai_AudioManager blocks autoplay until unlocked
     }
   }, []);
 
@@ -203,7 +208,6 @@ export default function EURUSD_AiCard() {
     const eventType = latestTradeState.type;
     if (!eventType) return;
 
-    // Prevent duplicate triggers
     if (prevEventRef.current === eventType) return;
     prevEventRef.current = eventType;
 
@@ -226,8 +230,6 @@ export default function EURUSD_AiCard() {
       enqueueAudio(getVoiceClip("sl"));
       return;
     }
-
-    // Ignore: bar, news, flat, heartbeat
   }, [latestTradeState, enabled]);
 
   // ------------------------------------------------------------

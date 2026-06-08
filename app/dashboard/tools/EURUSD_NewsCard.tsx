@@ -2,12 +2,81 @@
 
 import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
-import GTSlider from "@/app/components/ui/GTSlider";
-
 import { getRandomMessage } from "./Ai_Text";
 import { setMusicEnabled, setMusicVolume } from "./Ai_AudioManager";
-
 import { createClient } from "@supabase/supabase-js";
+
+// ------------------------------------------------------------
+// MIXER FADER WITH HYBRID GLOW + POWER BUTTON
+// ------------------------------------------------------------
+function MixerFaderWithGlow({
+  value,
+  onChange,
+  enabled,
+  toggle,
+  label
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  enabled: boolean;
+  toggle: () => void;
+  label?: string;
+}) {
+  return (
+    <div className="mixer-strip flex flex-col gap-3 relative">
+
+      {/* POWER BUTTON (TOP RIGHT) */}
+      <button
+        onClick={toggle}
+        className={`
+          mixer-power-btn
+          ${enabled ? "mixer-power-on" : "mixer-power-off"}
+        `}
+      >
+        ⏻
+      </button>
+
+      {/* LABEL */}
+      {label && (
+<div className="mixer-label">
+  {label}
+</div>
+
+      )}
+
+      {/* SLIDER */}
+      <div className="flex flex-col gap-2">
+
+        {/* TRACK + THUMB */}
+        <div className="relative w-full">
+          <input
+            type="range"
+            className="mixer-fader-glow"
+            min={0}
+            max={100}
+            value={value}
+            onChange={(e) => onChange(Number(e.target.value))}
+            style={{
+              "--fill": `${value}%`
+            } as React.CSSProperties}
+          />
+        </div>
+
+<div className="mixer-ticks">
+  <div className="mixer-tick"></div>
+  <div className="mixer-tick"></div>
+  <div className="mixer-tick"></div>
+  <div className="mixer-tick"></div>
+  <div className="mixer-tick"></div>
+</div>
+
+
+
+
+      </div>
+    </div>
+  );
+}
 
 // ------------------------------------------------------------
 // TYPING EFFECT
@@ -49,9 +118,11 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// EURUSD NEWS ROW ID
 const EURUSD_NEWS_ROW_ID = "d1c4f448-a9f9-4938-ac75-14398ee7aa40";
 
+// ------------------------------------------------------------
+// COMPONENT
+// ------------------------------------------------------------
 export default function EURUSD_NewsCard() {
   const [nextNewsTime, setNextNewsTime] = useState("None");
   const [newsToday, setNewsToday] = useState(false);
@@ -62,7 +133,7 @@ export default function EURUSD_NewsCard() {
   const { displayed, done } = useTypingEffect(aiMessage, 28, 600);
 
   const [musicEnabledState, setMusicEnabledState] = useState(false);
-  const [musicVolumeState, setMusicVolumeState] = useState(0.25);
+  const [musicVolumeState, setMusicVolumeState] = useState(0.35);
 
   // ------------------------------------------------------------
   // LOAD MUSIC SETTINGS
@@ -95,7 +166,7 @@ export default function EURUSD_NewsCard() {
   };
 
   // ------------------------------------------------------------
-  // SUPABASE: INITIAL FETCH + REALTIME SUBSCRIPTION
+  // SUPABASE: INITIAL FETCH + REALTIME
   // ------------------------------------------------------------
   useEffect(() => {
     let mounted = true;
@@ -256,47 +327,16 @@ export default function EURUSD_NewsCard() {
           </p>
         </div>
 
-{/* MUSIC CONTROL */}
-<div className="relative rounded-xl border border-emerald-500/20 p-4 pb-10 space-y-4">
+        {/* MUSIC CONTROL */}
+        <div className="relative rounded-xl border border-emerald-500/20 p-4 pb-10 space-y-4">
 
-  {/* FLOATING BUTTON */}
-  <button
-    onClick={toggleMusic}
-    className={`
-      absolute
-      bottom-3
-      right-3
-
-      px-3
-      py-1
-      rounded-lg
-      text-xs
-      font-semibold
-
-      transition-colors
-      transition-shadow
-      duration-300
-
-      ${
-        musicEnabledState
-          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 shadow-[0_0_12px_rgba(16,185,129,0.35)]"
-          : "bg-slate-700/30 text-slate-400 border border-slate-600/40 shadow-none"
-      }
-    `}
-  >
-    {musicEnabledState ? "ON" : "DEEP FOCUS MODE OFF"}
-  </button>
-
-          {musicEnabledState && (
-            <GTSlider
-              title="Atmosphere Level"
-              value={musicVolumeState * 100}
-              min={0}
-              max={100}
-              step={1}
-              onChange={handleMusicVolume}
-            />
-          )}
+          <MixerFaderWithGlow
+            label="Deep Focus Music"
+            value={musicVolumeState * 100}
+            onChange={handleMusicVolume}
+            enabled={musicEnabledState}
+            toggle={toggleMusic}
+          />
 
         </div>
 

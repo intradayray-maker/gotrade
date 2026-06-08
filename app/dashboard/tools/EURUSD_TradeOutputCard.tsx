@@ -501,7 +501,7 @@ const getSideGlow = () => {
         </div>
 
           {/* STOP LOSS */}
-        <div className="flex items-center justify-between rounded-xl border border-red-500/20 p-3">
+        <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
           <span className="text-slate-400">Stop Loss:</span>
           <span className="text-xl font-semibold tabular-nums text-red-400 flex items-center">
             {animTrade.stop ? fmtPrice(animTrade.stop) : "--"}
@@ -510,7 +510,7 @@ const getSideGlow = () => {
         </div>
 
         {/* TAKE PROFIT */}
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 p-3">
+        <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
           <span className="text-slate-400">Take Profit:</span>
           <span className="text-xl font-semibold tabular-nums text-emerald-400 flex items-center">
             {animTrade.tp ? fmtPrice(animTrade.tp) : "--"}
