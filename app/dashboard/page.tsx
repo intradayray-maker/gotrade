@@ -31,10 +31,10 @@ export default async function DashboardPage() {
     .single();
 
   const isAdmin = profile?.is_admin === true;
-  const hasPro = profile?.plan_probundle === true;
+  const hasPro = profile?.plan_PRO_BUNDLE === true;
 
-  const canEUR = isAdmin || hasPro || profile?.plan_eurusd === true;
-  const canETH = isAdmin || hasPro || profile?.plan_ethusdtp === true;
+  const canEUR = isAdmin || hasPro || profile?.plan_EURUSD === true;
+  const canETH = isAdmin || hasPro || profile?.plan_ETHUSDT === true;
 
   return (
     <DashboardClient
