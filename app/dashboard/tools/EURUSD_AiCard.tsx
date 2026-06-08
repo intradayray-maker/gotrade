@@ -77,6 +77,9 @@ export default function EURUSD_AiCard() {
   const formatMoney = (n: number) =>
     Math.round(n).toLocaleString("en-US");
 
+  const isTradeOngoing = (trade: Trade | null) =>
+    trade?.type === "entry_long" || trade?.type === "entry_short";
+
   // ------------------------------------------------------------
   // LOAD SETTINGS
   // ------------------------------------------------------------
@@ -282,6 +285,7 @@ export default function EURUSD_AiCard() {
 
   useEffect(() => {
     if (!barState) return;
+    if (isTradeOngoing(latestTradeState)) return;
 
     const entry = barState.high;
     const stop = barState.low;
@@ -291,7 +295,7 @@ export default function EURUSD_AiCard() {
 
     setRequiredMargin(margin);
     localStorage.setItem("forex_required_margin", String(margin));
-  }, [barState, riskAmount, leverage]);
+  }, [barState, riskAmount, leverage, latestTradeState]);
 
   // ------------------------------------------------------------
   // MARGIN ANIMATION
