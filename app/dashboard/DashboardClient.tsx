@@ -11,7 +11,12 @@ import ETHUSDT_AiCard from "@/app/dashboard/products/ETHUSD/ETHUSDT_AiCard";
 import ETHUSDT_NewsCard from "@/app/dashboard/products/ETHUSD/ETHUSDT_NewsCard";
 import ETHUSDT_TradeOutputCard from "@/app/dashboard/products/ETHUSD/ETHUSDT_TradeOutputCard";
 
-export default function DashboardClient({ canEUR, canETH }) {
+interface DashboardClientProps {
+  canEUR: boolean;
+  canETH: boolean;
+}
+
+export default function DashboardClient({ canEUR, canETH }: DashboardClientProps) {
   const [previewMode, setPreviewMode] = useState("actual");
 
   // Compute effective permissions
