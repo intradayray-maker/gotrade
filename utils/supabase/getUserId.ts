@@ -1,5 +1,5 @@
 // utils/supabase/getUserId.ts
-import { supabaseBrowserClient } from './client'
+import { createClient} from './client'
 
 export async function getSupabaseUserId() {
  const {
