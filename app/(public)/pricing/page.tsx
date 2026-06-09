@@ -368,7 +368,7 @@ export default function PricingPage() {
 
 
 <button
-  onClick={() => handleCheckout("price_1TYXeJKLveVAZ0tjTfeJg5k4")}
+  onClick={() => handleCheckout("price_1TgEcFKLveVAZ0tjNyB2gm66")}
   disabled={loading}
   className="
     mt-auto
@@ -510,7 +510,7 @@ export default function PricingPage() {
     </ul>
 
 <button
-  onClick={() => handleCheckout("price_1TYXiPKLveVAZ0tjwudC5ayt")}
+  onClick={() => handleCheckout("price_1TgEe8KLveVAZ0tjTzrAeN9Y")}
   disabled={loading}
   className="
     mt-auto
@@ -637,7 +637,7 @@ export default function PricingPage() {
 
 
 <button
-  onClick={() => handleCheckout("price_1TYXk8KLveVAZ0tjIw2sznnv")}
+  onClick={() => handleCheckout("price_1TgEhiKLveVAZ0tjlaVICsCk")}
   disabled={loading}
   className="
     mt-auto
