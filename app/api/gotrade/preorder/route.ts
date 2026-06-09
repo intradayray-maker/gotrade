@@ -6,14 +6,18 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { name, email, capital } = body
 
-    const supabase = createClient()(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const supabase =
+      createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
 
-    const { error } = await supabase
-      .from("gotrade_preorders")
-      .insert([{ name, email, capital }])
+    const { error } =
+      await supabase
+        .from("gotrade_preorders")
+        .insert([
+          { name, email, capital }
+        ])
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })
