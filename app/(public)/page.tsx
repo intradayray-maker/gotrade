@@ -6,14 +6,10 @@ import { ShieldCheck, LineChart, Zap } from "lucide-react"
 import GTCard from "@/components/ui/GTCard"
 import { usePathname } from "next/navigation"
 
-
-
 export default function PublicLandingPage() {
 
-
-
-
   const pathname = usePathname()
+
   // BACK TO TOP VISIBILITY HANDLER
   useEffect(() => {
     const btn = document.getElementById("backToTop")
@@ -36,8 +32,6 @@ export default function PublicLandingPage() {
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-16 space-y-16">
 
-
-
         {/* HEADER */}
         <header className="flex items-center justify-between py-2">
 
@@ -46,34 +40,34 @@ export default function PublicLandingPage() {
           <nav className="flex items-center gap-6 text-sm text-white/60">
 
             {/* HOME ICON WITH HOVER */}
-           <Link
-  href="/"
-  className="group flex items-center transition relative"
->
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className={`
-      h-4 w-4 transition
-      ${pathname === "/" ? "text-emerald-400 drop-shadow-[0_0_6px_rgba(0,255,180,0.6)]" : "text-white/60"}
-      group-hover:text-white
-      group-hover:-translate-y-[1px]
-    `}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-    strokeWidth="2"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h4m6 0h4a1 1 0 001-1V10"
-    />
-  </svg>
+            <Link
+              href="/"
+              className="group flex items-center transition relative"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className={`
+                  h-4 w-4 transition
+                  ${pathname === "/" ? "text-emerald-400 drop-shadow-[0_0_6px_rgba(0,255,180,0.6)]" : "text-white/60"}
+                  group-hover:text-white
+                  group-hover:-translate-y-[1px]
+                `}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h4m6 0h4a1 1 0 001-1V10"
+                />
+              </svg>
 
-  {pathname === "/" && (
-    <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-emerald-400 rounded-full shadow-[0_0_6px_rgba(0,255,180,0.6)]"></span>
-  )}
-</Link>
+              {pathname === "/" && (
+                <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-emerald-400 rounded-full shadow-[0_0_6px_rgba(0,255,180,0.6)]"></span>
+              )}
+            </Link>
 
             <Link href="/how-it-works" className="hover:text-white transition">
               How it works
@@ -111,9 +105,6 @@ export default function PublicLandingPage() {
 
         </header>
 
-
-
-
         {/* HERO SECTION */}
         <section className="grid gap-10 md:grid-cols-[minmax(0,1.4fr),minmax(0,1fr)] md:items-center">
 
@@ -124,22 +115,22 @@ export default function PublicLandingPage() {
             </p>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-white/90 drop-shadow-[0_0_10px_rgba(0,255,180,0.25)]">
-              Copy our best trades.
+              Copy our BEST trades.
               <span className="block bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
-                Keep your own risk rules.
+                You stay in full control.
               </span>
             </h1>
 
             <p className="text-sm sm:text-base text-[#4da3ff] font-medium drop-shadow-[0_0_6px_rgba(0,120,255,0.45)]">
-              Bot‑powered auto‑trading connected directly to your own brokerage account.
+              Precision signals. Zero noise. You execute with confidence.
             </p>
 
             <p className="text-sm sm:text-base text-white/70 max-w-xl">
-              Our Trading Bot connects to your{" "}
+              We deliver real‑time FOREX & CRYPTO entries, stops, and take profits — built from our{" "}
               <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent font-semibold drop-shadow-[0_0_8px_rgba(0,255,180,0.35)]">
-                own broker account,
+                premium master strategy.
               </span>{" "}
-              mirrors our BEST master strategy in real time, and enforces your risk limits — so you can scale without the complexity.
+              You manage your own risk and execute inside your own brokerage account.
             </p>
 
             <div className="flex flex-wrap items-center gap-4">
@@ -182,9 +173,6 @@ export default function PublicLandingPage() {
 
         </section>
 
-
-
-
         {/* PAIN / TRAP / SOLUTION CARDS */}
         <section className="grid gap-6 md:grid-cols-3">
 
@@ -216,7 +204,7 @@ export default function PublicLandingPage() {
           <div className="relative rounded-xl p-[2px] bg-gradient-to-br from-emerald-500/40 via-teal-400/40 to-emerald-600/40 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
             <div className="rounded-xl bg-[#0b0b12] p-4 space-y-3">
               <p className="text-sm font-semibold text-emerald-300 text-center">
-                Our balanced Auto‑Trading solution
+                Our balanced signal‑driven solution
               </p>
               <div className="rounded-lg overflow-hidden border border-slate-800/40">
                 <img src="/images/gotrade-solution.png" className="w-full h-auto" />
@@ -225,9 +213,6 @@ export default function PublicLandingPage() {
           </div>
 
         </section>
-
-
-
 
         {/* LIVE SNAPSHOT CARD */}
         <GTCard>
@@ -261,14 +246,11 @@ export default function PublicLandingPage() {
             </div>
 
             <div className="rounded-lg bg-gradient-to-r from-emerald-500/10 to-teal-500/10 p-3 text-xs text-white/70 border border-emerald-500/20">
-              Our Auto‑Trader enforces your max daily loss, position size, and allocation per trade — automatically.
+              Our signals help you enforce your own max daily loss, position size, and allocation per trade — with structure and clarity.
             </div>
 
           </div>
         </GTCard>
-
-
-
 
         {/* 3‑STEP SECTION */}
         <section className="space-y-6">
@@ -281,7 +263,7 @@ export default function PublicLandingPage() {
           </div>
 
           <p className="text-white/50 text-sm max-w-md">
-            No charts to study. No signals to chase. Just a clean, hands‑free experience.
+            No charts to study. No noise to filter. Just clean, actionable Forex & Crypto signals.
           </p>
 
           <div className="grid md:grid-cols-3 gap-4">
@@ -289,9 +271,9 @@ export default function PublicLandingPage() {
             <GTCard>
               <div className="space-y-2">
                 <LineChart className="w-6 h-6 text-emerald-400" />
-                <h3 className="text-sm font-semibold text-white/70">Step 1 — We carefully enter trades</h3>
+                <h3 className="text-sm font-semibold text-white/70">Step 1 — We take the trades</h3>
                 <p className="text-sm text-white/60">
-                  When the market opens, our strategy takes the trades — no guessing, no hesitation.
+                  When the market opens, our strategy executes with precision — no guessing, no hesitation.
                 </p>
               </div>
             </GTCard>
@@ -299,9 +281,9 @@ export default function PublicLandingPage() {
             <GTCard>
               <div className="space-y-2">
                 <Zap className="w-6 h-6 text-emerald-400" />
-                <h3 className="text-sm font-semibold text-white/70">Step 2 — Your account copies us</h3>
+                <h3 className="text-sm font-semibold text-white/70">Step 2 — You receive the signals instantly</h3>
                 <p className="text-sm text-white/60">
-                  Our bot mirrors every buy and sell directly into your own brokerage account.
+                  Entries, stops, and targets delivered in real time — built for fast, confident execution.
                 </p>
               </div>
             </GTCard>
@@ -309,9 +291,9 @@ export default function PublicLandingPage() {
             <GTCard>
               <div className="space-y-2">
                 <ShieldCheck className="w-6 h-6 text-emerald-400" />
-                <h3 className="text-sm font-semibold text-white/70">Step 3 — You relax on true autopilot</h3>
+                <h3 className="text-sm font-semibold text-white/70">Step 3 — You execute with control</h3>
                 <p className="text-sm text-white/60">
-                  Watch everything from the dashboard while our trading bot handles execution for you.
+                  You stay in charge of your account, your size, and your risk — with our structure guiding every move.
                 </p>
               </div>
             </GTCard>
@@ -319,9 +301,6 @@ export default function PublicLandingPage() {
           </div>
 
         </section>
-
-
-
 
         {/* CTA SECTION */}
         <section className="space-y-4 text-center">
@@ -331,7 +310,7 @@ export default function PublicLandingPage() {
           </h2>
 
           <p className="text-white/50 text-sm max-w-md mx-auto">
-            We give you the execution layer your strategy deserves — without you EVER having to make a BUY / SELL decision.
+            We give you the clarity and structure your trading deserves — without relying on automation or bots.
           </p>
 
           <Link href="/pricing">
@@ -359,48 +338,39 @@ export default function PublicLandingPage() {
 
         </section>
 
-
-
-
         {/* FOOTER */}
         <footer className="border-t border-slate-800/40 pt-6 text-xs text-white/40">
           © {new Date().getFullYear()} Trading involves risk, including the potential loss of capital.
-          Automated trading systems do not guarantee profits or prevent losses.
+          Signals do not guarantee profits or prevent losses.
           Past performance is not indicative of future results.
           Nothing on this site should be interpreted as financial advice.
         </footer>
 
-
-
       </div>
 
-
-
       {/* BACK TO TOP BUTTON */}
-<button
-  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-  id="backToTop"
-  className="
-    fixed bottom-6 right-6 z-50
-    w-12 h-12
-    flex items-center justify-center
-    rounded-full
-    bg-[rgb(3,82,65)]
-    text-[rgb(225,254,234)]
-    shadow-[0_0_18px_rgba(3,82,65,0.45)]
-    transition duration-150
-    hover:bg-[rgb(5,100,80)]
-    hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
-    hover:-translate-y-[2px]
-    cursor-pointer
-    hidden
-  "
->
-  ↑
-</button>
-
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        id="backToTop"
+        className="
+          fixed bottom-6 right-6 z-50
+          w-12 h-12
+          flex items-center justify-center
+          rounded-full
+          bg-[rgb(3,82,65)]
+          text-[rgb(225,254,234)]
+          shadow-[0_0_18px_rgba(3,82,65,0.45)]
+          transition duration-150
+          hover:bg-[rgb(5,100,80)]
+          hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
+          hover:-translate-y-[2px]
+          cursor-pointer
+          hidden
+        "
+      >
+        ↑
+      </button>
 
     </main>
   )
 }
-

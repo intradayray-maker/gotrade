@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
-import { getRandomMessageETH } from "@/TOOLS/Ai_Text";
-import { setMusicEnabled, setMusicVolume } from "@/TOOLS/Ai_AudioManager";
+import { getRandomMessageETH } from "app/dashboard/products/TOOLS/Ai_Text";
+import { setMusicEnabled, setMusicVolume } from "app/dashboard/products/TOOLS/Ai_AudioManager";
 
 // ------------------------------------------------------------
 // MIXER FADER WITH HYBRID GLOW + POWER BUTTON

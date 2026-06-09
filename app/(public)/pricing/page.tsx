@@ -238,12 +238,11 @@ export default function PricingPage() {
 
           <div className="space-y-6">
             <h1 className="text-4xl font-bold tracking-tight text-white/90">
-              Affordable pricing built to keep you profitable.
+              Pricing that respects your time and your capital.
             </h1>
 
             <p className="text-white/60 text-base max-w-md">
-              Three simple plans. No gimmics. No upsells.  
-              Just full access to automation, risk controls, and live execution.
+              Three plans. No fluff. No hidden fees. Just clean access to the signals and structure that keep you consistent.
             </p>
           </div>
 
@@ -252,34 +251,12 @@ export default function PricingPage() {
 <div className="rounded-lg overflow-hidden border border-slate-800/40">
 <img src="/images/7.png" className="w-full h-auto" /></div>
 
-
           </div>
 
         </section>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 {/* PRICING GRID */}
 <section className="grid md:grid-cols-3 gap-10">
-
-
 
   {/* STARTER PLAN */}
   <div className="
@@ -295,33 +272,15 @@ export default function PricingPage() {
     {/* Title + Icon */}
     <div className="flex items-center gap-3">
       <PlanIcon />
-      <h2 className="text-lg font-semibold">Starter</h2>
+      <h2 className="text-lg font-semibold">Forex Signals</h2>
     </div>
-
-    {/* Urgency Badge */}
-    <div className="
-      text-xs font-semibold
-      text-yellow-300
-      bg-yellow-300/10
-      border border-yellow-300/20
-      px-2 py-1 rounded-md
-      w-fit
-      shadow-[0_0_10px_rgba(255,215,0,0.35)]
-    ">
-      1st 100 members only
-    </div>
-
-    {/* Account Minimum */}
-    <p className="text-xs text-white/50">
-      Minimum Account Balance: <span className="text-white/70">$500</span>
-    </p>
 
     {/* Separator */}
     <div className="h-px bg-white/10 w-full" />
 
     {/* Price */}
     <div>
-      <span className="text-4xl font-semibold">$4.99</span>
+      <span className="text-4xl font-semibold">$19.99</span>
       <span className="ml-1 text-sm text-white/40">/month</span>
     </div>
 
@@ -330,17 +289,43 @@ export default function PricingPage() {
 
       <li className="flex items-start gap-2 text-white/70">
         <CheckIcon />
-        (1) Auto‑Trade Bot
+        AI trading companion
       </li>
 
       <li className="flex items-start gap-2 text-white/70">
         <CheckIcon />
-        Limited risk controls
+        Built‑in position sizing
       </li>
 
       <li className="flex items-start gap-2 text-white/70">
         <CheckIcon />
-        Full trade history
+        Smart leverage guidance
+      </li>
+
+      <li className="flex items-start gap-2 text-white/70">
+        <CheckIcon />
+        Real‑time trade signals
+      </li>
+
+      <li className="flex items-start gap-2 text-white/70">
+        <CheckIcon />
+        Entry • Stop • Targets
+      </li>
+
+      <li className="flex items-start gap-2 text-white/70">
+        <CheckIcon />
+        Daily news safety filter
+      </li>
+
+
+      <li className="flex items-start gap-2 text-white/70">
+        <CheckIcon />
+        AI market reflections
+      </li>
+
+      <li className="flex items-start gap-2 text-white/70">
+        <CheckIcon />
+        Trade execution details
       </li>
 
       <li className="flex items-start gap-2 text-white/70">
@@ -355,24 +340,18 @@ export default function PricingPage() {
 
       <li className="flex items-start gap-2 text-white/70">
         <CheckIcon />
-        1 Zoom call per week
-      </li>
-
-
-      <li className="flex items-start gap-2 text-white/70">
-        <CheckIcon />
-        Performance fee reporting
+        (1) weekly Zoom call
       </li>
 
       <li className="flex items-start gap-2 text-white/70">
         <CheckIcon />
-        35% performance fee
-      </li>
+        Weekday signal coverage
+      </li>      
 
       {/* Missing */}
       <li className="flex items-start gap-2 text-white/40">
         <XIcon />
-        Standard risk controls
+        Crypto Signals
       </li>
 
       <li className="flex items-start gap-2 text-white/40">
@@ -382,9 +361,11 @@ export default function PricingPage() {
 
       <li className="flex items-start gap-2 text-white/40">
         <XIcon />
-        Multiple auto‑trade bots
+        Nights and Weekends Trading
       </li>
     </ul>
+
+
 
 <button
   onClick={() => handleCheckout("price_1TYXeJKLveVAZ0tjTfeJg5k4")}
@@ -403,7 +384,7 @@ export default function PricingPage() {
     transition
   "
 >
-  {loading ? "Redirecting..." : "Get Starter"}
+  {loading ? "Redirecting..." : "Get Forex Signals"}
 </button>
 
 
@@ -425,20 +406,30 @@ export default function PricingPage() {
     {/* Title + Icon */}
     <div className="flex items-center gap-3">
       <PlanIcon />
-      <h2 className="text-lg font-semibold">Pro</h2>
+      <h2 className="text-lg font-semibold">Crypto Signals</h2>
     </div>
 
-    {/* Account Minimum */}
-    <p className="text-xs text-white/50">
-      Minimum Account Balance: <span className="text-white/70">$5,000</span>
-    </p>
+
+    {/* Urgency Badge */}
+    <div className="
+      text-xs font-semibold
+      text-yellow-300
+      bg-yellow-300/10
+      border border-yellow-300/20
+      px-2 py-1 rounded-md
+      w-fit
+      shadow-[0_0_10px_rgba(255,215,0,0.35)]
+    ">
+      Trending Now
+    </div>
+
 
     {/* Separator */}
     <div className="h-px bg-white/10 w-full" />
 
     {/* Price */}
     <div>
-      <span className="text-4xl font-semibold">$39.99</span>
+      <span className="text-4xl font-semibold">$29.99</span>
       <span className="ml-1 text-sm text-white/40">/month</span>
     </div>
 
@@ -447,17 +438,42 @@ export default function PricingPage() {
 
       <li className="flex items-start gap-2 text-white/70">
         <CheckIcon />
-        (3) Auto‑Trade Bots
+        AI trading companion
       </li>
 
       <li className="flex items-start gap-2 text-white/70">
         <CheckIcon />
-        Standard risk controls
+        Built‑in position sizing
       </li>
 
       <li className="flex items-start gap-2 text-white/70">
         <CheckIcon />
-        Full trade history
+        Smart leverage guidance
+      </li>
+
+      <li className="flex items-start gap-2 text-white/70">
+        <CheckIcon />
+        Real‑time crypto signals
+      </li>
+
+      <li className="flex items-start gap-2 text-white/70">
+        <CheckIcon />
+        Entry • Stop • Targets
+      </li>
+
+      <li className="flex items-start gap-2 text-white/70">
+        <CheckIcon />
+        AI volatility meter
+      </li>
+
+      <li className="flex items-start gap-2 text-white/70">
+        <CheckIcon />
+        Volatility pulse insights
+      </li>
+
+      <li className="flex items-start gap-2 text-white/70">
+        <CheckIcon />
+        Trade execution details
       </li>
 
       <li className="flex items-start gap-2 text-white/70">
@@ -472,23 +488,13 @@ export default function PricingPage() {
 
       <li className="flex items-start gap-2 text-white/70">
         <CheckIcon />
-        2 Zoom calls per week
-      </li>
-
-      <li className="flex items-start gap-2 text-white/70">
-        <CheckIcon />
-        Performance fee reporting
-      </li>
-
-      <li className="flex items-start gap-2 text-white/70">
-        <CheckIcon />
-        25% performance fee
+        (2) Zoom calls per week
       </li>
 
       {/* Missing */}
       <li className="flex items-start gap-2 text-white/40">
         <XIcon />
-        Custom risk controls
+        Forex signals
       </li>
 
       <li className="flex items-start gap-2 text-white/40">
@@ -520,7 +526,7 @@ export default function PricingPage() {
     transition
   "
 >
-  {loading ? "Redirecting..." : "Get Pro"}
+  {loading ? "Redirecting..." : "Get Crypto Signals"}
 </button>
 
 
@@ -542,67 +548,93 @@ export default function PricingPage() {
     {/* Title + Icon */}
     <div className="flex items-center gap-3">
       <PlanIcon />
-      <h2 className="text-lg font-semibold">Elite</h2>
+      <h2 className="text-lg font-semibold">Elite Bundle</h2>
     </div>
-
-    {/* Account Minimum */}
-    <p className="text-xs text-white/50">
-      Minimum Account Balance: <span className="text-white/70">$30,000</span>
-    </p>
 
     {/* Separator */}
     <div className="h-px bg-white/10 w-full" />
 
     {/* Price */}
     <div>
-      <span className="text-4xl font-semibold">$139.99</span>
+      <span className="text-4xl font-semibold">$39.99</span>
       <span className="ml-1 text-sm text-white/40">/month</span>
     </div>
 
     {/* Features */}
     <ul className="space-y-3 text-sm">
 
-      <li className="flex items-start gap-2 text-white/70">
-        <CheckIcon />
-        (4) Auto‑Trade Bots
-      </li>
+ <li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
+  AI trading companion
+</li>
 
-      <li className="flex items-start gap-2 text-white/70">
-        <CheckIcon />
-        Custom risk controls
-      </li>
+<li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
+  Built‑in position sizing
+</li>
 
-      <li className="flex items-start gap-2 text-white/70">
-        <CheckIcon />
-        Full trade history
-      </li>
+<li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
+  Smart leverage guidance
+</li>
 
-      <li className="flex items-start gap-2 text-white/70">
-        <CheckIcon />
-        Priority 1‑on‑1 personal support
-      </li>
+<li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
+  Real‑time Forex signals
+</li>
 
-      <li className="flex items-start gap-2 text-white/70">
-        <CheckIcon />
-        Email notifications
-      </li>
+<li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
+  Real‑time Crypto signals
+</li>
 
-      <li className="flex items-start gap-2 text-white/70">
-        <CheckIcon />
-        Scheduled Zoom calls
-      </li>
+<li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
+  Entry • Stop • Targets
+</li>
 
-      <li className="flex items-start gap-2 text-white/70">
-        <CheckIcon />
-        Performance fee reporting
-      </li>
+<li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
+  Daily news safety filter (Forex)
+</li>
 
-      <li className="flex items-start gap-2 text-white/70">
-        <CheckIcon />
-        20% performance fee
-      </li>
+<li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
+  AI volatility meter (Crypto)
+</li>
 
-    </ul>
+<li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
+  Volatility pulse insights
+</li>
+
+<li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
+  Trade execution details
+</li>
+
+<li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
+  Growth strategy (personalized)
+</li>
+
+<li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
+  Email notifications
+</li>
+
+<li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
+  Priority 1‑on‑1 personal support
+</li>
+
+<li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
+  Scheduled Zoom calls
+</li>
+</ul>
+
+
 
 <button
   onClick={() => handleCheckout("price_1TYXk8KLveVAZ0tjIw2sznnv")}
@@ -621,154 +653,12 @@ export default function PricingPage() {
     transition
   "
 >
-  {loading ? "Redirecting..." : "Get Elite"}
+  {loading ? "Redirecting..." : "Get Elite Bundle"}
 </button>
-
-
-  </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-{/* ELITE TEST PLAN (ADMIN ONLY) */}
-<div className="
-  flex flex-col
-  rounded-2xl
-  border border-yellow-400/20
-  bg-yellow-400/5
-  p-8
-  shadow-[0_0_25px_rgba(255,200,0,0.25)]
-  space-y-6
-">
-
-  {/* Title + Icon */}
-  <div className="flex items-center gap-3">
-    <PlanIcon />
-    <h2 className="text-lg font-semibold text-yellow-300">Elite (Test Mode)</h2>
-  </div>
-
-  {/* Account Minimum */}
-  <p className="text-xs text-yellow-200/60">
-    Minimum Account Balance: <span className="text-yellow-200/80">$30,000</span>
-  </p>
-
-  {/* Separator */}
-  <div className="h-px bg-yellow-300/20 w-full" />
-
-  {/* Price */}
-  <div>
-    <span className="text-4xl font-semibold text-yellow-300">$0</span>
-    <span className="ml-1 text-sm text-yellow-200/60">/month</span>
-  </div>
-
-  {/* Features */}
-  <ul className="space-y-3 text-sm text-yellow-200/80">
-
-    <li className="flex items-start gap-2">
-      <CheckIcon />
-      (4) Auto‑Trade Bots
-    </li>
-
-    <li className="flex items-start gap-2">
-      <CheckIcon />
-      Custom risk controls
-    </li>
-
-    <li className="flex items-start gap-2">
-      <CheckIcon />
-      Full trade history
-    </li>
-
-    <li className="flex items-start gap-2">
-      <CheckIcon />
-      Priority 1‑on‑1 personal support
-    </li>
-
-    <li className="flex items-start gap-2">
-      <CheckIcon />
-      Email notifications
-    </li>
-
-    <li className="flex items-start gap-2">
-      <CheckIcon />
-      Scheduled Zoom calls
-    </li>
-
-    <li className="flex items-start gap-2">
-      <CheckIcon />
-      Performance fee reporting
-    </li>
-
-    <li className="flex items-start gap-2">
-      <CheckIcon />
-      20% performance fee
-    </li>
-
-  </ul>
-
-<button
-  onClick={() => handleCheckout("price_1TYbLOKLveVAZ0tjHkfZb2vf")}
-  disabled={loading}
-  className="
-    mt-auto
-    rounded-[6px]
-    px-6 py-3
-    text-sm font-semibold
-    bg-yellow-500/20
-    text-yellow-200
-    border border-yellow-500/40
-    shadow-[0_0_18px_rgba(255,200,0,0.35)]
-    hover:bg-yellow-500/30
-    hover:shadow-[0_0_28px_rgba(255,200,0,0.55)]
-    transition
-  "
->
-  {loading ? "Redirecting..." : "Get Elite (Test $0)"}
-</button>
-
 
 </div>
 
-
-
-
-
-
-
-
 </section>
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 {/* FOOTER */}
 
@@ -776,7 +666,6 @@ export default function PricingPage() {
 <p className="mt-1"></p>
 
 </div>
-
 
       {/* BACK TO TOP BUTTON */}
       <button

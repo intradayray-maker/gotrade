@@ -7,14 +7,12 @@ import { usePathname } from "next/navigation";
 export default function AboutPage() {
   const pathname = usePathname();
 
-  // BACK TO TOP VISIBILITY HANDLER
   useEffect(() => {
     const btn = document.getElementById("backToTop");
     if (!btn) return;
 
     const handleScroll = () => {
-      if (window.scrollY > 300) btn.style.display = "block";
-      else btn.style.display = "none";
+      btn.style.display = window.scrollY > 300 ? "block" : "none";
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -26,8 +24,6 @@ export default function AboutPage() {
 
       <div className="mx-auto max-w-6xl px-6 py-20 space-y-24">
 
-
-
         {/* HEADER */}
         <header className="flex items-center justify-between py-2">
 
@@ -35,7 +31,7 @@ export default function AboutPage() {
 
           <nav className="flex items-center gap-6 text-sm text-white/60">
 
-            {/* HOME ICON WITH ACTIVE HIGHLIGHT */}
+            {/* HOME ICON */}
             <Link
               href="/"
               className="group flex items-center transition relative"
@@ -130,64 +126,48 @@ export default function AboutPage() {
 
         </header>
 
-
-
-
-
-
-
         {/* HERO SECTION */}
         <section className="grid md:grid-cols-2 gap-12 items-center">
 
           <div className="space-y-6">
             <h1 className="text-4xl font-bold tracking-tight text-white/90">
-              Built by traders who were tired of duct‑taping tools together.
+              Built by traders who were tired of guessing, chasing, and overcomplicating the process.
             </h1>
 
             <p className="text-white/60 text-base max-w-md">
-              We created this platform because active investors deserve automation
-              that feels clean, reliable, and built for real‑world execution —
-              not another “signal service” or hype‑driven promise.
+              We built this platform because traders deserve structure — not noise.  
+              No hype. No “secret indicators.” Just clean, high‑quality signals and a system designed for clarity and consistency.
             </p>
           </div>
 
-          <div className="rounded-xl border border-slate-800/40 bg-[#0b0b12] h-64 flex items-center justify-center text-white/30 text-sm">
-
-<div className="rounded-lg overflow-hidden border border-slate-800/40">
-<img src="/images/9.png" className="w-full h-auto" /></div>
-
-
+          <div className="rounded-xl border border-slate-800/40 bg-[#0b0b12] h-64 flex items-center justify-center">
+            <div className="rounded-lg overflow-hidden border border-slate-800/40">
+              <img src="/images/9.png" className="w-full h-auto" />
+            </div>
           </div>
 
         </section>
-
-
-
-
 
         {/* WHO WE BUILT THIS FOR */}
         <section className="grid md:grid-cols-2 gap-12 items-center">
 
-          <div className="rounded-xl border border-slate-800/40 bg-[#0b0b12] h-56 flex items-center justify-center text-white/30 text-sm">
-<div className="rounded-lg overflow-hidden border border-slate-800/40">
-<img src="/images/10.png" className="w-full h-auto" /></div>
+          <div className="rounded-xl border border-slate-800/40 bg-[#0b0b12] h-56 flex items-center justify-center">
+            <div className="rounded-lg overflow-hidden border border-slate-800/40">
+              <img src="/images/10.png" className="w-full h-auto" />
+            </div>
           </div>
 
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold tracking-tight text-white/80">
-              No technical skills required.
+              Built for traders at every level.
             </h2>
 
             <p className="text-white/60 text-sm max-w-md">
-Whether you're a day trader who doesn’t want to sit through long, boring trades, tired of losing money in the market, or simply someone looking to invest in your future — this platform was built for you.
+              Whether you're new and want a structured path, or experienced and tired of inconsistent results — this platform gives you a clear, repeatable way to approach the market with confidence.
             </p>
           </div>
 
         </section>
-
-
-
-
 
         {/* 3 INFO CARDS */}
         <section className="grid md:grid-cols-3 gap-6">
@@ -197,7 +177,7 @@ Whether you're a day trader who doesn’t want to sit through long, boring trade
               Focus
             </p>
             <p className="text-slate-200">
-              Active equity traders who want automation without giving up control.
+              Traders who want structure, clarity, and high‑quality signals — without giving up control of their account.
             </p>
           </div>
 
@@ -206,8 +186,9 @@ Whether you're a day trader who doesn’t want to sit through long, boring trade
               Philosophy
             </p>
             <p className="text-slate-200">
-              Your rules first. Your risk limits enforced automatically.  
-              You stay in control of capital at all times.
+              Your capital stays in your hands.  
+              Your risk. Your execution.  
+              We provide the precision — you stay in control.
             </p>
           </div>
 
@@ -216,16 +197,11 @@ Whether you're a day trader who doesn’t want to sit through long, boring trade
               Stack
             </p>
             <p className="text-slate-200">
-              Next.js, Supabase, Stripe, Alpaca, and a custom trading engine
-              designed for low‑latency execution.
+              Next.js, Supabase, Stripe, and a custom signal engine designed for speed, reliability, and real‑time delivery.
             </p>
           </div>
 
         </section>
-
-
-
-
 
         {/* WHY WE EXIST */}
         <section className="grid md:grid-cols-2 gap-12 items-center">
@@ -236,37 +212,29 @@ Whether you're a day trader who doesn’t want to sit through long, boring trade
             </h2>
 
             <p className="text-white/60 text-sm max-w-md">
-              Most trading tools are either too simple, too slow, or too
-              complicated. We wanted something that felt like a real execution
-              layer — fast, reliable, and built for traders who care about
-              precision.
+              Most trading tools overwhelm you with indicators, dashboards, and noise.  
+              We wanted something different — something that cuts through the clutter and gives traders exactly what they need.
             </p>
 
             <p className="text-white/60 text-sm max-w-md">
-              So we built an automation engine that mirrors trades instantly,
-              respects your risk settings, and removes the repetitive work that
-              drains your focus.
+              So we built a signal‑driven system that delivers clear entries, exits, and structure.  
+              No hype. No confusion. Just precision you can act on.
             </p>
           </div>
 
-          <div className="rounded-xl border border-slate-800/40 bg-[#0b0b12] h-56 flex items-center justify-center text-white/30 text-sm">
-          
-<div className="rounded-lg overflow-hidden border border-slate-800/40">
-<img src="/images/11.png" className="w-full h-auto" />
-
-              </div>
+          <div className="rounded-xl border border-slate-800/40 bg-[#0b0b12] h-56 flex items-center justify-center">
+            <div className="rounded-lg overflow-hidden border border-slate-800/40">
+              <img src="/images/11.png" className="w-full h-auto" />
+            </div>
           </div>
 
         </section>
 
-{/* FOOTER */}
-
-<p className="font-medium text-white/70"></p>
-<p className="mt-1"></p>
+        {/* FOOTER */}
+        <p className="font-medium text-white/70"></p>
+        <p className="mt-1"></p>
 
       </div>
-
-
 
       {/* BACK TO TOP BUTTON */}
       <button

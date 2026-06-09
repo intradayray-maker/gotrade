@@ -3,6 +3,33 @@
 import { useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { ReactNode } from "react"
+
+// ⭐ Universal card style
+function BillingCard({
+  children,
+  className = ""
+}: {
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <div
+      className={`
+        rounded-xl
+        border-[2px]
+        border border-emerald-500/30
+        bg-transparent
+        p-6
+        h-full
+        flex flex-col
+        ${className}
+      `}
+    >
+      {children}
+    </div>
+  )
+}
 
 export default function HowItWorksPage() {
 
@@ -14,11 +41,7 @@ export default function HowItWorksPage() {
     if (!btn) return
 
     const handleScroll = () => {
-      if (window.scrollY > 300) {
-        btn.style.display = "block"
-      } else {
-        btn.style.display = "none"
-      }
+      btn.style.display = window.scrollY > 300 ? "block" : "none"
     }
 
     window.addEventListener("scroll", handleScroll)
@@ -30,8 +53,6 @@ export default function HowItWorksPage() {
 
       <div className="mx-auto max-w-6xl px-6 py-20 space-y-24">
 
-
-
         {/* HEADER */}
         <header className="flex items-center justify-between py-2">
 
@@ -39,7 +60,7 @@ export default function HowItWorksPage() {
 
           <nav className="flex items-center gap-6 text-sm text-white/60">
 
-            {/* HOME ICON WITH ACTIVE HIGHLIGHT */}
+            {/* HOME ICON */}
             <Link
               href="/"
               className="group flex items-center transition relative"
@@ -134,107 +155,87 @@ export default function HowItWorksPage() {
 
         </header>
 
-
-
-
-
         {/* HERO SECTION */}
         <section className="grid md:grid-cols-2 gap-12 items-center">
 
           <div className="space-y-6">
             <h1 className="text-4xl font-bold tracking-tight text-white/90">
-              How it works — simple, hands‑free, and built for real investors.
+              How it works — simple, structured, and built for real traders.
             </h1>
 
             <p className="text-white/60 text-base max-w-md">
               You keep your broker, your capital, and full control.  
-              Our automation handles the execution so you can focus on decisions — not button‑clicking.
+              We deliver real‑time Forex & Crypto signals built from our premium master strategy — so you can execute with confidence and consistency.
             </p>
           </div>
 
           <div className="rounded-xl border border-slate-800/40 bg-[#0b0b12] h-64 flex items-center justify-center text-white/30 text-sm">
-
-<div className="rounded-lg overflow-hidden border border-slate-800/40">
-<img src="/images/1.png" className="w-full h-auto" /></div>
-
+            <div className="rounded-lg overflow-hidden border border-slate-800/40">
+              <img src="/images/1.png" className="w-full h-auto" />
+            </div>
           </div>
 
         </section>
 
-
-
-
-
-        {/* 3‑STEP VISUAL CARDS */}
+        {/* 3‑STEP CARDS */}
         <section className="space-y-10">
 
           <h2 className="text-2xl font-semibold tracking-tight text-white/80">
-            Your day with automated trading — in 3 steps
+            Your day with GoTrade — in 3 steps
           </h2>
 
           <div className="grid md:grid-cols-3 gap-6">
 
             {/* STEP 1 */}
-            <div className="relative rounded-xl p-[2px] bg-gradient-to-br from-emerald-500/40 via-teal-400/40 to-emerald-600/40 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
-              <div className="rounded-xl bg-[#0b0b12] p-6 space-y-4">
-                <div className="rounded-lg overflow-hidden border border-slate-800/40 h-32 flex items-center justify-center text-white/30 text-xs">
+            <BillingCard>
+              <img
+                src="/images/2.png"
+                className="w-full h-auto rounded-lg border border-emerald-500/20"
+              />
 
-<div className="rounded-lg overflow-hidden border border-slate-800/40">
-<img src="/images/2.png" className="w-full h-auto" /></div>
+              <h3 className="text-sm font-semibold text-white/80 tracking-wide mt-4">
+                Step 1 — We take the trades with precision
+              </h3>
 
-                </div>
-                <h3 className="text-sm font-semibold text-white/80 tracking-wide">
-                  Step 1 — We enter trades with precision
-                </h3>
-                <p className="text-sm text-white/60">
-                  When the market opens, our strategy takes the trades — no guessing, no hesitation.
-                </p>
-              </div>
-            </div>
+              <p className="text-sm text-white/60">
+                Our master strategy executes in real time — identifying high‑probability setups across Forex & Crypto.
+              </p>
+            </BillingCard>
 
             {/* STEP 2 */}
-            <div className="relative rounded-xl p-[2px] bg-gradient-to-br from-emerald-500/40 via-teal-400/40 to-emerald-600/40 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
-              <div className="rounded-xl bg-[#0b0b12] p-6 space-y-4">
-                <div className="rounded-lg overflow-hidden border border-slate-800/40 h-32 flex items-center justify-center text-white/30 text-xs">
+            <BillingCard>
+              <img
+                src="/images/3.png"
+                className="w-full h-auto rounded-lg border border-emerald-500/20"
+              />
 
-<div className="rounded-lg overflow-hidden border border-slate-800/40">
-<img src="/images/3.png" className="w-full h-auto" /></div>
+              <h3 className="text-sm font-semibold text-white/80 tracking-wide mt-4">
+                Step 2 — You receive the signals instantly
+              </h3>
 
-                </div>
-                <h3 className="text-sm font-semibold text-white/80 tracking-wide">
-                  Step 2 — Your account copies automatically
-                </h3>
-                <p className="text-sm text-white/60">
-                  Every buy and sell is mirrored into your own brokerage account — instantly.
-                </p>
-              </div>
-            </div>
+              <p className="text-sm text-white/60">
+                Entries, stops, and take‑profits delivered the moment they trigger — no noise, no delay.
+              </p>
+            </BillingCard>
 
             {/* STEP 3 */}
-            <div className="relative rounded-xl p-[2px] bg-gradient-to-br from-emerald-500/40 via-teal-400/40 to-emerald-600/40 shadow-[0_0_25px_rgba(0,0,0,0.5)]">
-              <div className="rounded-xl bg-[#0b0b12] p-6 space-y-4">
-                <div className="rounded-lg overflow-hidden border border-slate-800/40 h-32 flex items-center justify-center text-white/30 text-xs">
+            <BillingCard>
+              <img
+                src="/images/4.png"
+                className="w-full h-auto rounded-lg border border-emerald-500/20"
+              />
 
-<div className="rounded-lg overflow-hidden border border-slate-800/40">
-<img src="/images/4.png" className="w-full h-auto" /></div>
+              <h3 className="text-sm font-semibold text-white/80 tracking-wide mt-4">
+                Step 3 — You execute with control
+              </h3>
 
-
-                </div>
-                <h3 className="text-sm font-semibold text-white/80 tracking-wide">
-                  Step 3 — You relax on true autopilot
-                </h3>
-                <p className="text-sm text-white/60">
-                  Watch everything from your dashboard while automation handles the execution.
-                </p>
-              </div>
-            </div>
+              <p className="text-sm text-white/60">
+                You choose your size, manage your risk, and execute inside your own brokerage account — with structure guiding every move.
+              </p>
+            </BillingCard>
 
           </div>
         </section>
-
-
-
-
 
         {/* ALTERNATING IMAGE + TEXT SECTIONS */}
         <section className="space-y-24">
@@ -243,11 +244,9 @@ export default function HowItWorksPage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
 
             <div className="rounded-xl border border-slate-800/40 bg-[#0b0b12] h-56 flex items-center justify-center text-white/30 text-sm">
-
-
-<div className="rounded-lg overflow-hidden border border-slate-800/40">
-<img src="/images/5.png" className="w-full h-auto" /></div>
-
+              <div className="rounded-lg overflow-hidden border border-slate-800/40">
+                <img src="/images/5_2.png" className="w-full h-auto" />
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -255,7 +254,7 @@ export default function HowItWorksPage() {
                 Your broker. Your capital. Your rules.
               </h3>
               <p className="text-white/60 text-sm max-w-md">
-                You stay in full control. Adjust allocation, pause automation, or disconnect anytime.
+                You stay in full control. Adjust position size, manage allocation, or sit out a session — your account stays in your hands at all times.
               </p>
             </div>
 
@@ -269,16 +268,14 @@ export default function HowItWorksPage() {
                 Built for clarity, not confusion.
               </h3>
               <p className="text-white/60 text-sm max-w-md">
-                Your dashboard shows trades, performance, and risk settings in one clean view.
+                Your dashboard shows signals, performance, and session history in one clean, simple view — no clutter, no distractions.
               </p>
             </div>
 
             <div className="rounded-xl border border-slate-800/40 bg-[#0b0b12] h-56 flex items-center justify-center text-white/30 text-sm">
-
-
-<div className="rounded-lg overflow-hidden border border-slate-800/40">
-<img src="/images/6.png" className="w-full h-auto" /></div>
-
+              <div className="rounded-lg overflow-hidden border border-slate-800/40">
+                <img src="/images/6_2.png" className="w-full h-auto" />
+              </div>
             </div>
 
           </div>
@@ -288,42 +285,37 @@ export default function HowItWorksPage() {
         {/* WHY THIS PLAN SECTION */}
         <section className="grid md:grid-cols-2 gap-12 items-center">
 
+          <div className="space-y-4">
 
-<div className="space-y-4">
+            <h3 className="text-xl font-semibold text-white/80">
+              Why traders choose GoTrade.
+            </h3>
 
-<h3 className="text-xl font-semibold text-white/80">
-Your money working for you.
+            <div className="text-white/60 text-sm max-w-md space-y-3">
 
-</h3>
+              <p>
+                You get the same high‑precision signals we use in our own live accounts — without needing to build or maintain a strategy yourself.
+              </p>
 
-<div className="text-white/60 text-sm max-w-md space-y-3">
+              <p>
+                No bots. No automation. No brokerage connections.  
+                Just clean, real‑time signals you can execute with confidence.
+              </p>
 
-  <p>
-    Your subscription unlocks the full automation engine — execution, risk controls, and performance tracking.
-  </p>
+              <p>
+                Transparent. Structured. Built for traders who value precision and control.
+              </p>
 
-  <p>
-    When the system generates profits, a 20% performance fee keeps our incentives aligned.
-  </p>
+            </div>
+          </div>
 
-  <p>
-    Transparent. Scalable. Built for traders who value precision.
-  </p>
+        </section>
 
-</div>
-</div>
+        {/* FOOTER */}
+        <p className="font-medium text-white/70"></p>
+        <p className="mt-1"></p>
 
-</section>
-
-
-{/* FOOTER */}
-
-<p className="font-medium text-white/70"></p>
-<p className="mt-1"></p>
-
-      </div>
-
-
+      </div> {/* closes wrapper */}
 
       {/* BACK TO TOP BUTTON */}
       <button
