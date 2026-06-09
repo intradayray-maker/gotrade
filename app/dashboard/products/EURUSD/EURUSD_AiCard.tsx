@@ -13,7 +13,7 @@ import {
 } from "app/dashboard/products/TOOLS/Ai_AudioManager";
 
 import { getVoiceClip } from "app/dashboard/products/TOOLS/Ai_LocalVoice";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase/browserClient";
 
 // ------------------------------------------------------------
 // TYPES
@@ -39,11 +39,6 @@ const isSameTrade = (a: Trade | null, b: Trade) =>
 // ------------------------------------------------------------
 // SUPABASE
 // ------------------------------------------------------------
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 const EURUSD_TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
 const EURUSD_BAR_ROW_ID = "87b8c55f-52c7-4824-9fc7-98febbbdb02d";
 

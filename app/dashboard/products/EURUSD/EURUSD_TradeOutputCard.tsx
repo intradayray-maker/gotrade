@@ -1,8 +1,11 @@
+//app\dashboard\products\EURUSD\EURUSD_TradeOutputCard.tsx
+// 
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase/browserClient";
 
 // ------------------------------------------------------------
 // AI PULSE STYLES (MATCHING EXISTING THEME)
@@ -81,11 +84,6 @@ type Derived = {
 // ------------------------------------------------------------
 // SUPABASE CLIENT
 // ------------------------------------------------------------
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 const EURUSD_TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
 
 // ------------------------------------------------------------
