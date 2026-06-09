@@ -1,13 +1,10 @@
-import { createBrowserClient } from '@supabase/ssr'
+// utils/supabase/client.ts
 
-export function createClient(); {
-  return createBrowserClient(
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+
+export function createClient() {
+  return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: {
-        flowType: 'implicit' // disable PKCE for password reset
-      }
-    }
-  )
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 }
