@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
       }
 
       try {
-        const supabase = createClient()()
+        const supabase = createClient();
 
         const origin =
           (typeof window !== 'undefined' && window.location.origin) ||
