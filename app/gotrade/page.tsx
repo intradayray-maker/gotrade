@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-import { createClient() } from "@supabase/supabase-js"
+import { createClient } from "@supabase/supabase-js"
 import Link from "next/link"
 
 async function getCount() {

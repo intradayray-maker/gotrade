@@ -1,7 +1,7 @@
 // app/api/stripe/checkout/route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { createClient() } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 

@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { createServerClient } from "@supabase/ssr"
-import { createClient() } from "@supabase/supabase-js"
+import { createClient } from "@supabase/supabase-js"
 
 // -----------------------------
 // AUTH SESSION

@@ -15,7 +15,7 @@ import {
 } from "app/dashboard/products/TOOLS/Ai_AudioManager";
 
 import { getVoiceClip } from "app/dashboard/products/TOOLS/Ai_LocalVoice";
-import { createClient() } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 
 // ------------------------------------------------------------
 // TYPES

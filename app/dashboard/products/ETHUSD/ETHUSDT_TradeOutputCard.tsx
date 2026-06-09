@@ -4,7 +4,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
-import { createClient() } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 
 // ------------------------------------------------------------
 // AI PULSE STYLES

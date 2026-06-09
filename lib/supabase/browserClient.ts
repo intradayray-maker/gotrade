@@ -3,6 +3,6 @@
 
 "use client";
 
-import { createClient()} from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/client";
 
-export const supabase = supabaseBrowserClient;
+export const supabase = createClient();

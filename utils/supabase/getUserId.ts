@@ -1,11 +1,11 @@
 // utils/supabase/getUserId.ts
-import { createClient()} from './client'
+import { createClient } from './client'
 
 export async function getSupabaseUserId() {
  const {
   data: { user },
   error,
- } = await supabaseBrowserClient.auth.getUser()
+ } = await createClient().auth.getUser()
 
  if (error) {
   console.error('Error fetching Supabase user:', error.message)
