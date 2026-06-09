@@ -534,7 +534,7 @@ export default function PricingPage() {
 
 
 
-  {/* ELITE PLAN */}
+  {/* PRO PLAN */}
   <div className="
     flex flex-col
     rounded-2xl
@@ -548,7 +548,7 @@ export default function PricingPage() {
     {/* Title + Icon */}
     <div className="flex items-center gap-3">
       <PlanIcon />
-      <h2 className="text-lg font-semibold">Elite Bundle</h2>
+      <h2 className="text-lg font-semibold">Pro Bundle</h2>
     </div>
 
     {/* Separator */}
@@ -653,7 +653,7 @@ export default function PricingPage() {
     transition
   "
 >
-  {loading ? "Redirecting..." : "Get Elite Bundle"}
+  {loading ? "Redirecting..." : "Get Pro Bundle"}
 </button>
 
 </div>
