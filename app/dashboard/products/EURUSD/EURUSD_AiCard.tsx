@@ -10,9 +10,9 @@ import {
   setMusicEnabled,
   setMusicVolume,
   enqueueAudio,
-} from "@/TOOLS/Ai_AudioManager";
+} from "app/dashboard/products/TOOLS/Ai_AudioManager";
 
-import { getVoiceClip } from "@/TOOLS/Ai_LocalVoice";
+import { getVoiceClip } from "app/dashboard/products/TOOLS/Ai_LocalVoice";
 import { createClient } from "@supabase/supabase-js";
 
 // ------------------------------------------------------------

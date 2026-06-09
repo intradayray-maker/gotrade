@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
-import { getRandomMessage } from "@/TOOLS/Ai_Text";
-import { setMusicEnabled, setMusicVolume } from "@/TOOLS/Ai_AudioManager";
+import { getRandomMessage } from "app/dashboard/products/TOOLS/Ai_Text";
+import { setMusicEnabled, setMusicVolume } from "app/dashboard/products/TOOLS/Ai_AudioManager";
 import { createClient } from "@supabase/supabase-js";
 
 // ------------------------------------------------------------
