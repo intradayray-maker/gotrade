@@ -330,6 +330,13 @@ export default function PricingPage() {
 
       <li className="flex items-start gap-2 text-white/70">
         <CheckIcon />
+        Weekday trading signals
+      </li>  
+
+
+
+      <li className="flex items-start gap-2 text-white/70">
+        <CheckIcon />
         Growth strategy (basic)
       </li>
 
@@ -343,10 +350,7 @@ export default function PricingPage() {
         (1) weekly Zoom call
       </li>
 
-      <li className="flex items-start gap-2 text-white/70">
-        <CheckIcon />
-        Weekday signal coverage
-      </li>      
+    
 
       {/* Missing */}
       <li className="flex items-start gap-2 text-white/40">
@@ -361,7 +365,7 @@ export default function PricingPage() {
 
       <li className="flex items-start gap-2 text-white/40">
         <XIcon />
-        Nights and Weekends Trading
+        Night and Weekend Signals
       </li>
     </ul>
 
@@ -478,6 +482,13 @@ export default function PricingPage() {
 
       <li className="flex items-start gap-2 text-white/70">
         <CheckIcon />
+          Day, Night and Weekend Signals
+      </li>
+
+
+
+      <li className="flex items-start gap-2 text-white/70">
+        <CheckIcon />
         Growth strategy (personalized)
       </li>
 
@@ -490,6 +501,11 @@ export default function PricingPage() {
         <CheckIcon />
         (2) Zoom calls per week
       </li>
+
+
+
+
+
 
       {/* Missing */}
       <li className="flex items-start gap-2 text-white/40">
@@ -615,6 +631,12 @@ export default function PricingPage() {
 
 <li className="flex items-start gap-2 text-white/70">
   <CheckIcon />
+  Day, Night and Weekend Signals
+</li>
+
+
+<li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
   Growth strategy (personalized)
 </li>
 
@@ -625,15 +647,14 @@ export default function PricingPage() {
 
 <li className="flex items-start gap-2 text-white/70">
   <CheckIcon />
-  Priority 1‑on‑1 personal support
-</li>
-
-<li className="flex items-start gap-2 text-white/70">
-  <CheckIcon />
   Scheduled Zoom calls
 </li>
 </ul>
 
+<li className="flex items-start gap-2 text-white/70">
+  <CheckIcon />
+  Priority 1‑on‑1 personal support
+</li>
 
 
 <button
