@@ -1,3 +1,5 @@
+// components/UserMenu.tsx
+
 "use client";
 
 import type { User } from "@supabase/supabase-js";
@@ -10,6 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { logoutAction } from "@/app/(dashboard)/logout/actions";
 
 export interface UserMenuProps {
   user: User | null;
@@ -116,8 +119,6 @@ export default function UserMenu({ user, isAdmin }: UserMenuProps) {
               Settings
             </Link>
 
-
-
             {isAdmin && (
               <Link
                 href="/sandbox/admin-tools"
@@ -128,7 +129,8 @@ export default function UserMenu({ user, isAdmin }: UserMenuProps) {
               </Link>
             )}
 
-            <form action="/auth/logout" method="post" className="mt-1">
+            {/* ✅ FIXED: REAL LOGOUT ACTION */}
+            <form action={logoutAction} className="mt-1">
               <button
                 type="submit"
                 className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-red-400 transition hover:bg-white/5"

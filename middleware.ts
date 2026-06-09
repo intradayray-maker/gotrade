@@ -1,20 +1,28 @@
-// middleware.ts
+//middleware.ts
 
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase.auth.getUser();
 
-const url = req.nextUrl.clone()
+  const isLoggedIn = !!data.user;
+  const path = req.nextUrl.pathname;
 
-// Only apply redirect on the custom domain
-const isCustomDomain = req.headers.get('host') === 'gotrade.one'
+  const isPublic =
+    path.startsWith("/login") ||
+    path.startsWith("/signup") ||
+    path === "/";
 
-// Redirect ONLY the root path of the custom domain
-if (isCustomDomain && url.pathname === '/') {
-url.pathname = '/coming-soon'
-return NextResponse.redirect(url)
+  if (!isLoggedIn && !isPublic) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  return NextResponse.next();
 }
 
-return NextResponse.next()
-}
+export const config = {
+  matcher: ["/dashboard/:path*", "/settings/:path*", "/profile/:path*"],
+};

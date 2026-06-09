@@ -242,6 +242,9 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 
+:root {
+  color-scheme: dark;
+}
 
 
 

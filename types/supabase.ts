@@ -87,7 +87,7 @@ export type Database = {
           id?: string
           message: string
           read?: boolean
-          title: string
+          title?: string
           type?: string
           user_id?: string | null
         }
@@ -104,63 +104,85 @@ export type Database = {
       }
       profiles: {
         Row: {
-          billing_status: string | null
-          current_period_end: string | null
-          email: string | null
-          email_notifications: boolean | null
-          first_name: string | null
           id: string
-          is_admin: boolean | null
+          first_name: string | null
           last_name: string | null
-          nextbillingdate: number | null
-          planname: string | null
+          timezone: string | null
+          email_notifications: boolean | null
+          updated_at: string | null
           stripe_customer_id: string | null
           stripe_default_payment_method: string | null
-          stripe_price_id: string | null
+          billing_status: string | null
           stripe_subscription_id: string | null
+          stripe_price_id: string | null
+          current_period_end: string | null
           subscription_status: string | null
-          timezone: string | null
-          updated_at: string | null
+          planname: string | null
+          nextbillingdate: number | null
+          stripe_lookup_key: string | null
+          is_admin: boolean | null
+          role: string | null
+          plan_EURUSD: boolean | null
+          plan_ETHUSDT: boolean | null
+          plan_PRO_BUNDLE: boolean | null
+          email: string | null
         }
         Insert: {
-          billing_status?: string | null
-          current_period_end?: string | null
-          email?: string | null
-          email_notifications?: boolean | null
-          first_name?: string | null
           id: string
-          is_admin?: boolean | null
+          first_name?: string | null
           last_name?: string | null
-          nextbillingdate?: number | null
-          planname?: string | null
+          timezone?: string | null
+          email_notifications?: boolean | null
+          updated_at?: string | null
           stripe_customer_id?: string | null
           stripe_default_payment_method?: string | null
-          stripe_price_id?: string | null
+          billing_status?: string | null
           stripe_subscription_id?: string | null
+          stripe_price_id?: string | null
+          current_period_end?: string | null
           subscription_status?: string | null
-          timezone?: string | null
-          updated_at?: string | null
+          planname?: string | null
+          nextbillingdate?: number | null
+          stripe_lookup_key?: string | null
+          is_admin?: boolean | null
+          role?: string | null
+          plan_EURUSD?: boolean | null
+          plan_ETHUSDT?: boolean | null
+          plan_PRO_BUNDLE?: boolean | null
+          email?: string | null
         }
         Update: {
-          billing_status?: string | null
-          current_period_end?: string | null
-          email?: string | null
-          email_notifications?: boolean | null
-          first_name?: string | null
           id?: string
-          is_admin?: boolean | null
+          first_name?: string | null
           last_name?: string | null
-          nextbillingdate?: number | null
-          planname?: string | null
+          timezone?: string | null
+          email_notifications?: boolean | null
+          updated_at?: string | null
           stripe_customer_id?: string | null
           stripe_default_payment_method?: string | null
-          stripe_price_id?: string | null
+          billing_status?: string | null
           stripe_subscription_id?: string | null
+          stripe_price_id?: string | null
+          current_period_end?: string | null
           subscription_status?: string | null
-          timezone?: string | null
-          updated_at?: string | null
+          planname?: string | null
+          nextbillingdate?: number | null
+          stripe_lookup_key?: string | null
+          is_admin?: boolean | null
+          role?: string | null
+          plan_EURUSD?: boolean | null
+          plan_ETHUSDT?: boolean | null
+          plan_PRO_BUNDLE?: boolean | null
+          email?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       stripe_events: {
         Row: {

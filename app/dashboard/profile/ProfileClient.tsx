@@ -363,7 +363,7 @@ export default function ProfileClient({
             </GTCard>
 
             <GTCard className="!p-4 flex items-center justify-center text-center border-[1px] border-emerald-900/15">
-              <form action="/auth/reset-password" method="POST">
+              <form action="/reset-password" method="POST">
                 <button className="relative flex items-center justify-center w-[130px] px-[12px] py-[12px] rounded-[6px] text-[14px] font-semibold text-[rgb(225,254,234)] bg-[rgb(84,33,33)] shadow-[0_0_34px_rgba(84,33,33,0.45)] border-[5px] border-[rgb(84,33,33)] bg-clip-padding before:absolute before:inset-0 before:rounded-[6px] before:p-[2px] before:bg-gradient-to-br before:from-red-300/60 before:to-red-700/60 before:-z-10 hover:bg-[rgb(110,45,45)] transition">
                   CHANGE IT
                 </button>

@@ -53,107 +53,101 @@ export default function HowItWorksPage() {
 
       <div className="mx-auto max-w-6xl px-6 py-20 space-y-24">
 
-        {/* HEADER */}
-        <header className="flex items-center justify-between py-2">
+ {/* HEADER */}
+<header className="flex items-center justify-between py-2">
 
-          <div className="flex items-center gap-3"></div>
+  <div className="flex items-center gap-3"></div>
 
-          <nav className="flex items-center gap-6 text-sm text-white/60">
+  <nav className="flex items-center gap-6 text-sm text-white/60">
 
-            {/* HOME ICON */}
-            <Link
-              href="/"
-              className="group flex items-center transition relative"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className={`
-                  h-4 w-4 transition
-                  ${pathname === "/" 
-                    ? "text-emerald-400 drop-shadow-[0_0_6px_rgba(0,255,180,0.6)]" 
-                    : "text-white/60"}
-                  group-hover:text-white
-                  group-hover:-translate-y-[1px]
-                `}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h4m6 0h4a1 1 0 001-1V10"
-                />
-              </svg>
+    {/* HOME ICON WITH HOVER */}
+    <Link
+      href="/"
+      className="group flex items-center transition relative"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className={`
+          h-4 w-4 transition
+          ${pathname === "/" ? "text-emerald-400 drop-shadow-[0_0_6px_rgba(0,255,180,0.6)]" : "text-white/60"}
+          group-hover:text-white
+          group-hover:-translate-y-[1px]
+        `}
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h4m6 0h4a1 1 0 001-1V10"
+        />
+      </svg>
 
-              {pathname === "/" && (
-                <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-emerald-400 rounded-full shadow-[0_0_6px_rgba(0,255,180,0.6)]"></span>
-              )}
-            </Link>
+      {pathname === "/" && (
+        <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-emerald-400 rounded-full shadow-[0_0_6px_rgba(0,255,180,0.6)]"></span>
+      )}
+    </Link>
 
-            <Link
-              href="/how-it-works"
-              className={`
-                hover:text-white transition relative
-                ${pathname === "/how-it-works" ? "text-emerald-400" : ""}
-              `}
-            >
-              How it works
-              {pathname === "/how-it-works" && (
-                <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-emerald-400 rounded-full"></span>
-              )}
-            </Link>
+    <Link href="/how-it-works" className="hover:text-white transition">
+      How it works
+    </Link>
 
-            <Link
-              href="/pricing"
-              className={`
-                hover:text-white transition relative
-                ${pathname === "/pricing" ? "text-emerald-400" : ""}
-              `}
-            >
-              Pricing
-              {pathname === "/pricing" && (
-                <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-emerald-400 rounded-full"></span>
-              )}
-            </Link>
+    <Link href="/pricing" className="hover:text-white transition">
+      Pricing
+    </Link>
 
-            <Link
-              href="/about"
-              className={`
-                hover:text-white transition relative
-                ${pathname === "/about" ? "text-emerald-400" : ""}
-              `}
-            >
-              About
-              {pathname === "/about" && (
-                <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-emerald-400 rounded-full"></span>
-              )}
-            </Link>
+    <Link href="/about" className="hover:text-white transition">
+      About
+    </Link>
 
-            <Link href="/signup">
-              <div
-                className="
-                  rounded-[6px]
-                  px-5 py-1.5 text-sm font-semibold
-                  bg-[rgb(3,82,65)]
-                  text-[rgb(225,254,234)]
-                  border border-[rgb(3,82,65)]
-                  shadow-[0_0_18px_rgba(3,82,65,0.45)]
-                  transition duration-150
-                  hover:bg-[rgb(5,100,80)]
-                  hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
-                  hover:-translate-y-[1px]
-                  cursor-pointer
-                "
-              >
-                Sign up
-              </div>
-            </Link>
+    {/* SIGN UP BUTTON */}
+    <Link href="/signup">
+      <div
+        className="
+        rounded-[6px]
+        px-5 py-1.5 text-sm font-semibold
+        bg-[rgb(3,82,65)]
+        text-[rgb(225,254,234)]
+        border border-[rgb(3,82,65)]
+        shadow-[0_0_18px_rgba(3,82,65,0.45)]
+        transition duration-150
+        hover:bg-[rgb(5,100,80)]
+        hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
+        hover:-translate-y-[1px]
+        cursor-pointer
+        "
+      >
+        Sign up
+      </div>
+    </Link>
 
-          </nav>
+    {/* LOGIN BUTTON (NEW) */}
+    <Link href="/login">
+      <div
+        className="
+        rounded-[6px]
+        px-5 py-1.5 text-sm font-semibold
+        bg-[rgb(15,15,23)]
+        text-white/80
+        border border-slate-800/40
+        shadow-[0_0_12px_rgba(0,0,0,0.35)]
+        transition duration-150
+        hover:bg-white/5
+        hover:text-white
+        hover:-translate-y-[1px]
+        cursor-pointer
+        "
+      >
+        Log in
+      </div>
+    </Link>
 
-        </header>
+  </nav>
+
+</header>
+
 
         {/* HERO SECTION */}
         <section className="grid md:grid-cols-2 gap-12 items-center">
