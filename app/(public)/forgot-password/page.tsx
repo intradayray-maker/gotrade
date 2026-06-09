@@ -4,7 +4,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/utils/supabase/client'
+import { createClient() } from '@/utils/supabase/client'
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
       }
 
       try {
-        const supabase = createClient()
+        const supabase = createClient()()
 
         const origin =
           (typeof window !== 'undefined' && window.location.origin) ||

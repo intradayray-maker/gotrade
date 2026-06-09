@@ -1,3 +1,3 @@
 // lib/supabase.ts
 
-export { createClientas supabase } from "@/utils/supabase/client";
+export { createClient()as supabase } from "@/utils/supabase/client";

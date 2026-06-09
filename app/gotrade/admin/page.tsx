@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { createServerClient } from "@supabase/ssr"
-import { createClient } from "@supabase/supabase-js"
+import { createClient() } from "@supabase/supabase-js"
 
 // -----------------------------
 // AUTH SESSION
@@ -32,7 +32,7 @@ async function getSession() {
 // PROFILE
 // -----------------------------
 async function getProfile(userId: string) {
-  const supabase = createClient(
+  const supabase = createClient()(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
@@ -50,7 +50,7 @@ async function getProfile(userId: string) {
 // PREORDERS
 // -----------------------------
 async function getPreorders() {
-  const supabase = createClient(
+  const supabase = createClient()(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )

@@ -1,14 +1,14 @@
 // app/api/webhooks/stripe/route.ts
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
-import { createClient } from "@supabase/supabase-js"
+import { createClient() } from "@supabase/supabase-js"
 
 export const runtime = "nodejs"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 // SERVICE ROLE client (required for secure DB writes)
-const supabase = createClient(
+const supabase = createClient()(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
   { auth: { persistSession: false } }

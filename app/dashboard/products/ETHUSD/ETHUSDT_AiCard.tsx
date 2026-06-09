@@ -15,7 +15,7 @@ import {
 } from "app/dashboard/products/TOOLS/Ai_AudioManager";
 
 import { getVoiceClip } from "app/dashboard/products/TOOLS/Ai_LocalVoice";
-import { createClient } from "@supabase/supabase-js";
+import { createClient() } from "@supabase/supabase-js";
 
 // ------------------------------------------------------------
 // TYPES
@@ -41,7 +41,7 @@ const isSameTrade = (a: Trade | null, b: Trade) =>
 // ------------------------------------------------------------
 // SUPABASE
 // ------------------------------------------------------------
-const supabase = createClient(
+const supabase = createClient()(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );

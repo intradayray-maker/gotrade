@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
-import { createClient} from "@/utils/supabase/client";
+import { createClient()} from "@/utils/supabase/client";
 
 export default function UserAvatar() {
   const supabase = supabaseBrowserClient;

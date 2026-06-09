@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
 import { getRandomMessage } from "app/dashboard/products/TOOLS/Ai_Text";
 import { setMusicEnabled, setMusicVolume } from "app/dashboard/products/TOOLS/Ai_AudioManager";
-import { createClient } from "@supabase/supabase-js";
+import { createClient() } from "@supabase/supabase-js";
 
 // ------------------------------------------------------------
 // MIXER FADER WITH HYBRID GLOW + POWER BUTTON
@@ -113,7 +113,7 @@ function useTypingEffect(text: string, speed = 35, delay = 600) {
 // ------------------------------------------------------------
 // SUPABASE CLIENT
 // ------------------------------------------------------------
-const supabase = createClient(
+const supabase = createClient()(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
