@@ -113,7 +113,7 @@ function useTypingEffect(text: string, speed = 35, delay = 600) {
 // ------------------------------------------------------------
 // SUPABASE CLIENT
 // ------------------------------------------------------------
-const supabase = createClient()(
+const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
