@@ -1,13 +1,8 @@
 // app/api/webhook/route.ts
-// NODE RUNTIME — EURUSD unchanged + ETHUSDT.P added
+export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY ?? ""
-);
 
 // -----------------------------
 // EURUSD — your original row IDs
@@ -64,6 +59,12 @@ function getTables(ticker: string) {
 // -----------------------------
 export async function POST(req: Request) {
   try {
+    const supabase =
+      createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+
     let body: any;
 
     try {
