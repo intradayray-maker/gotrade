@@ -649,13 +649,12 @@ export default function PricingPage() {
   <CheckIcon />
   Scheduled Zoom calls
 </li>
-</ul>
 
 <li className="flex items-start gap-2 text-white/70">
   <CheckIcon />
   Priority 1‑on‑1 personal support
 </li>
-
+</ul>
 
 <button
   onClick={() => handleCheckout("price_1TgEhiKLveVAZ0tjlaVICsCk")}
