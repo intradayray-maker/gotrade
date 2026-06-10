@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
 import { getRandomMessage } from "app/dashboard/products/TOOLS/Ai_Text";
 import { setMusicEnabled, setMusicVolume } from "app/dashboard/products/TOOLS/Ai_AudioManager";
-import { supabase } from "@/lib/supabase/browserClient";
+
+// ✅ FIXED: use singleton Supabase client
+import { getBrowserSupabase } from "@/lib/supabase/browserClient";
+const supabase = getBrowserSupabase();
 
 // ------------------------------------------------------------
 // MIXER FADER WITH HYBRID GLOW + POWER BUTTON
@@ -25,7 +28,7 @@ function MixerFaderWithGlow({
   return (
     <div className="mixer-strip flex flex-col gap-3 relative">
 
-      {/* POWER BUTTON (TOP RIGHT) */}
+      {/* POWER BUTTON */}
       <button
         onClick={toggle}
         className={`
@@ -37,17 +40,10 @@ function MixerFaderWithGlow({
       </button>
 
       {/* LABEL */}
-      {label && (
-<div className="mixer-label">
-  {label}
-</div>
-
-      )}
+      {label && <div className="mixer-label">{label}</div>}
 
       {/* SLIDER */}
       <div className="flex flex-col gap-2">
-
-        {/* TRACK + THUMB */}
         <div className="relative w-full">
           <input
             type="range"
@@ -56,23 +52,17 @@ function MixerFaderWithGlow({
             max={100}
             value={value}
             onChange={(e) => onChange(Number(e.target.value))}
-            style={{
-              "--fill": `${value}%`
-            } as React.CSSProperties}
+            style={{ "--fill": `${value}%` } as React.CSSProperties}
           />
         </div>
 
-<div className="mixer-ticks">
-  <div className="mixer-tick"></div>
-  <div className="mixer-tick"></div>
-  <div className="mixer-tick"></div>
-  <div className="mixer-tick"></div>
-  <div className="mixer-tick"></div>
-</div>
-
-
-
-
+        <div className="mixer-ticks">
+          <div className="mixer-tick"></div>
+          <div className="mixer-tick"></div>
+          <div className="mixer-tick"></div>
+          <div className="mixer-tick"></div>
+          <div className="mixer-tick"></div>
+        </div>
       </div>
     </div>
   );
@@ -111,7 +101,7 @@ function useTypingEffect(text: string, speed = 35, delay = 600) {
 }
 
 // ------------------------------------------------------------
-// SUPABASE CLIENT
+// SUPABASE CONSTANTS
 // ------------------------------------------------------------
 const EURUSD_NEWS_ROW_ID = "d1c4f448-a9f9-4938-ac75-14398ee7aa40";
 
@@ -195,7 +185,8 @@ export default function EURUSD_NewsCard() {
           table: "EURUSD_news_state",
           filter: `id=eq.${EURUSD_NEWS_ROW_ID}`,
         },
-        (payload) => {
+        // ✅ FIXED: typed payload
+        (payload: { new: Record<string, any> }) => {
           if (!mounted || !payload.new) return;
 
           const d = payload.new;
@@ -324,7 +315,6 @@ export default function EURUSD_NewsCard() {
 
         {/* MUSIC CONTROL */}
         <div className="relative rounded-xl border border-emerald-500/20 p-4 pb-10 space-y-4">
-
           <MixerFaderWithGlow
             label="Deep Focus Music"
             value={musicVolumeState * 100}
@@ -332,7 +322,6 @@ export default function EURUSD_NewsCard() {
             enabled={musicEnabledState}
             toggle={toggleMusic}
           />
-
         </div>
 
       </div>

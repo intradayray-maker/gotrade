@@ -1,14 +1,42 @@
-//app\dashboard\products\EURUSD\EURUSD_TradeOutputCard.tsx
-// 
+// app/dashboard/products/EURUSD/EURUSD_TradeOutputCard.tsx
 
 "use client";
 
 import { useEffect, useRef, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
-import { supabase } from "@/lib/supabase/browserClient";
+import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 
 // ------------------------------------------------------------
-// AI PULSE STYLES (MATCHING EXISTING THEME)
+// SUPABASE CLIENT (single shared instance)
+// ------------------------------------------------------------
+const supabase = getBrowserSupabase();
+
+// ------------------------------------------------------------
+// CONSTANTS
+// ------------------------------------------------------------
+const EURUSD_TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
+
+// ------------------------------------------------------------
+// TYPES
+// ------------------------------------------------------------
+type Trade = {
+  ticker: string;
+  side: string;
+  entry: number;
+  tp: number;
+  stop: number;
+  timestamp?: string;
+  type?: string;
+};
+
+type Derived = {
+  units: number;
+  position_value: number;
+  required_margin: number;
+};
+
+// ------------------------------------------------------------
+// AI PULSE STYLES
 // ------------------------------------------------------------
 const pulseStyles = `
 @keyframes pulse-blue {
@@ -35,25 +63,10 @@ const pulseStyles = `
   100% { box-shadow: 0 0 0px rgba(0,255,180,0.25); }
 }
 
-.ai-pulse-blue {
-  animation: pulse-blue 3.2s ease-in-out infinite;
-  border-color: rgba(0,150,255,0.45) !important;
-}
-
-.ai-pulse-orange {
-  animation: pulse-orange 3.2s ease-in-out infinite;
-  border-color: rgba(255,140,0,0.45) !important;
-}
-
-.ai-pulse-red {
-  animation: pulse-red 3.2s ease-in-out infinite;
-  border-color: rgba(255,0,0,0.45) !important;
-}
-
-.ai-pulse-green {
-  animation: pulse-green 3.2s ease-in-out infinite;
-  border-color: rgba(0,255,180,0.45) !important;
-}
+.ai-pulse-blue { animation: pulse-blue 3.2s ease-in-out infinite; border-color: rgba(0,150,255,0.45) !important; }
+.ai-pulse-orange { animation: pulse-orange 3.2s ease-in-out infinite; border-color: rgba(255,140,0,0.45) !important; }
+.ai-pulse-red { animation: pulse-red 3.2s ease-in-out infinite; border-color: rgba(255,0,0,0.45) !important; }
+.ai-pulse-green { animation: pulse-green 3.2s ease-in-out infinite; border-color: rgba(0,255,180,0.45) !important; }
 `;
 
 if (typeof document !== "undefined") {
@@ -61,30 +74,6 @@ if (typeof document !== "undefined") {
   styleTag.innerHTML = pulseStyles;
   document.head.appendChild(styleTag);
 }
-
-// ------------------------------------------------------------
-// TYPES
-// ------------------------------------------------------------
-type Trade = {
-  ticker: string;
-  side: string;
-  entry: number;
-  tp: number;
-  stop: number;
-  timestamp?: string;
-  type?: string; // NEW
-};
-
-type Derived = {
-  units: number;
-  position_value: number;
-  required_margin: number;
-};
-
-// ------------------------------------------------------------
-// SUPABASE CLIENT
-// ------------------------------------------------------------
-const EURUSD_TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
 
 // ------------------------------------------------------------
 // COMPONENT
@@ -106,8 +95,8 @@ export default function EURUSD_TradeOutputCard() {
     required_margin: 0,
   });
 
-  const [leverage, setLeverage] = useState<number>(1);
-  const [marginFromAi, setMarginFromAi] = useState<number>(0);
+  const [leverage, setLeverage] = useState(1);
+  const [marginFromAi, setMarginFromAi] = useState(0);
 
   const [animTrade, setAnimTrade] = useState(trade);
   const [animDerived, setAnimDerived] = useState(derived);
@@ -117,7 +106,6 @@ export default function EURUSD_TradeOutputCard() {
 
   const [flash, setFlash] = useState("");
 
-  const lastTimestampRef = useRef<string | null>(null);
   const lastTradeRef = useRef<Trade | null>(null);
 
   const isSameTrade = (a: Trade | null, b: Trade) =>
@@ -130,7 +118,6 @@ export default function EURUSD_TradeOutputCard() {
     a.type === b.type;
 
   const fmtInt = (n: number) => Math.round(n).toLocaleString("en-US");
-
   const fmtPrice = (n: number, decimals = 5) =>
     n.toLocaleString("en-US", {
       minimumFractionDigits: decimals,
@@ -138,70 +125,36 @@ export default function EURUSD_TradeOutputCard() {
     });
 
   // ------------------------------------------------------------
-  // COPY BUTTON
-  // ------------------------------------------------------------
-  const CopyBtn = ({ val }: { val: number }) => {
-    const [copied, setCopied] = useState(false);
-
-    const handleCopy = async () => {
-      await navigator.clipboard.writeText(String(val));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    };
-
-    return (
-      <button
-        onClick={handleCopy}
-        className={`
-          relative ml-2 rounded-md px-2 py-1 text-xs font-medium transition-all
-          ${
-            copied
-              ? "text-emerald-300 drop-shadow-[0_0_6px_rgba(0,255,0,0.45)] scale-105"
-              : "text-slate-300 bg-slate-700/40 hover:bg-slate-600/40 hover:text-white"
-          }
-        `}
-      >
-        {copied ? "✓ Copied!" : "Copy"}
-        {copied && (
-          <span className="absolute inset-0 rounded-md bg-emerald-400/20 animate-ping"></span>
-        )}
-      </button>
-    );
-  };
-
-  // ------------------------------------------------------------
   // LOAD LEVERAGE + MARGIN FROM AI CARD
   // ------------------------------------------------------------
   useEffect(() => {
     try {
-      const storedLev = localStorage.getItem("forex_leverage");
-      const storedMargin = localStorage.getItem("forex_required_margin");
-
-      if (storedLev) setLeverage(parseFloat(storedLev));
-      if (storedMargin) setMarginFromAi(parseFloat(storedMargin));
+      const lev = localStorage.getItem("forex_leverage");
+      const m = localStorage.getItem("forex_required_margin");
+      if (lev) setLeverage(parseFloat(lev));
+      if (m) setMarginFromAi(parseFloat(m));
     } catch {}
   }, []);
 
-  // Sync margin every second
   useEffect(() => {
     const interval = setInterval(() => {
       try {
-        const storedMargin = localStorage.getItem("forex_required_margin");
-        if (storedMargin) {
-          const m = parseFloat(storedMargin);
-          setMarginFromAi((prev) => (prev !== m ? m : prev));
+        const m = localStorage.getItem("forex_required_margin");
+        if (m) {
+          const parsed = parseFloat(m);
+          setMarginFromAi((prev) => (prev !== parsed ? parsed : prev));
         }
       } catch {}
     }, 1000);
-
     return () => clearInterval(interval);
   }, []);
 
   // ------------------------------------------------------------
-  // SUPABASE: INITIAL FETCH + REALTIME SUBSCRIPTION
+  // INITIAL FETCH + REALTIME SUBSCRIPTION
   // ------------------------------------------------------------
   useEffect(() => {
     let mounted = true;
+    let channel: any = null;
 
     const fetchInitial = async () => {
       const { data, error } = await supabase
@@ -225,13 +178,12 @@ export default function EURUSD_TradeOutputCard() {
       if (isSameTrade(lastTradeRef.current, t)) return;
 
       lastTradeRef.current = t;
-      lastTimestampRef.current = t.timestamp ?? null;
       setTrade(t);
     };
 
     fetchInitial();
 
-    const channel = supabase
+    channel = supabase
       .channel("eurusd-trade-state-output-realtime")
       .on(
         "postgres_changes",
@@ -241,10 +193,10 @@ export default function EURUSD_TradeOutputCard() {
           table: "EURUSD_trades_state",
           filter: `id=eq.${EURUSD_TRADE_ROW_ID}`,
         },
-        (payload) => {
+        (payload: { new: Record<string, any> }) => {
           if (!mounted || !payload.new) return;
 
-          const d: any = payload.new;
+          const d = payload.new;
 
           const t: Trade = {
             ticker: d.ticker,
@@ -259,7 +211,6 @@ export default function EURUSD_TradeOutputCard() {
           if (isSameTrade(lastTradeRef.current, t)) return;
 
           lastTradeRef.current = t;
-          lastTimestampRef.current = t.timestamp ?? null;
           setTrade(t);
         }
       )
@@ -267,7 +218,7 @@ export default function EURUSD_TradeOutputCard() {
 
     return () => {
       mounted = false;
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
@@ -301,46 +252,32 @@ export default function EURUSD_TradeOutputCard() {
     const interval = setInterval(() => {
       setDerived(computeDerived());
     }, 60000);
-
     return () => clearInterval(interval);
   }, [trade, marginFromAi, leverage]);
 
   // ------------------------------------------------------------
-  // EVENT → PULSE + FLASH LOGIC
+  // ANIMATION + FLASH
   // ------------------------------------------------------------
   const getPulseClass = () => {
     switch (animTrade.type) {
-      case "entry_long":
-        return "ai-pulse-blue";
-      case "entry_short":
-        return "ai-pulse-orange";
-      case "sl":
-        return "ai-pulse-red";
-      case "tp":
-        return "ai-pulse-green";
-      default:
-        return "";
+      case "entry_long": return "ai-pulse-blue";
+      case "entry_short": return "ai-pulse-orange";
+      case "sl": return "ai-pulse-red";
+      case "tp": return "ai-pulse-green";
+      default: return "";
     }
   };
 
   const getFlashClass = () => {
     switch (animTrade.type) {
-      case "entry_long":
-        return "bg-blue-950/30";
-      case "entry_short":
-        return "bg-orange-950/30";
-      case "sl":
-        return "bg-red-950/30";
-      case "tp":
-        return "bg-emerald-950/30";
-      default:
-        return "";
+      case "entry_long": return "bg-blue-950/30";
+      case "entry_short": return "bg-orange-950/30";
+      case "sl": return "bg-red-950/30";
+      case "tp": return "bg-emerald-950/30";
+      default: return "";
     }
   };
 
-  // ------------------------------------------------------------
-  // ANIMATION ON REAL TRADE CHANGE
-  // ------------------------------------------------------------
   useEffect(() => {
     const oldT = prevTrade.current;
     const newT = trade;
@@ -391,20 +328,16 @@ export default function EURUSD_TradeOutputCard() {
   }, [trade, derived]);
 
   // ------------------------------------------------------------
-  // SIDE COLOR (WHITE TEXT + GLOW)
+  // SIDE COLOR
   // ------------------------------------------------------------
-const getSideGlow = () => {
-  if (animTrade.side === "long")
-    return "text-[#4da3ff] drop-shadow-[0_0_6px_rgba(0,150,255,0.55)] uppercase";
-  if (animTrade.side === "short")
-    return "text-orange-400 drop-shadow-[0_0_6px_rgba(255,140,0,0.55)] uppercase";
-  return "text-slate-500 uppercase";
-};
+  const getSideGlow = () => {
+    if (animTrade.side === "long")
+      return "text-[#4da3ff] drop-shadow-[0_0_6px_rgba(0,150,255,0.55)] uppercase";
+    if (animTrade.side === "short")
+      return "text-orange-400 drop-shadow-[0_0_6px_rgba(255,140,0,0.55)] uppercase";
+    return "text-slate-500 uppercase";
+  };
 
-
-  // ------------------------------------------------------------
-  // ENTRY PRICE BORDER GLOW
-  // ------------------------------------------------------------
   const getEntryBorderGlow = () => {
     if (animTrade.side === "long")
       return "border-blue-500/40 shadow-[0_0_8px_rgba(0,150,255,0.45)]";
@@ -429,19 +362,18 @@ const getSideGlow = () => {
 
       <div className="space-y-3">
 
-{/* POSITION */}
-<div
-  className={`
-    flex items-center justify-between rounded-xl border border-slate-600/20 p-3 transition-all
-    ${flash}
-  `}
->
-  <span className="text-slate-400">Position:</span>
-  <span className={`text-xl font-semibold tabular-nums ${getSideGlow()}`}>
-    {animTrade.side || "--"}
-  </span>
-</div>
-
+        {/* POSITION */}
+        <div
+          className={`
+            flex items-center justify-between rounded-xl border border-slate-600/20 p-3 transition-all
+            ${flash}
+          `}
+        >
+          <span className="text-slate-400">Position:</span>
+          <span className={`text-xl font-semibold tabular-nums ${getSideGlow()}`}>
+            {animTrade.side || "--"}
+          </span>
+        </div>
 
         {/* TICKER */}
         <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
@@ -456,9 +388,6 @@ const getSideGlow = () => {
           <span className="text-slate-400">Units:</span>
           <span className="text-xl font-semibold tabular-nums text-white flex items-center">
             {animDerived.units ? fmtInt(animDerived.units) : "--"}
-            {animDerived.units > 0 && (
-              <CopyBtn val={Math.round(animDerived.units)} />
-            )}
           </span>
         </div>
 
@@ -467,9 +396,6 @@ const getSideGlow = () => {
           <span className="text-slate-400">Trade Amount:</span>
           <span className="text-xl font-semibold tabular-nums text-white flex items-center">
             {animDerived.position_value ? `$${fmtInt(animDerived.position_value)}` : "--"}
-            {animDerived.position_value > 0 && (
-              <CopyBtn val={Math.round(animDerived.position_value)} />
-            )}
           </span>
         </div>
 
@@ -478,9 +404,6 @@ const getSideGlow = () => {
           <span className="text-slate-400">Margin Used:</span>
           <span className="text-xl font-semibold tabular-nums text-white flex items-center">
             {animDerived.required_margin ? `$${fmtInt(animDerived.required_margin)}` : "--"}
-            {animDerived.required_margin > 0 && (
-              <CopyBtn val={Math.round(animDerived.required_margin)} />
-            )}
           </span>
         </div>
 
@@ -494,16 +417,14 @@ const getSideGlow = () => {
           <span className="text-slate-400">Entry Price:</span>
           <span className="text-xl font-semibold tabular-nums text-white flex items-center">
             {animTrade.entry ? fmtPrice(animTrade.entry) : "--"}
-            {animTrade.entry > 0 && <CopyBtn val={animTrade.entry} />}
           </span>
         </div>
 
-          {/* STOP LOSS */}
+        {/* STOP LOSS */}
         <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
           <span className="text-slate-400">Stop Loss:</span>
           <span className="text-xl font-semibold tabular-nums text-red-400 flex items-center">
             {animTrade.stop ? fmtPrice(animTrade.stop) : "--"}
-            {animTrade.stop > 0 && <CopyBtn val={animTrade.stop} />}
           </span>
         </div>
 
@@ -512,7 +433,6 @@ const getSideGlow = () => {
           <span className="text-slate-400">Take Profit:</span>
           <span className="text-xl font-semibold tabular-nums text-emerald-400 flex items-center">
             {animTrade.tp ? fmtPrice(animTrade.tp) : "--"}
-            {animTrade.tp > 0 && <CopyBtn val={animTrade.tp} />}
           </span>
         </div>
       </div>

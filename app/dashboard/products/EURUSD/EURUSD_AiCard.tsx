@@ -1,3 +1,5 @@
+// app/dashboard/products/EURUSD/EURUSD_AiCard.tsx
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -13,7 +15,10 @@ import {
 } from "app/dashboard/products/TOOLS/Ai_AudioManager";
 
 import { getVoiceClip } from "app/dashboard/products/TOOLS/Ai_LocalVoice";
-import { supabase } from "@/lib/supabase/browserClient";
+
+// ✅ FIXED: use singleton Supabase client
+import { getBrowserSupabase } from "@/lib/supabase/browserClient";
+const supabase = getBrowserSupabase();
 
 // ------------------------------------------------------------
 // TYPES
@@ -82,7 +87,6 @@ export default function EURUSD_AiCard() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // 🔥 REQUIRED: enable audio unlock listener
     initAudioUnlock();
 
     const savedRisk = localStorage.getItem("forex_dollar_risk");
@@ -94,7 +98,6 @@ export default function EURUSD_AiCard() {
     if (savedRisk) setRiskAmount(Number(savedRisk));
     if (savedLeverage) setLeverage(Number(savedLeverage));
 
-    // 🔥 Initialize background music engine (but it won't play until unlocked)
     initBackgroundMusic();
 
     if (savedMusicVolume) {
@@ -105,7 +108,7 @@ export default function EURUSD_AiCard() {
 
     if (savedMusicEnabled === "true") {
       setMusicEnabledState(true);
-      setMusicEnabled(true); // safe: Ai_AudioManager blocks autoplay until unlocked
+      setMusicEnabled(true);
     }
   }, []);
 
@@ -166,7 +169,8 @@ export default function EURUSD_AiCard() {
           table: "EURUSD_trades_state",
           filter: `id=eq.${EURUSD_TRADE_ROW_ID}`,
         },
-        (payload) => {
+        // ✅ FIXED: typed payload
+        (payload: { new: Record<string, any> }) => {
           if (!mounted || !payload.new) return;
 
           const d = payload.new;
@@ -193,7 +197,7 @@ export default function EURUSD_AiCard() {
   }, []);
 
   // ------------------------------------------------------------
-  // AI VOICE LOGIC — EXPLICIT EVENT TYPES
+  // AI VOICE LOGIC
   // ------------------------------------------------------------
   const prevEventRef = useRef<string | null>(null);
 
@@ -261,7 +265,8 @@ export default function EURUSD_AiCard() {
           table: "EURUSD_bar_state",
           filter: `id=eq.${EURUSD_BAR_ROW_ID}`,
         },
-        (payload) => {
+        // ✅ FIXED: typed payload
+        (payload: { new: Record<string, any> }) => {
           if (!mounted || !payload.new) return;
 
           const bar = payload.new;
@@ -400,19 +405,18 @@ export default function EURUSD_AiCard() {
 
       {/* STATUS */}
       <div className="rounded-xl border border-emerald-500/20 p-3">
-<p
-  className={`
-    text-sm tracking-wide transition-all
-    ${
-      enabled
-        ? "text-[rgb(0,166,116)] drop-shadow-[0_0_4px_rgba(0,255,180,0.25)]"
-        : "text-slate-500"
-    }
-  `}
->
-  {status}
-</p>
-
+        <p
+          className={`
+            text-sm tracking-wide transition-all
+            ${
+              enabled
+                ? "text-[rgb(0,166,116)] drop-shadow-[0_0_4px_rgba(0,255,180,0.25)]"
+                : "text-slate-500"
+            }
+          `}
+        >
+          {status}
+        </p>
       </div>
 
       {/* RISK SLIDER */}
