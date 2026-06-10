@@ -1,3 +1,7 @@
+// utils\supabase\config.ts
+
+
+
 function getRequiredEnv(
   name: "NEXT_PUBLIC_SUPABASE_URL" | "NEXT_PUBLIC_SUPABASE_ANON_KEY"
 ): string {

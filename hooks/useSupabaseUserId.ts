@@ -1,4 +1,5 @@
 // hooks/useSupabaseUserId.ts
+
 import { useEffect, useState } from 'react'
 import { getSupabaseUserId } from '@/utils/supabase/getUserId'
 
