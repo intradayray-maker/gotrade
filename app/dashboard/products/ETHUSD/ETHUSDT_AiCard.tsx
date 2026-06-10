@@ -1,5 +1,6 @@
 // app\dashboard\products\ETHUSD\ETHUSDT_AiCard.tsx
- 
+
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -15,7 +16,10 @@ import {
 } from "app/dashboard/products/TOOLS/Ai_AudioManager";
 
 import { getVoiceClip } from "app/dashboard/products/TOOLS/Ai_LocalVoice";
-import { createClient } from "@supabase/supabase-js";
+
+// ✅ Unified Supabase client (no duplicates)
+import { getBrowserSupabase } from "@/lib/supabase/browserClient";
+const supabase = getBrowserSupabase();
 
 // ------------------------------------------------------------
 // TYPES
@@ -30,22 +34,12 @@ type Trade = {
   timestamp?: string;
 };
 
-const isSameTrade = (a: Trade | null, b: Trade) =>
-  a &&
-  a.ticker === b.ticker &&
-  a.side === b.side &&
-  a.entry === b.entry &&
-  a.stop === b.stop &&
-  a.tp === b.tp;
+const isTradeOngoing = (trade: Trade | null) =>
+  trade?.type === "entry_long" || trade?.type === "entry_short";
 
 // ------------------------------------------------------------
-// SUPABASE
+// SUPABASE ROW IDS (NEW PROJECT)
 // ------------------------------------------------------------
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 const ETH_TRADE_ROW_ID = "0fee5c83-f233-4487-bc5f-f7e703a14024";
 const ETH_BAR_ROW_ID = "530ef4a6-e3be-4c19-b34e-1d84062170cb";
 
@@ -60,6 +54,7 @@ export default function ETHUSDT_AiCard() {
 
   const [requiredMargin, setRequiredMargin] = useState(0);
   const [displayMargin, setDisplayMargin] = useState(0);
+
   const [barState, setBarState] = useState<{
     high: number;
     low: number;
@@ -68,8 +63,8 @@ export default function ETHUSDT_AiCard() {
 
   const [latestTradeState, setLatestTradeState] = useState<Trade | null>(null);
 
-  const [flashColor, setFlashColor] = useState("");
   const prevMargin = useRef(0);
+  const [flashColor, setFlashColor] = useState("");
 
   const [status, setStatus] = useState("Listening for breakouts…");
   const [now, setNow] = useState(new Date());
@@ -79,9 +74,6 @@ export default function ETHUSDT_AiCard() {
 
   const formatMoney = (n: number) =>
     Math.round(n).toLocaleString("en-US");
-
-  const isTradeOngoing = (trade: Trade | null) =>
-    trade?.type === "entry_long" || trade?.type === "entry_short";
 
   // ------------------------------------------------------------
   // AUDIO UNLOCK + LOAD SETTINGS
@@ -146,7 +138,7 @@ export default function ETHUSDT_AiCard() {
 
       if (!mounted || !data) return;
 
-      const t: Trade = {
+      setLatestTradeState({
         type: data.type,
         ticker: data.ticker,
         side: data.side,
@@ -154,9 +146,7 @@ export default function ETHUSDT_AiCard() {
         stop: data.stop ?? 0,
         tp: data.tp ?? 0,
         timestamp: data.timestamp,
-      };
-
-      setLatestTradeState(t);
+      });
     };
 
     fetchInitial();
@@ -171,12 +161,12 @@ export default function ETHUSDT_AiCard() {
           table: "ETHUSDT_trades_state",
           filter: `id=eq.${ETH_TRADE_ROW_ID}`,
         },
-        (payload) => {
+        (payload: { new: Record<string, any> }) => {
           if (!mounted || !payload.new) return;
 
           const d = payload.new;
 
-          const t: Trade = {
+          setLatestTradeState({
             type: d.type,
             ticker: d.ticker,
             side: d.side,
@@ -184,9 +174,7 @@ export default function ETHUSDT_AiCard() {
             stop: d.stop ?? 0,
             tp: d.tp ?? 0,
             timestamp: d.timestamp,
-          };
-
-          setLatestTradeState(t);
+          });
         }
       )
       .subscribe();
@@ -266,10 +254,11 @@ export default function ETHUSDT_AiCard() {
           table: "ETHUSDT_bar_state",
           filter: `id=eq.${ETH_BAR_ROW_ID}`,
         },
-        (payload) => {
+        (payload: { new: Record<string, any> }) => {
           if (!mounted || !payload.new) return;
 
           const bar = payload.new;
+
           setBarState({
             high: Number(bar.high) || 0,
             low: Number(bar.low) || 0,
@@ -285,6 +274,9 @@ export default function ETHUSDT_AiCard() {
     };
   }, []);
 
+  // ------------------------------------------------------------
+  // MARGIN CALCULATION
+  // ------------------------------------------------------------
   useEffect(() => {
     if (!barState) return;
     if (isTradeOngoing(latestTradeState)) return;

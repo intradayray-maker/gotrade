@@ -4,7 +4,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
-import { createClient } from "@supabase/supabase-js";
+
+// ✅ Unified Supabase client (no duplicates)
+import { getBrowserSupabase } from "@/lib/supabase/browserClient";
+const supabase = getBrowserSupabase();
 
 // ------------------------------------------------------------
 // AI PULSE STYLES
@@ -83,11 +86,6 @@ type Derived = {
 // ------------------------------------------------------------
 // SUPABASE
 // ------------------------------------------------------------
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 const ETH_TRADE_ROW_ID = "0fee5c83-f233-4487-bc5f-f7e703a14024";
 
 // ------------------------------------------------------------
@@ -252,10 +250,10 @@ export default function ETHUSDT_TradeOutputCard() {
           table: "ETHUSDT_trades_state",
           filter: `id=eq.${ETH_TRADE_ROW_ID}`,
         },
-        (payload) => {
+        (payload: { new: Record<string, any> }) => {
           if (!mounted || !payload.new) return;
 
-          const d: any = payload.new;
+          const d = payload.new;
 
           const t: Trade = {
             ticker: d.ticker,
@@ -296,7 +294,6 @@ export default function ETHUSDT_TradeOutputCard() {
 
     // ETH size = (margin * leverage) / entry
     const units = (marginFromAi * leverage) / trade.entry;
-
     const positionValue = units * trade.entry;
 
     return {
@@ -440,7 +437,6 @@ export default function ETHUSDT_TradeOutputCard() {
       </p>
 
       <div className="space-y-3">
-
         {/* POSITION */}
         <div
           className={`
@@ -526,8 +522,8 @@ export default function ETHUSDT_TradeOutputCard() {
             {animTrade.tp > 0 && <CopyBtn val={animTrade.tp} />}
           </span>
         </div>
-
       </div>
     </GTCard>
   );
 }
+

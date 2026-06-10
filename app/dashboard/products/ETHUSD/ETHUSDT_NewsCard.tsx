@@ -1,3 +1,6 @@
+//  app\dashboard\products\ETHUSD\ETHUSDT_NewsCard.tsx
+
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -300,7 +303,7 @@ useEffect(() => {
       <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse delay-300"></span>
     </div>
     <span className="text-xs text-slate-400 tracking-wide">
-      ETH Volitility Pulse…
+      ETH Volatility Pulse…
     </span>
   </div>
 
