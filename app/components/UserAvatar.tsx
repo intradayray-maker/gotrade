@@ -9,19 +9,38 @@ export default function UserAvatar() {
   const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    const loadUser = async () => {
+      const { data } = await supabase.auth.getUser();
       setEmail(data.user?.email ?? null);
-    });
-  }, []);
+    };
+
+    loadUser();
+  }, [supabase]);
 
   if (!email) {
-    return <UserCircleIcon className="w-8 h-8 text-neutral-500" />;
+    return (
+      <UserCircleIcon
+        className="w-8 h-8 text-neutral-500"
+      />
+    );
   }
 
-  const initials = email[0].toUpperCase();
+  const initials = email[0]?.toUpperCase() ?? "?";
 
   return (
-    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold">
+    <div
+      className="
+        w-8
+        h-8
+        rounded-full
+        bg-white/20
+        flex
+        items-center
+        justify-center
+        text-white
+        font-semibold
+      "
+    >
       {initials}
     </div>
   );
