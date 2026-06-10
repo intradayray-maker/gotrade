@@ -186,11 +186,18 @@ export default function ETHUSDT_TradeOutputCard() {
     } catch {}
   }, []);
 
-  // Sync margin every second
+  // Sync leverage + margin every second
   useEffect(() => {
     const interval = setInterval(() => {
       try {
+        const storedLev = localStorage.getItem("eth_leverage");
         const storedMargin = localStorage.getItem("eth_required_margin");
+
+        if (storedLev) {
+          const parsedLev = parseFloat(storedLev);
+          setLeverage((prev) => (prev !== parsedLev ? parsedLev : prev));
+        }
+
         if (storedMargin) {
           const m = parseFloat(storedMargin);
           setMarginFromAi((prev) => (prev !== m ? m : prev));

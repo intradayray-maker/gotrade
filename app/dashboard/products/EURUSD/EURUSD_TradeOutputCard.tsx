@@ -139,7 +139,14 @@ export default function EURUSD_TradeOutputCard() {
   useEffect(() => {
     const interval = setInterval(() => {
       try {
+        const lev = localStorage.getItem("forex_leverage");
         const m = localStorage.getItem("forex_required_margin");
+
+        if (lev) {
+          const parsedLev = parseFloat(lev);
+          setLeverage((prev) => (prev !== parsedLev ? parsedLev : prev));
+        }
+
         if (m) {
           const parsed = parseFloat(m);
           setMarginFromAi((prev) => (prev !== parsed ? parsed : prev));
