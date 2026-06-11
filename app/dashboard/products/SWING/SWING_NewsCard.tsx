@@ -267,3 +267,4 @@ export default function SWING_NewsCard() {
     </GTCard>
   );
 }
+// test
