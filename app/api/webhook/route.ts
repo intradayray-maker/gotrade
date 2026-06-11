@@ -1,4 +1,3 @@
-// app/api/webhook/route.ts
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
@@ -19,7 +18,7 @@ const ETH_BAR_ROW   = "530ef4a6-e3be-4c19-b34e-1d84062170cb";
 const ETH_NEWS_ROW  = "40d28923-8f43-464f-8147-244d63141587";
 
 // -----------------------------
-// SWING — row IDs
+// SWING — row IDs (RELAX BOT)
 // -----------------------------
 const SWING_TRADE_ROW = "81587010-c8c1-4857-a1e8-f476aa04c439";
 const SWING_BAR_ROW   = "f5d39010-88a3-4b9c-9e3d-eb3bc2c2ce71";
@@ -61,6 +60,7 @@ function getTables(ticker: string) {
     };
   }
 
+  // RELAX BOT → SWING TABLES
   if (t === "SWING") {
     return {
       tradeTable: "SWING_trades_state",
@@ -142,9 +142,9 @@ export async function POST(req: Request) {
     }
 
     // -----------------------------
-    // NEWS UPDATE (EURUSD / ETHUSDT.P / SWING)
+    // NEWS UPDATE (EURUSD / ETHUSDT.P / SWING / RELAX BOT)
     // -----------------------------
-    if (type === "news" || type === "swing_news") {
+    if (type === "news" || type === "swing_news" || type === "swing_meta") {
       let payload: any = {
         timestamp: new Date().toISOString()
       };
@@ -158,8 +158,8 @@ export async function POST(req: Request) {
         payload.news_countdown = Number(body.news_countdown) || null;
       }
 
-      // SWING format
-      if (type === "swing_news") {
+      // SWING + RELAX BOT format
+      if (type === "swing_news" || type === "swing_meta") {
         payload.entry_window_text = body.entry_window_text ?? null;
         payload.entry_window_percent = Number(body.entry_window_percent) || null;
         payload.hold_duration_text = body.hold_duration_text ?? null;
