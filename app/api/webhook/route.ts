@@ -4,25 +4,53 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 // -----------------------------
-// EURUSD — original row IDs
+// EURUSD — row IDs
 // -----------------------------
-const TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
-const BAR_ROW_ID   = "87b8c55f-52c7-4824-9fc7-98febbbdb02d";
-const NEWS_ROW_ID  = "d1c4f448-a9f9-4938-ac75-14398ee7aa40";
+const EURUSD = {
+  tradeTable: "EURUSD_trades_state",
+  barTable:   "EURUSD_bar_state",
+  newsTable:  "EURUSD_news_state",
+  tradeRow: "5726f12d-46d7-4e03-8131-a1febfd7ae42",
+  barRow:   "87b8c55f-52c7-4824-9fc7-98febbbdb02d",
+  newsRow:  "d1c4f448-a9f9-4938-ac75-14398ee7aa40"
+};
 
 // -----------------------------
-// ETHUSDT.P — row IDs
+// ETH BOT — row IDs
 // -----------------------------
-const ETH_TRADE_ROW = "0fee5c83-f233-4487-bc5f-f7e703a14024";
-const ETH_BAR_ROW   = "530ef4a6-e3be-4c19-b34e-1d84062170cb";
-const ETH_NEWS_ROW  = "40d28923-8f43-464f-8147-244d63141587";
+const ETH = {
+  tradeTable: "ETHUSDT_trades_state",
+  barTable:   "ETHUSDT_bar_state",
+  newsTable:  "ETHUSDT_news_state",
+  tradeRow: "0fee5c83-f233-4487-bc5f-f7e703a14024",
+  barRow:   "530ef4a6-e3be-4c19-b34e-1d84062170cb",
+  newsRow:  "40d28923-8f43-464f-8147-244d63141587"
+};
 
 // -----------------------------
-// SWING — row IDs (RELAX BOT)
+// RELAX BOT (SWING) — row IDs
 // -----------------------------
-const SWING_TRADE_ROW = "81587010-c8c1-4857-a1e8-f476aa04c439";
-const SWING_BAR_ROW   = "f5d39010-88a3-4b9c-9e3d-eb3bc2c2ce71";
-const SWING_NEWS_ROW  = "9d5488a8-fefb-4df3-96f7-6347cf1ade87";
+const RELAX = {
+  tradeTable: "SWING_trades_state",
+  barTable:   "SWING_bar_state",
+  newsTable:  "SWING_news_state",
+  tradeRow: "81587010-c8c1-4857-a1e8-f476aa04c439",
+  barRow:   "f5d39010-88a3-4b9c-9e3d-eb3bc2c2ce71",
+  newsRow:  "9d5488a8-fefb-4df3-96f7-6347cf1ade87"
+};
+
+// -----------------------------
+// BOT ROUTER
+// -----------------------------
+function getBotTables(bot: string) {
+  const b = bot.toUpperCase();
+
+  if (b === "EURUSD") return EURUSD;
+  if (b === "ETH")    return ETH;
+  if (b === "RELAX")  return RELAX;
+
+  return null;
+}
 
 // -----------------------------
 function normalizeSide(s: any) {
@@ -32,47 +60,6 @@ function normalizeSide(s: any) {
   if (v === "sell") return "short";
   if (["long", "short", "flat"].includes(v)) return v;
   return "flat";
-}
-
-// -----------------------------
-function getTables(ticker: string) {
-  const t = ticker.toUpperCase();
-
-  if (t === "EURUSD") {
-    return {
-      tradeTable: "EURUSD_trades_state",
-      barTable:   "EURUSD_bar_state",
-      newsTable:  "EURUSD_news_state",
-      tradeRow: TRADE_ROW_ID,
-      barRow:   BAR_ROW_ID,
-      newsRow:  NEWS_ROW_ID
-    };
-  }
-
-  if (t === "ETHUSDT.P") {
-    return {
-      tradeTable: "ETHUSDT_trades_state",
-      barTable:   "ETHUSDT_bar_state",
-      newsTable:  "ETHUSDT_news_state",
-      tradeRow: ETH_TRADE_ROW,
-      barRow:   ETH_BAR_ROW,
-      newsRow:  ETH_NEWS_ROW
-    };
-  }
-
-  // RELAX BOT → SWING TABLES
-  if (t === "SWING") {
-    return {
-      tradeTable: "SWING_trades_state",
-      barTable:   "SWING_bar_state",
-      newsTable:  "SWING_news_state",
-      tradeRow: SWING_TRADE_ROW,
-      barRow:   SWING_BAR_ROW,
-      newsRow:  SWING_NEWS_ROW
-    };
-  }
-
-  return null;
 }
 
 // -----------------------------
@@ -94,12 +81,13 @@ export async function POST(req: Request) {
       );
     }
 
+    // BOT + TYPE
     const type = String(body.type ?? "").toLowerCase();
-    const ticker = String(body.ticker ?? "").toUpperCase();
+    const bot  = String(body.bot ?? "").toUpperCase();
 
-    const tables = getTables(ticker);
+    const tables = getBotTables(bot);
     if (!tables) {
-      return NextResponse.json({ ok: true, status: "unknown ticker" });
+      return NextResponse.json({ ok: true, status: "unknown bot" });
     }
 
     // -----------------------------
@@ -142,14 +130,14 @@ export async function POST(req: Request) {
     }
 
     // -----------------------------
-    // NEWS UPDATE (EURUSD / ETHUSDT.P / SWING / RELAX BOT)
+    // NEWS UPDATE (EURUSD / ETH / RELAX)
     // -----------------------------
     if (type === "news" || type === "swing_news" || type === "swing_meta") {
       let payload: any = {
         timestamp: new Date().toISOString()
       };
 
-      // EURUSD + ETHUSDT.P format
+      // EURUSD + ETH format
       if (type === "news") {
         payload.news_today = Boolean(body.news_today);
         payload.news_message = body.news_message ?? null;
@@ -158,7 +146,7 @@ export async function POST(req: Request) {
         payload.news_countdown = Number(body.news_countdown) || null;
       }
 
-      // SWING + RELAX BOT format
+      // RELAX BOT format
       if (type === "swing_news" || type === "swing_meta") {
         payload.entry_window_text = body.entry_window_text ?? null;
         payload.entry_window_percent = Number(body.entry_window_percent) || null;
