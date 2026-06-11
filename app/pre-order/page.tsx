@@ -75,7 +75,7 @@ export default async function GoTradeLanding() {
 
 
 {/* CTA BUTTON */}
-<Link href="/gotrade/preorder" className="block mb-3">
+<Link href="/pre-order/preorder" className="block mb-3">
   <div
     className="
       inline-block
@@ -208,7 +208,7 @@ export default async function GoTradeLanding() {
             GoTrade gives you the execution layer your strategy deserves.
           </p>
 
-          <Link href="/gotrade/preorder">
+          <Link href="/pre-order/preorder">
             <div
               className="
                 inline-block

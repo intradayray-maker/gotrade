@@ -2,25 +2,28 @@
 
 import { useState, useEffect, useMemo } from "react";
 import GTSlider from "@/app/components/ui/GTSlider";
+import { getBrowserSupabase } from "@/lib/supabase/browserClient";
+import { formatInTimeZone } from "date-fns-tz";
 
-function useLocalTime() {
+const supabase = getBrowserSupabase();
+
+/* ==========================
+   Local Time (Timezone-Aware)
+   ========================== */
+function useLocalTime(userTimezone: string) {
   const [time, setTime] = useState("");
 
   useEffect(() => {
     const update = () => {
       const now = new Date();
-      setTime(
-        now.toLocaleTimeString([], {
-          hour: "numeric",
-          minute: "2-digit"
-        })
-      );
+      const formatted = formatInTimeZone(now, userTimezone, "h:mm a");
+      setTime(formatted);
     };
 
     update();
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [userTimezone]);
 
   return time;
 }
@@ -58,6 +61,34 @@ function AnimatedNumber({ value }: { value: number }) {
    BabyBot Projection Tool
    ========================== */
 export function BabyBotProjection() {
+  // --------------------------
+  // USER TIMEZONE
+  // --------------------------
+  const [userTimezone, setUserTimezone] = useState("America/New_York");
+
+  useEffect(() => {
+    const loadTZ = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("timezone")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.timezone) {
+        setUserTimezone(profile.timezone);
+      }
+    };
+
+    loadTZ();
+  }, []);
+
+  const localTime = useLocalTime(userTimezone);
 
   // --------------------------
   // CORE INPUTS
@@ -66,7 +97,6 @@ export function BabyBotProjection() {
   const [amPoints, setAmPoints] = useState(3);
   const [pmPoints, setPmPoints] = useState(3);
   const [riskBuffer, setRiskBuffer] = useState(20);
-  const localTime = useLocalTime();
 
   // --------------------------
   // MODE TOGGLE
@@ -490,64 +520,62 @@ export function BabyBotProjection() {
 
       </div>
 
-      {/* ==========================
+       {/* ==========================
           SUMMARY GRID
          ========================== */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
 
-{/* LEFT — Points Summary */}
-<div className="rounded-xl border border-slate-700/60 bg-[#0f0f17] p-4">
-  <p className="text-xs uppercase tracking-wide text-slate-400 text-center">
-    Points Summary
-  </p>
+        {/* LEFT — Points Summary */}
+        <div className="rounded-xl border border-slate-700/60 bg-[#0f0f17] p-4">
+          <p className="text-xs uppercase tracking-wide text-slate-400 text-center">
+            Points Summary
+          </p>
 
-  <div className="mt-3 space-y-3">
+          <div className="mt-3 space-y-3">
 
-    {/* AM Points */}
-    <div className="flex justify-between items-center p-3 rounded-lg border border-slate-700/40 bg-black/20">
-      <span className="text-slate-400">🌞 AM Points:</span>
-      <span className="text-xl font-semibold text-slate-400 tabular-nums">
-        {fmtCompact(amPoints)}
-      </span>
-    </div>
+            {/* AM Points */}
+            <div className="flex justify-between items-center p-3 rounded-lg border border-slate-700/40 bg-black/20">
+              <span className="text-slate-400">🌞 AM Points:</span>
+              <span className="text-xl font-semibold text-slate-400 tabular-nums">
+                {fmtCompact(amPoints)}
+              </span>
+            </div>
 
-    {/* PM Points */}
-    <div className="flex justify-between items-center p-3 rounded-lg border border-slate-700/40 bg-black/20">
-      <span className="text-slate-400">🌚 PM Points:</span>
-      <span className="text-xl font-semibold text-slate-400 tabular-nums">
-        {fmtCompact(pmPoints)}
-      </span>
-    </div>
+            {/* PM Points */}
+            <div className="flex justify-between items-center p-3 rounded-lg border border-slate-700/40 bg-black/20">
+              <span className="text-slate-400">🌚 PM Points:</span>
+              <span className="text-xl font-semibold text-slate-400 tabular-nums">
+                {fmtCompact(pmPoints)}
+              </span>
+            </div>
 
-    {/* SIDE‑BY‑SIDE GRID — EXACTLY LIKE RISK PROJECTION */}
-    <div className="grid grid-cols-2 gap-3">
+            {/* SIDE‑BY‑SIDE GRID — EXACTLY LIKE RISK PROJECTION */}
+            <div className="grid grid-cols-2 gap-3">
 
-{/* Daily Avg Points */}
-<div className="rounded-lg border border-slate-700/40 bg-black/20 p-1 text-center">
-  <p className="text-2xl font-bold text-emerald-300 tabular-nums">
-    {fmtCompact(totalAvgPoints)}x
-  </p>
-  <p className="text-[11px] italic text-slate-500 mt-1">
-    Daily Avg Points
-  </p>
-</div>
+              {/* Daily Avg Points */}
+              <div className="rounded-lg border border-slate-700/40 bg-black/20 p-1 text-center">
+                <p className="text-2xl font-bold text-emerald-300 tabular-nums">
+                  {fmtCompact(totalAvgPoints)}x
+                </p>
+                <p className="text-[11px] italic text-slate-500 mt-1">
+                  Daily Avg Points
+                </p>
+              </div>
 
-{/* Monthly Avg Points */}
-<div className="rounded-lg border border-slate-700/40 bg-black/20 p-1 text-center">
-  <p className="text-2xl font-bold text-emerald-300 tabular-nums">
-    {fmtCompact(totalAvgPoints * 30)}x
-  </p>
-  <p className="text-[11px] italic text-slate-500 mt-1">
-    Monthly Avg Points
-  </p>
-</div>
+              {/* Monthly Avg Points */}
+              <div className="rounded-lg border border-slate-700/40 bg-black/20 p-1 text-center">
+                <p className="text-2xl font-bold text-emerald-300 tabular-nums">
+                  {fmtCompact(totalAvgPoints * 30)}x
+                </p>
+                <p className="text-[11px] italic text-slate-500 mt-1">
+                  Monthly Avg Points
+                </p>
+              </div>
 
+            </div>
 
-    </div>
-
-  </div>
-</div>
-
+          </div>
+        </div>
 
         {/* MIDDLE — PnL Summary */}
         <div

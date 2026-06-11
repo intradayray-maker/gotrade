@@ -1,5 +1,5 @@
-//app\dashboard\layout.tsx
- 
+// app/dashboard/layout.tsx
+
 import Header from "@/components/Header";
 import { isAdminUser } from "@/utils/auth/admin";
 import { createSupabaseServerClient } from "@/utils/supabase/server";
@@ -16,22 +16,29 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // Default admin detection via configured admin email
   let isAdmin = isAdminUser(user ? { email: user.email } : undefined);
 
-  // Also check profiles table for `is_admin` flag (server-side authoritative)
+  // Fetch plan flags + admin flag from profiles
+  let plan_EURUSD = false;
+  let plan_ETHUSDT = false;
+  let plan_PRO_BUNDLE = false;
+
   try {
     if (user?.id) {
       const { data: profile, error } = await supabase
         .from("profiles")
-        .select("is_admin")
+        .select("is_admin, plan_EURUSD, plan_ETHUSDT, plan_PRO_BUNDLE")
         .eq("id", user.id)
         .single();
 
-      if (!error && profile && (profile as any).is_admin) {
-        isAdmin = true;
+      if (!error && profile) {
+        if (profile.is_admin) isAdmin = true;
+
+        plan_EURUSD = profile.plan_EURUSD === true;
+        plan_ETHUSDT = profile.plan_ETHUSDT === true;
+        plan_PRO_BUNDLE = profile.plan_PRO_BUNDLE === true;
       }
     }
   } catch (err) {
-    // keep fallback isAdmin value
-    console.error("Failed to check profiles.is_admin:", err);
+    console.error("Failed to load profile flags:", err);
   }
 
   return (
@@ -41,6 +48,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
         isAdmin={isAdmin}
         variant="dashboard"
         homeHref="/dashboard"
+        planEUR={plan_EURUSD}
+        planETH={plan_ETHUSDT}
+        planSWING={plan_PRO_BUNDLE} // PRO plan = Swing plan
       />
       <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
     </div>

@@ -19,27 +19,37 @@ export default async function DashboardPage() {
       <DashboardClient
         canEUR={false}
         canETH={false}
+        canSWING={false}
       />
     );
   }
 
-  // Safe: user.id is guaranteed to exist here
+  // Explicitly select only the fields needed for gating
   const { data: profile } = await supabase
     .from("profiles")
-    .select("*")
+    .select("is_admin, plan_EURUSD, plan_ETHUSDT, plan_PRO_BUNDLE")
     .eq("id", user.id)
     .single();
 
   const isAdmin = profile?.is_admin === true;
-  const hasPro = profile?.plan_PRO_BUNDLE === true;
 
-  const canEUR = isAdmin || hasPro || profile?.plan_EURUSD === true;
-  const canETH = isAdmin || hasPro || profile?.plan_ETHUSDT === true;
+  // NEW: PRO plan now unlocks SWING, not EUR/ETH
+  const hasSwing = profile?.plan_PRO_BUNDLE === true;
+
+  // EURUSD day trading
+  const canEUR = isAdmin || profile?.plan_EURUSD === true;
+
+  // ETHUSDT.P day trading
+  const canETH = isAdmin || profile?.plan_ETHUSDT === true;
+
+  // SWING (4H/Daily)
+  const canSWING = isAdmin || hasSwing;
 
   return (
     <DashboardClient
       canEUR={canEUR}
       canETH={canETH}
+      canSWING={canSWING}
     />
   );
 }

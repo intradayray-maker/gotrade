@@ -1,5 +1,5 @@
-//components\Header.tsx
-// 
+// components/Header.tsx
+
 import HeaderClient from "./HeaderClient";
 import type { User } from "@supabase/supabase-js";
 
@@ -8,6 +8,11 @@ type HeaderProps = {
   isAdmin: boolean;
   variant: "public" | "dashboard";
   homeHref: string;
+
+  // NEW PLAN FLAGS
+  planEUR?: boolean;
+  planETH?: boolean;
+  planSWING?: boolean;
 };
 
 export const dynamic = "force-dynamic";

@@ -1,35 +1,17 @@
-//  app\dashboard\products\EURUSD\EURUSD_NewsCard.tsx
+"use client"
 
-
-"use client";
-
-import { useEffect, useState } from "react";
-import GTCard from "@/components/ui/GTCard";
-import { getRandomMessage } from "app/dashboard/products/TOOLS/Ai_Text";
+import { useEffect, useState } from "react"
+import GTCard from "@/components/ui/GTCard"
+import { useDemoState } from "../demoState"
+import { getRandomMessage } from "app/dashboard/products/TOOLS/Ai_Text"
 import {
   setMusicEnabled,
   setMusicVolume,
   initBackgroundMusic,
-} from "app/dashboard/products/TOOLS/Ai_AudioManager";
-
-import { getBrowserSupabase } from "@/lib/supabase/browserClient";
-import { formatInTimeZone } from "date-fns-tz";
-
-const supabase = getBrowserSupabase();
+} from "@/app/admin/demo/TOOLS/Demo_AudioManager"
 
 // ------------------------------------------------------------
-// SHORT TIMEZONE LABELS
-// ------------------------------------------------------------
-const getShortTZ = (tz: string) => {
-  if (tz === "America/New_York") return "ET";
-  if (tz === "America/Chicago") return "CT";
-  if (tz === "America/Denver") return "MT";
-  if (tz === "America/Los_Angeles") return "PT";
-  return tz.split("/")[1]?.replace("_", " ") || tz;
-};
-
-// ------------------------------------------------------------
-// MIXER FADER
+// MIXER FADER (UNCHANGED FROM REAL CARD)
 // ------------------------------------------------------------
 function MixerFaderWithGlow({
   value,
@@ -38,11 +20,11 @@ function MixerFaderWithGlow({
   toggle,
   label,
 }: {
-  value: number;
-  onChange: (v: number) => void;
-  enabled: boolean;
-  toggle: () => void;
-  label?: string;
+  value: number
+  onChange: (v: number) => void
+  enabled: boolean
+  toggle: () => void
+  label?: string
 }) {
   return (
     <div className="mixer-strip flex flex-col gap-3 relative">
@@ -79,216 +61,131 @@ function MixerFaderWithGlow({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // ------------------------------------------------------------
 // TYPING EFFECT
 // ------------------------------------------------------------
-function useTypingEffect(text: string, speed = 35, delay = 600) {
-  const [displayed, setDisplayed] = useState("");
-  const [done, setDone] = useState(false);
+function useTypingEffect(text: string, speed = 28, delay = 600) {
+  const [displayed, setDisplayed] = useState("")
+  const [done, setDone] = useState(false)
 
   useEffect(() => {
-    setDisplayed("");
-    setDone(false);
+    setDisplayed("")
+    setDone(false)
 
-    let i = 0;
+    let i = 0
 
     const start = setTimeout(() => {
       const tick = () => {
-        setDisplayed(text.slice(0, i));
-        i++;
+        setDisplayed(text.slice(0, i))
+        i++
         if (i <= text.length) {
-          setTimeout(tick, speed);
+          setTimeout(tick, speed)
         } else {
-          setDone(true);
+          setDone(true)
         }
-      };
-      tick();
-    }, delay);
+      }
+      tick()
+    }, delay)
 
-    return () => clearTimeout(start);
-  }, [text, speed, delay]);
+    return () => clearTimeout(start)
+  }, [text, speed, delay])
 
-  return { displayed, done };
+  return { displayed, done }
 }
 
 // ------------------------------------------------------------
-// CONSTANTS
+// DEMO NEWS CARD (FULL EURUSD STYLE)
 // ------------------------------------------------------------
-const EURUSD_NEWS_ROW_ID = "d1c4f448-a9f9-4938-ac75-14398ee7aa40";
-
-// ------------------------------------------------------------
-// COMPONENT
-// ------------------------------------------------------------
-export default function EURUSD_NewsCard() {
-  const [nextNewsTime, setNextNewsTime] = useState("None");
-  const [newsToday, setNewsToday] = useState(false);
-  const [windowActive, setWindowActive] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-
-  const [aiMessage] = useState(getRandomMessage());
-  const { displayed, done } = useTypingEffect(aiMessage, 28, 600);
-
-  const [musicEnabledState, setMusicEnabledState] = useState(false);
-  const [musicVolumeState, setMusicVolumeState] = useState(0.35);
+export default function DemoNewsCard() {
+  const { news, bar } = useDemoState()
 
   // ------------------------------------------------------------
-  // USER TIMEZONE
+  // DYNAMIC TICKER LABEL
   // ------------------------------------------------------------
-  const [userTimezone, setUserTimezone] = useState("America/New_York");
-  const tzLabel = getShortTZ(userTimezone);
-
-  useEffect(() => {
-    const loadTimezone = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("timezone")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.timezone) {
-        setUserTimezone(profile.timezone);
-      }
-    };
-
-    loadTimezone();
-  }, []);
+  const tickerLabel =
+    bar.active === "ETH"
+      ? "ETHUSDT • BINANCE"
+      : "EURUSD • OANDA"
 
   // ------------------------------------------------------------
-  // LOAD MUSIC SETTINGS (NO AUTOPLAY)
+  // DEMO VALUES
   // ------------------------------------------------------------
-  useEffect(() => {
-    const savedVol = localStorage.getItem("ai_music_volume");
-    if (savedVol) {
-      const vol = Number(savedVol);
-      setMusicVolumeState(vol);
-      setMusicVolume(vol);
-    }
+  const nextNewsTime = news.nextEvent || "None"
+  const newsToday = news.today
+  const windowActive = news.windowActive
+  const countdown = news.countdown ?? 0
 
-    const savedEnabled = localStorage.getItem("ai_music_enabled");
+  const tzLabel = ""
 
-    if (savedEnabled === "true") {
-      setMusicEnabledState(true);
-    }
-  }, []);
-
-  const toggleMusic = () => {
-    const next = !musicEnabledState;
-    setMusicEnabledState(next);
-
-    if (next) {
-      initBackgroundMusic();
-      setMusicEnabled(true);
-    } else {
-      setMusicEnabled(false);
-    }
-
-    localStorage.setItem("ai_music_enabled", String(next));
-  };
-
-  const handleMusicVolume = (v: number) => {
-    const vol = v / 100;
-    setMusicVolumeState(vol);
-    setMusicVolume(vol);
-    localStorage.setItem("ai_music_volume", String(vol));
-  };
-
-  // ------------------------------------------------------------
-  // SUPABASE: INITIAL FETCH + REALTIME (timezone-aware)
-  // ------------------------------------------------------------
-  useEffect(() => {
-    let mounted = true;
-
-    const convertTime = (t: string | null) => {
-      if (!t || t === "None") return "None";
-      try {
-        return formatInTimeZone(new Date(t), userTimezone, "h:mm a");
-      } catch {
-        return t;
-      }
-    };
-
-    const fetchInitial = async () => {
-      const { data, error } = await supabase
-        .from("EURUSD_news_state")
-        .select(
-          "next_news_time, news_today, news_window_active, news_countdown"
-        )
-        .eq("id", EURUSD_NEWS_ROW_ID)
-        .single();
-
-      if (!mounted || error || !data) return;
-
-      setNextNewsTime(convertTime(data.next_news_time));
-      setNewsToday(Boolean(data.news_today));
-      setWindowActive(Boolean(data.news_window_active));
-      setCountdown(Number(data.news_countdown ?? 0));
-    };
-
-    fetchInitial();
-
-    const channel = supabase
-      .channel("eurusd-news-realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "EURUSD_news_state",
-          filter: `id=eq.${EURUSD_NEWS_ROW_ID}`,
-        },
-        (payload: { new: Record<string, any> }) => {
-          if (!mounted || !payload.new) return;
-
-          const d = payload.new;
-
-          setNextNewsTime(convertTime(d.next_news_time));
-          setNewsToday(Boolean(d.news_today));
-          setWindowActive(Boolean(d.news_window_active));
-          setCountdown(Number(d.news_countdown ?? 0));
-        }
-      )
-      .subscribe();
-
-    return () => {
-      mounted = false;
-      supabase.removeChannel(channel);
-    };
-  }, [userTimezone]);
-
-  // ------------------------------------------------------------
-  // CLEAN TIME
-  // ------------------------------------------------------------
-  const cleanTime = nextNewsTime.replace("Today, ", "");
-
+  const cleanTime = nextNewsTime.replace("Today, ", "")
   const noEvents =
     nextNewsTime === "None" ||
     nextNewsTime === "" ||
-    nextNewsTime === null;
+    nextNewsTime === null
+
+  // ------------------------------------------------------------
+  // AI MESSAGE
+  // ------------------------------------------------------------
+  const [aiMessage] = useState(getRandomMessage())
+  const { displayed, done } = useTypingEffect(aiMessage, 28, 600)
+
+  // ------------------------------------------------------------
+  // MUSIC STATE
+  // ------------------------------------------------------------
+  const [musicEnabledState, setMusicEnabledState] = useState(false)
+  const [musicVolumeState, setMusicVolumeState] = useState(0.35)
+
+  useEffect(() => {
+    const savedVol = localStorage.getItem("ai_music_volume")
+    if (savedVol) {
+      const vol = Number(savedVol)
+      setMusicVolumeState(vol)
+      setMusicVolume(vol)
+    }
+
+    const savedEnabled = localStorage.getItem("ai_music_enabled")
+    if (savedEnabled === "true") {
+      setMusicEnabledState(true)
+    }
+  }, [])
+
+  const toggleMusic = () => {
+    const next = !musicEnabledState
+    setMusicEnabledState(next)
+
+    if (next) {
+      initBackgroundMusic()
+      setMusicEnabled(true)
+    } else {
+      setMusicEnabled(false)
+    }
+
+    localStorage.setItem("ai_music_enabled", String(next))
+  }
+
+  const handleMusicVolume = (v: number) => {
+    const vol = v / 100
+    setMusicVolumeState(vol)
+    setMusicVolume(vol)
+    localStorage.setItem("ai_music_volume", String(vol))
+  }
 
   // ------------------------------------------------------------
   // UI
   // ------------------------------------------------------------
   return (
     <GTCard className="flex h-full flex-col gap-4">
-      <p className="text-center text-xs uppercase tracking-wide text-slate-400">
-        Daily News Status
-      </p>
 
       <div className="flex flex-1 flex-col space-y-3">
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
           <span className="text-lg font-semibold text-slate-50">
-            EURUSD • OANDA
+            {tickerLabel}
           </span>
         </div>
+
 
         {/* NEWS CELL */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center space-y-1">
@@ -342,7 +239,7 @@ export default function EURUSD_NewsCard() {
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
           {windowActive ? (
             <span className="block text-lg font-semibold text-red-400">
-              ⚠️ Avoid trading — news window active
+              ⚠️ Avoid Trading — Active News
             </span>
           ) : (
             <span className="block text-lg font-semibold text-emerald-400">
@@ -400,7 +297,6 @@ export default function EURUSD_NewsCard() {
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-
     </GTCard>
-  );
+  )
 }

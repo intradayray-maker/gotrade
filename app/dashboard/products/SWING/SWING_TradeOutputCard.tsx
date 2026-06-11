@@ -1,4 +1,4 @@
-// app/dashboard/products/EURUSD/EURUSD_TradeOutputCard.tsx
+// app/dashboard/products/SWING/SWING_TradeOutputCard.tsx
 
 "use client";
 
@@ -7,14 +7,14 @@ import GTCard from "@/components/ui/GTCard";
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 
 // ------------------------------------------------------------
-// SUPABASE CLIENT (single shared instance)
+// SUPABASE CLIENT
 // ------------------------------------------------------------
 const supabase = getBrowserSupabase();
 
 // ------------------------------------------------------------
-// CONSTANTS
+// CONSTANTS — SWING VERSION
 // ------------------------------------------------------------
-const EURUSD_TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
+const SWING_TRADE_ROW_ID = "REPLACE-WITH-YOUR-UUID";
 
 // ------------------------------------------------------------
 // TYPES
@@ -126,7 +126,7 @@ function CopyButton({
 // ------------------------------------------------------------
 // COMPONENT
 // ------------------------------------------------------------
-export default function EURUSD_TradeOutputCard() {
+export default function SWING_TradeOutputCard() {
   const [trade, setTrade] = useState<Trade>({
     ticker: "",
     side: "",
@@ -175,12 +175,12 @@ export default function EURUSD_TradeOutputCard() {
     });
 
   // ------------------------------------------------------------
-  // LOAD LEVERAGE + MARGIN FROM AI CARD
+  // LOAD LEVERAGE + MARGIN FROM AI CARD (Swing keys)
   // ------------------------------------------------------------
   useEffect(() => {
     try {
-      const lev = localStorage.getItem("forex_leverage");
-      const m = localStorage.getItem("forex_required_margin");
+      const lev = localStorage.getItem("swing_leverage");
+      const m = localStorage.getItem("swing_required_margin");
       if (lev) setLeverage(parseFloat(lev));
       if (m) setMarginFromAi(parseFloat(m));
     } catch {}
@@ -189,8 +189,8 @@ export default function EURUSD_TradeOutputCard() {
   useEffect(() => {
     const interval = setInterval(() => {
       try {
-        const lev = localStorage.getItem("forex_leverage");
-        const m = localStorage.getItem("forex_required_margin");
+        const lev = localStorage.getItem("swing_leverage");
+        const m = localStorage.getItem("swing_required_margin");
 
         if (lev) {
           const parsedLev = parseFloat(lev);
@@ -207,7 +207,7 @@ export default function EURUSD_TradeOutputCard() {
   }, []);
 
   // ------------------------------------------------------------
-  // INITIAL FETCH + REALTIME SUBSCRIPTION
+  // INITIAL FETCH + REALTIME SUBSCRIPTION (Swing table)
   // ------------------------------------------------------------
   useEffect(() => {
     let mounted = true;
@@ -215,9 +215,9 @@ export default function EURUSD_TradeOutputCard() {
 
     const fetchInitial = async () => {
       const { data, error } = await supabase
-        .from("EURUSD_trades_state")
+        .from("SWING_trades_state")
         .select("ticker, side, entry, stop, tp, timestamp, type")
-        .eq("id", EURUSD_TRADE_ROW_ID)
+        .eq("id", SWING_TRADE_ROW_ID)
         .single();
 
       if (!mounted || error || !data) return;
@@ -241,14 +241,14 @@ export default function EURUSD_TradeOutputCard() {
     fetchInitial();
 
     channel = supabase
-      .channel("eurusd-trade-state-output-realtime")
+      .channel("swing-trade-state-output-realtime")
       .on(
         "postgres_changes",
         {
           event: "UPDATE",
           schema: "public",
-          table: "EURUSD_trades_state",
-          filter: `id=eq.${EURUSD_TRADE_ROW_ID}`,
+          table: "SWING_trades_state",
+          filter: `id=eq.${SWING_TRADE_ROW_ID}`,
         },
         (payload: { new: Record<string, any> }) => {
           if (!mounted || !payload.new) return;
@@ -280,7 +280,7 @@ export default function EURUSD_TradeOutputCard() {
   }, []);
 
   // ------------------------------------------------------------
-  // DERIVED CALCULATION
+  // DERIVED CALCULATION (same formula as Forex)
   // ------------------------------------------------------------
   const computeDerived = () => {
     if (!trade.entry || marginFromAi <= 0 || leverage <= 0) {

@@ -5,18 +5,25 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 // -----------------------------
-// EURUSD — your original row IDs
+// EURUSD — original row IDs
 // -----------------------------
 const TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
 const BAR_ROW_ID   = "87b8c55f-52c7-4824-9fc7-98febbbdb02d";
 const NEWS_ROW_ID  = "d1c4f448-a9f9-4938-ac75-14398ee7aa40";
 
 // -----------------------------
-// ETHUSDT.P — new row IDs
+// ETHUSDT.P — row IDs
 // -----------------------------
 const ETH_TRADE_ROW = "0fee5c83-f233-4487-bc5f-f7e703a14024";
 const ETH_BAR_ROW   = "530ef4a6-e3be-4c19-b34e-1d84062170cb";
 const ETH_NEWS_ROW  = "40d28923-8f43-464f-8147-244d63141587";
+
+// -----------------------------
+// SWING — row IDs
+// -----------------------------
+const SWING_TRADE_ROW = "81587010-c8c1-4857-a1e8-f476aa04c439";
+const SWING_BAR_ROW   = "f5d39010-88a3-4b9c-9e3d-eb3bc2c2ce71";
+const SWING_NEWS_ROW  = "9d5488a8-fefb-4df3-96f7-6347cf1ade87";
 
 // -----------------------------
 function normalizeSide(s: any) {
@@ -28,6 +35,7 @@ function normalizeSide(s: any) {
   return "flat";
 }
 
+// -----------------------------
 function getTables(ticker: string) {
   const t = ticker.toUpperCase();
 
@@ -53,24 +61,37 @@ function getTables(ticker: string) {
     };
   }
 
+  if (t === "SWING") {
+    return {
+      tradeTable: "SWING_trades_state",
+      barTable:   "SWING_bar_state",
+      newsTable:  "SWING_news_state",
+      tradeRow: SWING_TRADE_ROW,
+      barRow:   SWING_BAR_ROW,
+      newsRow:  SWING_NEWS_ROW
+    };
+  }
+
   return null;
 }
 
 // -----------------------------
 export async function POST(req: Request) {
   try {
-    const supabase =
-      createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     let body: any;
 
     try {
       body = await req.json();
     } catch {
-      return NextResponse.json({ ok: false, error: "invalid json" }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "invalid json" },
+        { status: 400 }
+      );
     }
 
     const type = String(body.type ?? "").toLowerCase();
@@ -121,17 +142,29 @@ export async function POST(req: Request) {
     }
 
     // -----------------------------
-    // NEWS UPDATE
+    // NEWS UPDATE (EURUSD / ETHUSDT.P / SWING)
     // -----------------------------
-    if (type === "news") {
-      const payload = {
-        news_today: Boolean(body.news_today),
-        news_message: body.news_message ?? null,
-        next_news_time: body.next_news_time ?? null,
-        news_window_active: Boolean(body.news_window_active),
-        news_countdown: Number(body.news_countdown) || null,
+    if (type === "news" || type === "swing_news") {
+      let payload: any = {
         timestamp: new Date().toISOString()
       };
+
+      // EURUSD + ETHUSDT.P format
+      if (type === "news") {
+        payload.news_today = Boolean(body.news_today);
+        payload.news_message = body.news_message ?? null;
+        payload.next_news_time = body.next_news_time ?? null;
+        payload.news_window_active = Boolean(body.news_window_active);
+        payload.news_countdown = Number(body.news_countdown) || null;
+      }
+
+      // SWING format
+      if (type === "swing_news") {
+        payload.entry_window_text = body.entry_window_text ?? null;
+        payload.entry_window_percent = Number(body.entry_window_percent) || null;
+        payload.hold_duration_text = body.hold_duration_text ?? null;
+        payload.risk_window_note = body.risk_window_note ?? null;
+      }
 
       await supabase
         .from(tables.newsTable)
@@ -145,6 +178,9 @@ export async function POST(req: Request) {
 
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ ok: false, error: "unexpected error" }, { status: 400 });
+    return NextResponse.json(
+      { ok: false, error: "unexpected error" },
+      { status: 400 }
+    );
   }
 }

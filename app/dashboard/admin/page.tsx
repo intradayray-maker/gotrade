@@ -46,7 +46,7 @@ export default async function AdminPage() {
         <AdminCard
           title="Sandbox Admin"
           description="Use the admin-only workspace for internal planning tools."
-          href="/sandbox/admin-tools"
+          href="/admin"
         />
       </section>
 

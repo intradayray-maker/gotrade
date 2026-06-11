@@ -1,5 +1,3 @@
-//components/HeaderClient.tsx
-
 "use client";
 
 import Link from "next/link";
@@ -12,6 +10,7 @@ import {
   WrenchScrewdriverIcon,
   Squares2X2Icon,
   UserIcon,
+  AcademicCapIcon,
 } from "@heroicons/react/24/outline";
 
 import NotificationsBell from "@/app/components/NotificationsBell";
@@ -25,11 +24,18 @@ export default function HeaderClient({
   isAdmin,
   variant,
   homeHref,
+  planEUR = false,
+  planETH = false,
+  planSWING = false,
 }: {
   user: any;
   isAdmin: boolean;
   variant: "public" | "dashboard";
   homeHref: string;
+
+  planEUR?: boolean;
+  planETH?: boolean;
+  planSWING?: boolean;
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -37,6 +43,13 @@ export default function HeaderClient({
   if (!pathname) return null;
 
   const closeMobile = () => setMobileOpen(false);
+
+  // ============================
+  // NAV GATING
+  // ============================
+  const showEUR = isAdmin || planEUR;
+  const showETH = isAdmin || planETH;
+  const showSWING = isAdmin || planSWING;
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-black">
@@ -74,6 +87,7 @@ export default function HeaderClient({
 
           {user && (
             <>
+              {/* DASHBOARD */}
               <Link
                 href="/dashboard"
                 title="Dashboard"
@@ -86,6 +100,20 @@ export default function HeaderClient({
                 <Squares2X2Icon className="h-5 w-5" />
               </Link>
 
+              {/* TRAINING */}
+              <Link
+                href="/dashboard/school"
+                title="Training"
+                className={`flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 transition hover:bg-white/10 ${
+                  pathname.startsWith("/dashboard/school")
+                    ? "text-white shadow-[0_0_12px_rgba(255,255,255,0.45)]"
+                    : "text-white/60"
+                }`}
+              >
+                <AcademicCapIcon className="h-5 w-5" />
+              </Link>
+
+              {/* BILLING */}
               <Link
                 href="/dashboard/billing"
                 title="Billing"
@@ -98,6 +126,7 @@ export default function HeaderClient({
                 <CreditCardIcon className="h-5 w-5" />
               </Link>
 
+              {/* PROFILE */}
               <Link
                 href="/dashboard/profile"
                 title="Profile"
@@ -110,6 +139,7 @@ export default function HeaderClient({
                 <UserIcon className="h-5 w-5" />
               </Link>
 
+              {/* SETTINGS */}
               <Link
                 href="/dashboard/settings"
                 title="Settings"
@@ -122,9 +152,10 @@ export default function HeaderClient({
                 <Cog6ToothIcon className="h-5 w-5" />
               </Link>
 
+              {/* ADMIN */}
               {isAdmin && (
                 <Link
-                  href="/sandbox/admin-tools"
+                  href="/admin"
                   title="Admin Tools"
                   className={`relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 transition hover:bg-white/10 ${
                     pathname.startsWith("/dashboard/admin")
@@ -133,10 +164,6 @@ export default function HeaderClient({
                   }`}
                 >
                   <WrenchScrewdriverIcon className="h-5 w-5" />
-
-                  {typeof window !== "undefined" && (window.__gotrade_errors ?? 0) > 0 && (
-                    <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-red-500 shadow-[0_0_6px_rgba(255,0,0,0.8)]" />
-                  )}
                 </Link>
               )}
 
@@ -150,6 +177,7 @@ export default function HeaderClient({
         </div>
       </div>
 
+      {/* MOBILE MENU */}
       {user && mobileOpen && (
         <div className="absolute left-0 top-[72px] flex w-full justify-center md:hidden animate-slideDown">
           <div className="mx-auto w-full max-w-sm rounded-2xl bg-black p-4">
@@ -161,6 +189,18 @@ export default function HeaderClient({
               <Squares2X2Icon className="h-6 w-6" />
               <span className="text-base">Dashboard</span>
             </Link>
+
+            <div className="my-2 h-px bg-white/10" />
+
+            <Link
+              href="/dashboard/school"
+              onClick={closeMobile}
+              className="flex items-center gap-3 py-3 text-white/90 transition hover:text-white"
+            >
+              <AcademicCapIcon className="h-6 w-6" />
+              <span className="text-base">Training</span>
+            </Link>
+
             <div className="my-2 h-px bg-white/10" />
 
             <Link
@@ -171,6 +211,7 @@ export default function HeaderClient({
               <CreditCardIcon className="h-6 w-6" />
               <span className="text-base">Billing</span>
             </Link>
+
             <div className="my-2 h-px bg-white/10" />
 
             <Link
@@ -181,6 +222,7 @@ export default function HeaderClient({
               <UserIcon className="h-6 w-6" />
               <span className="text-base">Profile</span>
             </Link>
+
             <div className="my-2 h-px bg-white/10" />
 
             <Link
@@ -196,7 +238,7 @@ export default function HeaderClient({
               <>
                 <div className="my-2 h-px bg-white/10" />
                 <Link
-                  href="/sandbox/admin-tools"
+                  href="/admin"
                   onClick={closeMobile}
                   className="flex items-center gap-3 py-3 text-white/90 transition hover:text-white"
                 >

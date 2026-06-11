@@ -2,26 +2,88 @@
 
 import TimezoneSelect from "@/components/ui/TimezoneSelect";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
+import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 
 export default function SettingsClient() {
+  const supabase = getBrowserSupabase();
+
   const [timezone, setTimezone] = useState("America/New_York");
   const [emailNotifications, setEmailNotifications] = useState(true);
 
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const save = () => {
+  /* -------------------------
+     LOAD USER PROFILE
+  -------------------------- */
+  useEffect(() => {
+    const loadProfile = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("timezone, email_notifications")
+        .eq("id", user.id)
+        .single();
+
+      if (profile) {
+        setTimezone(profile.timezone || "America/New_York");
+        setEmailNotifications(
+          profile.email_notifications ?? true
+        );
+      }
+
+      setLoading(false);
+    };
+
+    loadProfile();
+  }, [supabase]);
+
+  /* -------------------------
+     SAVE USER PROFILE
+  -------------------------- */
+  const save = async () => {
     setSaving(true);
     setSaved(false);
 
-    setTimeout(() => {
-      setSaving(false);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    }, 800);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    await supabase
+      .from("profiles")
+      .update({
+        timezone,
+        email_notifications: emailNotifications,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", user.id);
+
+    setSaving(false);
+    setSaved(true);
+
+    setTimeout(() => setSaved(false), 2000);
   };
+
+  if (loading) {
+    return (
+      <div className="text-white/60 text-center py-10">
+        Loading settings…
+      </div>
+    );
+  }
 
   return (
     <div
@@ -177,28 +239,35 @@ export default function SettingsClient() {
         <div className="grid grid-cols-1 gap-8 w-full">
 
           {/* CELL 1 — TIMEZONE */}
-          <GTCard className="flex flex-col items-center space-y-3">
+          <div
+            className="
+              flex flex-col items-center space-y-3
+              rounded-xl border border-white/4
+              bg-white/0 p-6
+            "
+          >
             <span className="text-white/50 text-sm mb-5">⌚ Timezone</span>
 
             <div className="w-[320px]">
               <TimezoneSelect value={timezone} onChange={setTimezone} />
             </div>
-          </GTCard>
+          </div>
 
           {/* CELL 2 — EMAIL NOTIFICATIONS */}
-          <GTCard className="flex flex-col items-center space-y-3">
+          <div
+            className="
+              flex flex-col items-center space-y-3
+              rounded-xl border border-white/4
+              bg-white/0 p-6
+            "
+          >
             <span className="text-white/50 text-sm mb-5">📩 Email Notifications</span>
 
             <div
               onClick={() => setEmailNotifications(!emailNotifications)}
               className={`
-                relative
-                w-32
-                h-9
-                rounded-full
-                cursor-pointer
-                transition-all
-                duration-300
+                relative w-32 h-9 rounded-full cursor-pointer
+                transition-all duration-300
                 ${
                   emailNotifications
                     ? "bg-emerald-500/60 shadow-[0_0_12px_rgba(16,185,129,0.6)]"
@@ -208,16 +277,8 @@ export default function SettingsClient() {
             >
               <div
                 className={`
-                  absolute
-                  top-1
-                  left-1
-                  h-7
-                  w-7
-                  rounded-full
-                  bg-white
-                  shadow-md
-                  transition-all
-                  duration-300
+                  absolute top-1 left-1 h-7 w-7 rounded-full bg-white shadow-md
+                  transition-all duration-300
                   ${
                     emailNotifications
                       ? "translate-x-20 shadow-[0_0_12px_rgba(16,185,129,0.6)]"
@@ -226,38 +287,35 @@ export default function SettingsClient() {
                 `}
               ></div>
             </div>
-          </GTCard>
+          </div>
 
           {/* CELL 3 — SAVE BUTTON */}
-          <GTCard className="flex flex-col items-center space-y-3">
+          <div
+            className="
+              flex flex-col items-center space-y-3
+              rounded-xl border border-white/4
+              bg-white/0 p-6
+            "
+          >
             <button
               onClick={save}
               disabled={saving}
               className="
-                relative
-                flex
-                items-center
-                justify-center
-                w-[150px]
-                px-[15px]
-                py-[15px]
-                rounded-[6px]
-                text-[14px]
-                font-semibold
+                relative flex items-center justify-center
+                w-[150px] px-[15px] py-[15px]
+                rounded-[6px] text-[14px] font-semibold
                 text-[rgb(225,254,234)]
                 bg-[rgb(3,82,65)]
                 shadow-[0_0_34px_rgba(3,82,65,0.45)]
-                border-[5px]
-                border-[rgb(3,82,65)]
+                border-[5px] border-[rgb(3,82,65)]
                 bg-clip-padding
                 hover:bg-[rgb(4,100,80)]
-                transition
-                disabled:opacity-50
+                transition disabled:opacity-50
               "
             >
               {saving ? "Saving…" : saved ? "Saved ✓" : "Save Changes"}
             </button>
-          </GTCard>
+          </div>
 
         </div>
       </GTCard>

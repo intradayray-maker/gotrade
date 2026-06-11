@@ -1,6 +1,3 @@
-// app\dashboard\products\ETHUSD\ETHUSDT_AiCard.tsx
-
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -17,8 +14,9 @@ import {
 
 import { getVoiceClip } from "app/dashboard/products/TOOLS/Ai_LocalVoice";
 
-// ✅ Unified Supabase client (no duplicates)
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
+import { formatInTimeZone } from "date-fns-tz";
+
 const supabase = getBrowserSupabase();
 
 // ------------------------------------------------------------
@@ -38,7 +36,7 @@ const isTradeOngoing = (trade: Trade | null) =>
   trade?.type === "entry_long" || trade?.type === "entry_short";
 
 // ------------------------------------------------------------
-// SUPABASE ROW IDS (NEW PROJECT)
+// SUPABASE ROW IDS
 // ------------------------------------------------------------
 const ETH_TRADE_ROW_ID = "0fee5c83-f233-4487-bc5f-f7e703a14024";
 const ETH_BAR_ROW_ID = "530ef4a6-e3be-4c19-b34e-1d84062170cb";
@@ -67,17 +65,64 @@ export default function ETHUSDT_AiCard() {
   const [flashColor, setFlashColor] = useState("");
 
   const [status, setStatus] = useState("Listening for breakouts…");
-  const [now, setNow] = useState(new Date());
 
+  // ------------------------------------------------------------
+  // USER TIMEZONE
+  // ------------------------------------------------------------
+  const [userTimezone, setUserTimezone] = useState("America/New_York");
+
+  useEffect(() => {
+    const loadTimezone = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("timezone")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.timezone) {
+        setUserTimezone(profile.timezone);
+      }
+    };
+
+    loadTimezone();
+  }, []);
+
+  // ------------------------------------------------------------
+  // LIVE CLOCK (timezone-aware)
+  // ------------------------------------------------------------
+  const [now, setNow] = useState("");
+
+  useEffect(() => {
+    const tick = () => {
+      const local = new Date();
+      const formatted = formatInTimeZone(
+        local,
+        userTimezone,
+        "yyyy-MM-dd HH:mm:ss"
+      );
+      setNow(formatted);
+    };
+
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, [userTimezone]);
+
+  // ------------------------------------------------------------
+  // AUDIO UNLOCK + LOAD SETTINGS
+  // ------------------------------------------------------------
   const [musicEnabledState, setMusicEnabledState] = useState(false);
   const [musicVolumeState, setMusicVolumeState] = useState(0.53);
 
   const formatMoney = (n: number) =>
     Math.round(n).toLocaleString("en-US");
 
-  // ------------------------------------------------------------
-  // AUDIO UNLOCK + LOAD SETTINGS
-  // ------------------------------------------------------------
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -106,7 +151,6 @@ export default function ETHUSDT_AiCard() {
     }
   }, []);
 
-  // SAVE SETTINGS
   useEffect(() => {
     localStorage.setItem("eth_dollar_risk", String(riskAmount));
     localStorage.setItem("eth_leverage", String(leverage));
@@ -117,14 +161,8 @@ export default function ETHUSDT_AiCard() {
     localStorage.setItem("ai_music_volume_eth", String(musicVolumeState));
   }, [musicEnabledState, musicVolumeState]);
 
-  // LIVE CLOCK
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
   // ------------------------------------------------------------
-  // SUPABASE: TRADE STATE
+  // SUPABASE: TRADE STATE (timezone-aware)
   // ------------------------------------------------------------
   useEffect(() => {
     let mounted = true;
@@ -145,7 +183,9 @@ export default function ETHUSDT_AiCard() {
         entry: data.entry ?? 0,
         stop: data.stop ?? 0,
         tp: data.tp ?? 0,
-        timestamp: data.timestamp,
+        timestamp: data.timestamp
+          ? formatInTimeZone(new Date(data.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
+          : undefined,
       });
     };
 
@@ -173,7 +213,9 @@ export default function ETHUSDT_AiCard() {
             entry: d.entry ?? 0,
             stop: d.stop ?? 0,
             tp: d.tp ?? 0,
-            timestamp: d.timestamp,
+            timestamp: d.timestamp
+              ? formatInTimeZone(new Date(d.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
+              : undefined,
           });
         }
       )
@@ -183,7 +225,7 @@ export default function ETHUSDT_AiCard() {
       mounted = false;
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [userTimezone]);
 
   // ------------------------------------------------------------
   // AI VOICE LOGIC
@@ -221,7 +263,7 @@ export default function ETHUSDT_AiCard() {
   }, [latestTradeState, enabled]);
 
   // ------------------------------------------------------------
-  // BAR STATE + MARGIN CALC
+  // BAR STATE + MARGIN CALC (timezone-aware)
   // ------------------------------------------------------------
   useEffect(() => {
     let mounted = true;
@@ -238,7 +280,9 @@ export default function ETHUSDT_AiCard() {
       setBarState({
         high: Number(data.high) || 0,
         low: Number(data.low) || 0,
-        timestamp: data.timestamp,
+        timestamp: data.timestamp
+          ? formatInTimeZone(new Date(data.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
+          : undefined,
       });
     };
 
@@ -262,7 +306,9 @@ export default function ETHUSDT_AiCard() {
           setBarState({
             high: Number(bar.high) || 0,
             low: Number(bar.low) || 0,
-            timestamp: bar.timestamp,
+            timestamp: bar.timestamp
+              ? formatInTimeZone(new Date(bar.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
+              : undefined,
           });
         }
       )
@@ -272,7 +318,7 @@ export default function ETHUSDT_AiCard() {
       mounted = false;
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [userTimezone]);
 
   // ------------------------------------------------------------
   // MARGIN CALCULATION
@@ -337,11 +383,12 @@ export default function ETHUSDT_AiCard() {
   // ------------------------------------------------------------
   return (
     <GTCard className="flex h-full flex-col gap-4">
+
       {/* DATE + TIME */}
       <div className="grid grid-cols-2 gap-2 text-center">
         <div className="flex flex-col">
           <span className="text-[20px] font-semibold tracking-wide text-slate-400">
-            {now.toLocaleDateString("en-US", {
+            {new Date(now).toLocaleDateString("en-US", {
               weekday: "short",
               month: "short",
               day: "numeric",
@@ -350,7 +397,7 @@ export default function ETHUSDT_AiCard() {
         </div>
         <div className="flex flex-col">
           <span className="text-[20px] font-semibold tracking-wide text-slate-400">
-            {now.toLocaleTimeString("en-US", {
+            {new Date(now).toLocaleTimeString("en-US", {
               hour: "numeric",
               minute: "2-digit",
             })}

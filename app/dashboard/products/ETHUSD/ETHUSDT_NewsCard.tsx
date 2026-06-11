@@ -1,4 +1,4 @@
-//  app\dashboard\products\ETHUSD\ETHUSDT_NewsCard.tsx
+// app\dashboard\products\ETHUSD\ETHUSDT_NewsCard.tsx
 
 
 "use client";
@@ -6,7 +6,11 @@
 import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
 import { getRandomMessageETH } from "app/dashboard/products/TOOLS/Ai_Text";
-import { setMusicEnabled, setMusicVolume } from "app/dashboard/products/TOOLS/Ai_AudioManager";
+import {
+  setMusicEnabled,
+  setMusicVolume,
+  initBackgroundMusic,
+} from "app/dashboard/products/TOOLS/Ai_AudioManager";
 
 // ------------------------------------------------------------
 // MIXER FADER WITH HYBRID GLOW + POWER BUTTON
@@ -126,12 +130,12 @@ export default function ETHUSDT_NewsCard() {
   // GRADIENT COLOR MATCHING FOR % TEXT
   // ------------------------------------------------------------
   const gradientColor = (() => {
-    const t = volatility / 100; // 0 → 1
+    const t = volatility / 100;
 
     const stops = [
-      { r: 0, g: 150, b: 255 },   // blue
-      { r: 120, g: 0, b: 255 },   // purple
-      { r: 55, g: 255, b: 180 }   // greenish-pink (your final arc color)
+      { r: 0, g: 150, b: 255 },
+      { r: 120, g: 0, b: 255 },
+      { r: 55, g: 255, b: 180 }
     ];
 
     let idx = t * 2;
@@ -170,29 +174,25 @@ export default function ETHUSDT_NewsCard() {
     return () => clearInterval(interval);
   }, []);
 
+  // Rotate ETH AI message every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAiMessage((current) => {
+        let next = getRandomMessageETH();
+        let attempts = 0;
+        while (next === current && attempts < 5) {
+          next = getRandomMessageETH();
+          attempts += 1;
+        }
+        return next;
+      });
+    }, 300000);
 
-// Rotate ETH AI message every 10 seconds
-useEffect(() => {
-  const interval = setInterval(() => {
-    setAiMessage((current) => {
-      let next = getRandomMessageETH();
-      let attempts = 0;
-      while (next === current && attempts < 5) {
-        next = getRandomMessageETH();
-        attempts += 1;
-      }
-      return next;
-    });
-  }, 300000);
-
-  return () => clearInterval(interval);
-}, []);
-
-
-
+    return () => clearInterval(interval);
+  }, []);
 
   // ------------------------------------------------------------
-  // LOAD MUSIC SETTINGS
+  // LOAD MUSIC SETTINGS (NO AUTOPLAY)
   // ------------------------------------------------------------
   useEffect(() => {
     const savedVol = localStorage.getItem("ai_music_volume_eth");
@@ -203,22 +203,33 @@ useEffect(() => {
     }
 
     const savedEnabled = localStorage.getItem("ai_music_enabled_eth");
+
+    // Restore toggle visually ONLY — do NOT start engine
     if (savedEnabled === "true") {
       setMusicEnabledState(true);
-      setMusicEnabled(true);
     }
   }, []);
 
   const toggleMusic = () => {
     const next = !musicEnabledState;
     setMusicEnabledState(next);
-    setMusicEnabled(next);
+
+    if (next) {
+      // User explicitly turned ON → now start engine
+      initBackgroundMusic();
+      setMusicEnabled(true);
+    } else {
+      setMusicEnabled(false);
+    }
+
+    localStorage.setItem("ai_music_enabled_eth", String(next));
   };
 
   const handleMusicVolume = (v: number) => {
     const vol = v / 100;
     setMusicVolumeState(vol);
     setMusicVolume(vol);
+    localStorage.setItem("ai_music_volume_eth", String(vol));
   };
 
   // ------------------------------------------------------------
@@ -241,7 +252,7 @@ useEffect(() => {
           </span>
         </div>
 
-        {/* 🔵 DONUT v1 — VOLATILITY HEAT MAP (SMOOTH LIQUID MOTION) */}
+        {/* 🔵 DONUT v1 — VOLATILITY HEAT MAP */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center flex items-center justify-center">
           <div className="relative flex items-center justify-center">
 
@@ -262,7 +273,7 @@ useEffect(() => {
               }}
             />
 
-            {/* Donut ring — gradient arc */}
+            {/* Donut ring */}
             <div
               className="relative w-32 h-32 rounded-full flex items-center justify-center transition-all duration-300"
               style={{
@@ -292,28 +303,27 @@ useEffect(() => {
           </div>
         </div>
 
-{/* AI OUTPUT — ETH version (typing + pulsing dots) */}
-<div className="rounded-xl border border-emerald-500/20 p-4 space-y-2 bg-[#050509] fade-in">
+        {/* AI OUTPUT */}
+        <div className="rounded-xl border border-emerald-500/20 p-4 space-y-2 bg-[#050509] fade-in">
 
-  {/* Pulsing dots */}
-  <div className="flex items-center space-x-2 opacity-80">
-    <div className="flex space-x-1">
-      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse delay-150"></span>
-      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse delay-300"></span>
-    </div>
-    <span className="text-xs text-slate-400 tracking-wide">
-      ETH Volatility Pulse…
-    </span>
-  </div>
+          {/* Pulsing dots */}
+          <div className="flex items-center space-x-2 opacity-80">
+            <div className="flex space-x-1">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse delay-150"></span>
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse delay-300"></span>
+            </div>
+            <span className="text-xs text-slate-400 tracking-wide">
+              ETH Volatility Pulse…
+            </span>
+          </div>
 
-  {/* Typing effect text */}
-<p className="text-sm leading-relaxed text-slate-200 min-h-[40px]">
-  {displayed}
-</p>
+          {/* Typing effect text */}
+          <p className="text-sm leading-relaxed text-slate-200 min-h-[40px]">
+            {displayed}
+          </p>
 
-
-</div>
+        </div>
 
         {/* MUSIC CONTROL */}
         <div className="relative rounded-xl border border-emerald-500/20 p-4 pb-10 space-y-4">

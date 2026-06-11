@@ -3,20 +3,20 @@
 import { useState } from "react";
 import Link from "next/link";
 
-import { AdminRevenuePlanner } from "@/app/sandbox/admin-tools/GoalPlannerAdminCard/AdminRevenuePlanner";
-import { BabyBotProjection } from "@/app/sandbox/admin-tools/baby-bot/BabyBotProjection";
-import { AdminIncomePlannerGold } from "@/app/sandbox/admin-tools/UserPlannerAdminCard/AdminIncomePlannerGold";
-import BiWeeklyGrowthChart from "@/app/sandbox/admin-tools/barchart/barchart";
-import EquityCurveChart from "@/app/sandbox/admin-tools/equity-curve/EquityCurveChart";
-import YTMarketingTool from "@/app/sandbox/admin-tools/YTMarketing/YTMarketingTool";
-import LoanTool from "@/app/sandbox/admin-tools/Loan/LoanTool";
+import { AdminRevenuePlanner } from "@/app/admin/GoalPlannerAdminCard/AdminRevenuePlanner";
+import { BabyBotProjection } from "@/app/admin/baby-bot/BabyBotProjection";
+import { AdminIncomePlannerGold } from "@/app/admin/UserPlannerAdminCard/AdminIncomePlannerGold";
+import EquityCurveChart from "@/app/admin/equity-curve/EquityCurveChart";
+import YTMarketingTool from "@/app/admin/YTMarketing/YTMarketingTool";
+import LoanTool from "@/app/admin/Loan/LoanTool";
+import PreOrderAdminPanel from "./PreOrderAdminPanel";
+import { BeakerIcon } from "@heroicons/react/24/outline";
+
 
 import {
   Squares2X2Icon,
   HomeIcon
 } from "@heroicons/react/24/outline";
-
-console.log("SUPABASE URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
 
 function CollapsibleSection({
   title,
@@ -29,7 +29,6 @@ function CollapsibleSection({
 
   return (
     <section className="space-y-3">
-
       <button
         onClick={() => setOpen(!open)}
         className="
@@ -50,12 +49,7 @@ function CollapsibleSection({
         </span>
       </button>
 
-      {open && (
-        <div className="pt-2">
-          {children}
-        </div>
-      )}
-
+      {open && <div className="pt-2">{children}</div>}
     </section>
   );
 }
@@ -64,7 +58,7 @@ export default function AdminToolsPage() {
   return (
     <main className="min-h-screen bg-[#050509] text-white p-6">
 
-      {/* ⭐ FLOATING RIGHT‑SIDE NAV BUTTONS */}
+      {/* Floating Nav */}
       <div className="
         fixed
         right-6
@@ -75,8 +69,6 @@ export default function AdminToolsPage() {
         flex-col
         gap-4
       ">
-
-        {/* Dashboard */}
         <Link
           href="/dashboard"
           title="Dashboard"
@@ -95,7 +87,6 @@ export default function AdminToolsPage() {
           <Squares2X2Icon className="h-6 w-6" />
         </Link>
 
-        {/* Public Home */}
         <Link
           href="/"
           title="Public Home"
@@ -113,10 +104,34 @@ export default function AdminToolsPage() {
         >
           <HomeIcon className="h-6 w-6" />
         </Link>
+<Link
+  href="/admin/demo"
+  title="Demo Cockpit"
+  className="
+    w-12 h-12
+    flex items-center justify-center
+    rounded-full
+    bg-[rgb(3,3,3)]
+    text-[rgb(225,254,234)]
+    transition duration-150
+    hover:bg-[rgb(5,100,80)]
+    hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
+    hover:-translate-y-[2px]
+  "
+>
+  <BeakerIcon className="h-6 w-6" />
+</Link>
+
+
+
+
+
+
+
 
       </div>
 
-      {/* MAIN CONTENT */}
+      {/* Main Content */}
       <div className="mx-auto max-w-5xl space-y-14">
 
         <CollapsibleSection title="NVDA Equity Curve Chart">
@@ -141,6 +156,10 @@ export default function AdminToolsPage() {
 
         <CollapsibleSection title="GoTrade ~ Forecast Tool">
           <LoanTool />
+        </CollapsibleSection>
+
+        <CollapsibleSection title="Pre‑Order Admin View">
+          <PreOrderAdminPanel />
         </CollapsibleSection>
 
       </div>

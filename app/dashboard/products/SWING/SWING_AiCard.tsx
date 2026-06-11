@@ -1,5 +1,3 @@
-// app\dashboard\products\EURUSD\EURUSD_AiCard.tsx
- 
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -43,15 +41,15 @@ const isSameTrade = (a: Trade | null, b: Trade) =>
   a.tp === b.tp;
 
 // ------------------------------------------------------------
-// SUPABASE
+// SUPABASE — SWING TABLES + ROW IDs
 // ------------------------------------------------------------
-const EURUSD_TRADE_ROW_ID = "5726f12d-46d7-4e03-8131-a1febfd7ae42";
-const EURUSD_BAR_ROW_ID = "87b8c55f-52c7-4824-9fc7-98febbbdb02d";
+const SWING_TRADE_ROW_ID = "REPLACE-WITH-YOUR-UUID";
+const SWING_BAR_ROW_ID = "REPLACE-WITH-YOUR-UUID";
 
 // ------------------------------------------------------------
 // COMPONENT
 // ------------------------------------------------------------
-export default function EURUSD_AiCard() {
+export default function SWING_AiCard() {
   const [enabled, setEnabled] = useState(true);
 
   const [riskAmount, setRiskAmount] = useState(50);
@@ -71,7 +69,7 @@ export default function EURUSD_AiCard() {
   const [flashColor, setFlashColor] = useState("");
   const prevMargin = useRef(0);
 
-  const [status, setStatus] = useState("Listening for breakouts…");
+  const [status, setStatus] = useState("Monitoring swing structure…");
 
   // ------------------------------------------------------------
   // USER TIMEZONE
@@ -132,11 +130,11 @@ export default function EURUSD_AiCard() {
 
     initAudioUnlock();
 
-    const savedRisk = localStorage.getItem("forex_dollar_risk");
-    const savedLeverage = localStorage.getItem("forex_leverage");
+    const savedRisk = localStorage.getItem("swing_dollar_risk");
+    const savedLeverage = localStorage.getItem("swing_leverage");
 
-    const savedMusicEnabled = localStorage.getItem("ai_music_enabled");
-    const savedMusicVolume = localStorage.getItem("ai_music_volume");
+    const savedMusicEnabled = localStorage.getItem("swing_music_enabled");
+    const savedMusicVolume = localStorage.getItem("swing_music_volume");
 
     if (savedRisk) setRiskAmount(Number(savedRisk));
     if (savedLeverage) setLeverage(Number(savedLeverage));
@@ -157,13 +155,13 @@ export default function EURUSD_AiCard() {
 
   // SAVE SETTINGS
   useEffect(() => {
-    localStorage.setItem("forex_dollar_risk", String(riskAmount));
-    localStorage.setItem("forex_leverage", String(leverage));
+    localStorage.setItem("swing_dollar_risk", String(riskAmount));
+    localStorage.setItem("swing_leverage", String(leverage));
   }, [riskAmount, leverage]);
 
   useEffect(() => {
-    localStorage.setItem("ai_music_enabled", String(musicEnabledState));
-    localStorage.setItem("ai_music_volume", String(musicVolumeState));
+    localStorage.setItem("swing_music_enabled", String(musicEnabledState));
+    localStorage.setItem("swing_music_volume", String(musicVolumeState));
   }, [musicEnabledState, musicVolumeState]);
 
   // ------------------------------------------------------------
@@ -174,9 +172,9 @@ export default function EURUSD_AiCard() {
 
     const fetchInitial = async () => {
       const { data } = await supabase
-        .from("EURUSD_trades_state")
+        .from("SWING_trades_state")
         .select("type, ticker, side, entry, stop, tp, timestamp")
-        .eq("id", EURUSD_TRADE_ROW_ID)
+        .eq("id", SWING_TRADE_ROW_ID)
         .single();
 
       if (!mounted || !data) return;
@@ -199,14 +197,14 @@ export default function EURUSD_AiCard() {
     fetchInitial();
 
     const channel = supabase
-      .channel("eurusd-ai-trade-realtime")
+      .channel("swing-ai-trade-realtime")
       .on(
         "postgres_changes",
         {
           event: "UPDATE",
           schema: "public",
-          table: "EURUSD_trades_state",
-          filter: `id=eq.${EURUSD_TRADE_ROW_ID}`,
+          table: "SWING_trades_state",
+          filter: `id=eq.${SWING_TRADE_ROW_ID}`,
         },
         (payload: { new: Record<string, any> }) => {
           if (!mounted || !payload.new) return;
@@ -279,9 +277,9 @@ export default function EURUSD_AiCard() {
 
     const fetchBarState = async () => {
       const { data, error } = await supabase
-        .from("EURUSD_bar_state")
+        .from("SWING_bar_state")
         .select("high, low, timestamp")
-        .eq("id", EURUSD_BAR_ROW_ID)
+        .eq("id", SWING_BAR_ROW_ID)
         .single();
 
       if (!mounted || error || !data) return;
@@ -298,14 +296,14 @@ export default function EURUSD_AiCard() {
     fetchBarState();
 
     const channel = supabase
-      .channel("eurusd-bar-realtime")
+      .channel("swing-bar-realtime")
       .on(
         "postgres_changes",
         {
           event: "UPDATE",
           schema: "public",
-          table: "EURUSD_bar_state",
-          filter: `id=eq.${EURUSD_BAR_ROW_ID}`,
+          table: "SWING_bar_state",
+          filter: `id=eq.${SWING_BAR_ROW_ID}`,
         },
         (payload: { new: Record<string, any> }) => {
           if (!mounted || !payload.new) return;
@@ -330,7 +328,7 @@ export default function EURUSD_AiCard() {
   }, [userTimezone]);
 
   // ------------------------------------------------------------
-  // MARGIN CALCULATION
+  // MARGIN CALCULATION (same formula as Forex)
   // ------------------------------------------------------------
   const isTradeOngoing = (trade: Trade | null) =>
     trade?.type === "entry_long" || trade?.type === "entry_short";
@@ -346,7 +344,7 @@ export default function EURUSD_AiCard() {
     const margin = leverage > 0 ? (sz * entry) / leverage : 0;
 
     setRequiredMargin(margin);
-    localStorage.setItem("forex_required_margin", String(margin));
+    localStorage.setItem("swing_required_margin", String(margin));
   }, [barState, riskAmount, leverage, latestTradeState]);
 
   // ------------------------------------------------------------
@@ -395,6 +393,7 @@ export default function EURUSD_AiCard() {
   // ------------------------------------------------------------
   return (
     <GTCard className="flex h-full flex-col gap-4">
+
       {/* DATE + TIME */}
       <div className="grid grid-cols-2 gap-2 text-center">
         <div className="flex flex-col">
@@ -432,7 +431,7 @@ export default function EURUSD_AiCard() {
             const next = !enabled;
             setEnabled(next);
             setStatus(
-              next ? "Listening for breakouts…" : "Assistant disabled"
+              next ? "Monitoring swing structure…" : "Assistant disabled"
             );
           }}
           className={`

@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
 
-// ✅ Unified Supabase client (no duplicates)
+// Unified Supabase client
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 const supabase = getBrowserSupabase();
 
@@ -140,7 +140,7 @@ export default function ETHUSDT_TradeOutputCard() {
     });
 
   // ------------------------------------------------------------
-  // COPY BUTTON
+  // COPY BUTTON (raw number copy)
   // ------------------------------------------------------------
   const CopyBtn = ({ val }: { val: number }) => {
     const [copied, setCopied] = useState(false);
@@ -292,7 +292,6 @@ export default function ETHUSDT_TradeOutputCard() {
       };
     }
 
-    // ETH size = (margin * leverage) / entry
     const units = (marginFromAi * leverage) / trade.entry;
     const positionValue = units * trade.entry;
 
@@ -526,4 +525,3 @@ export default function ETHUSDT_TradeOutputCard() {
     </GTCard>
   );
 }
-
