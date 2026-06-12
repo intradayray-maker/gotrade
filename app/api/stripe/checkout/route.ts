@@ -8,7 +8,7 @@ export const runtime = "nodejs"
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export async function POST(req: NextRequest) {
-  console.log("🔥 USING ORIGINAL CHECKOUT ROUTE")
+  console.log("🔥 USING PATCHED CHECKOUT ROUTE")
 
   const supabase = await createRouteHandlerClient()
 
@@ -60,6 +60,25 @@ export async function POST(req: NextRequest) {
       .eq("id", user.id)
   }
 
+  // ------------------------------------------------------------
+  // ⭐ DETECT PRO PLAN (RELAX) AND STORE user_id IMMEDIATELY
+  // ------------------------------------------------------------
+  const RELAX_PRICE_IDS = [
+    process.env.NEXT_PUBLIC_PRICE_PRO,   // ⭐ your real RELAX/PRO plan
+  ].filter(Boolean)
+
+  const isRelaxPlan = RELAX_PRICE_IDS.includes(priceId)
+
+  if (isRelaxPlan) {
+    console.log("🧘 PRO/RELAX PLAN DETECTED — storing user_id:", user.id)
+
+    // ⭐ FIX: Bypass TS because this client uses a different Database type
+    await (supabase as any)
+      .from("SWING_trades_state")
+      .update({ user_id: user.id })
+      .eq("id", "81587010-c8c1-4857-a1e8-f476aa04c439")
+  }
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -94,4 +113,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
-//test
