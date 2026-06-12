@@ -5,7 +5,6 @@ import { createRouteHandlerClient } from "@/utils/supabase/route"
 
 export const runtime = "nodejs"
 
-// ❗ FIXED: Removed apiVersion to avoid TS mismatch
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export async function POST(req: NextRequest) {
@@ -59,6 +58,26 @@ export async function POST(req: NextRequest) {
       .from("profiles")
       .update({ stripe_customer_id: customerId })
       .eq("id", user.id)
+  }
+
+  // ------------------------------------------------------------
+  // ⭐ NEW: Detect RELAX plan and store user_id immediately
+  // ------------------------------------------------------------
+  const RELAX_PRICE_IDS = [
+    process.env.NEXT_PUBLIC_RELAX_PRICE_ID,
+    "price_relax_123",
+  ].filter(Boolean)
+
+  const isRelaxPlan = RELAX_PRICE_IDS.includes(priceId)
+
+  if (isRelaxPlan) {
+    console.log("🧘 RELAX PLAN DETECTED — storing user_id:", user.id)
+
+    // ⭐ FIX: Bypass TS because this client uses a different Database type
+    await (supabase as any)
+      .from("SWING_trades_state")
+      .update({ user_id: user.id })
+      .eq("id", "81587010-c8c1-4857-a1e8-f476aa04c439")
   }
 
   try {

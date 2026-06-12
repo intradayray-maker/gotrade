@@ -36,6 +36,7 @@ export type Database = {
         }
         Relationships: []
       }
+
       master_signals: {
         Row: {
           id: string
@@ -72,6 +73,7 @@ export type Database = {
         }
         Relationships: []
       }
+
       notifications: {
         Row: {
           created_at: string | null
@@ -102,6 +104,7 @@ export type Database = {
         }
         Relationships: []
       }
+
       profiles: {
         Row: {
           id: string
@@ -184,6 +187,7 @@ export type Database = {
           }
         ]
       }
+
       stripe_events: {
         Row: {
           created_at: string | null
@@ -199,6 +203,7 @@ export type Database = {
         }
         Relationships: []
       }
+
       subscriptions: {
         Row: {
           created_at: string | null
@@ -235,7 +240,46 @@ export type Database = {
         }
         Relationships: []
       }
+
+      // ⭐⭐⭐ ADDED: SWING_trades_state ⭐⭐⭐
+      SWING_trades_state: {
+        Row: {
+          id: string
+          side: string | null
+          ticker: string | null
+          entry: number | null
+          stop: number | null
+          tp: number | null
+          timestamp: string | null
+          type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          side?: string | null
+          ticker?: string | null
+          entry?: number | null
+          stop?: number | null
+          tp?: number | null
+          timestamp?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          side?: string | null
+          ticker?: string | null
+          entry?: number | null
+          stop?: number | null
+          tp?: number | null
+          timestamp?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
+
     Views: {
       [_ in never]: never
     }
