@@ -25,7 +25,7 @@ Launching soon — not quite live yet.
 <p className="text-[11px] text-slate-500">
 Current status:
 <span className="ml-1 text-[11px] font-semibold text-emerald-400">
-Private beta · Signals live · Public launch pending investor timing
+Private beta · Signals live · Public launch pending...
 </span>
 </p>
 
