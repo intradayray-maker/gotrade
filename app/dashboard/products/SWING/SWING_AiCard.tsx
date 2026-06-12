@@ -43,8 +43,8 @@ const isSameTrade = (a: Trade | null, b: Trade) =>
 // ------------------------------------------------------------
 // SUPABASE — SWING TABLES + ROW IDs
 // ------------------------------------------------------------
-const SWING_TRADE_ROW_ID = "REPLACE-WITH-YOUR-UUID";
-const SWING_BAR_ROW_ID = "REPLACE-WITH-YOUR-UUID";
+const SWING_TRADE_ROW_ID = "81587010-c8c1-4857-a1e8-f476aa04c439";
+const SWING_BAR_ROW_ID = "f5d39010-88a3-4b9c-9e3d-eb3bc2c2ce71";
 
 // ------------------------------------------------------------
 // COMPONENT

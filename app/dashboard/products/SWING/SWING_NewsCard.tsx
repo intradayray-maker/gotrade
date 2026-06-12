@@ -126,7 +126,7 @@ function DonutCountdown({ percent }: { percent: number }) {
 // ------------------------------------------------------------
 // CONSTANTS
 // ------------------------------------------------------------
-const SWING_NEWS_ROW_ID = "REPLACE-WITH-YOUR-UUID";
+const SWING_NEWS_ROW_ID = "9d5488a8-fefb-4df3-96f7-6347cf1ade87";
 
 // ------------------------------------------------------------
 // COMPONENT

@@ -14,7 +14,7 @@ const supabase = getBrowserSupabase();
 // ------------------------------------------------------------
 // CONSTANTS — SWING VERSION
 // ------------------------------------------------------------
-const SWING_TRADE_ROW_ID = "REPLACE-WITH-YOUR-UUID";
+const SWING_TRADE_ROW_ID = "81587010-c8c1-4857-a1e8-f476aa04c439";
 
 // ------------------------------------------------------------
 // TYPES
