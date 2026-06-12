@@ -41,8 +41,34 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  const trimmedCoupon = coupon?.trim() ?? ""
+  let promotionCodeId: string | undefined
+
+  if (trimmedCoupon) {
+    // If the frontend passes the raw promo code string (e.g. PRELAUNCH10), resolve it to a Stripe promotion code ID.
+    if (trimmedCoupon.startsWith("promo_") || trimmedCoupon.startsWith("pc_")) {
+      promotionCodeId = trimmedCoupon
+    } else {
+      const promoList = await stripe.promotionCodes.list({
+        code: trimmedCoupon,
+        active: true,
+        limit: 1
+      })
+      promotionCodeId = promoList.data?.[0]?.id
+    }
+
+    if (!promotionCodeId) {
+      console.error("❌ Invalid promotion code:", trimmedCoupon)
+      return NextResponse.json(
+        { error: "Invalid promotion code" },
+        { status: 400 }
+      )
+    }
+  }
+
   console.log("➡️ Price ID:", priceId)
   console.log("➡️ Coupon:", coupon)
+  console.log("➡️ Promotion Code ID:", promotionCodeId)
 
   const origin =
     req.headers.get("origin") ||
@@ -92,9 +118,7 @@ export async function POST(req: NextRequest) {
       ],
 
       // ⭐ TS-SAFE PROMOTION CODE SUPPORT
-      ...(coupon && coupon.trim() !== ""
-        ? ({ promotion_code: coupon.trim() } as any)
-        : {}),
+      ...(promotionCodeId ? { promotion_code: promotionCodeId } : {}),
 
       metadata: {
         user_id: user.id
