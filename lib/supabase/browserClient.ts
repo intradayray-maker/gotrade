@@ -15,7 +15,13 @@ export function getBrowserSupabase() {
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: true,
-        }
+          storageKey: "sb-access-token",
+        },
+        global: {
+          headers: {
+            "x-client-info": "gotrade-browser",
+          },
+        },
       }
     );
   }
