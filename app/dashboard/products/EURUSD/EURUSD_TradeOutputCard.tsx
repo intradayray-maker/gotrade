@@ -216,20 +216,22 @@ export default function EURUSD_TradeOutputCard() {
     const fetchInitial = async () => {
       const { data, error } = await supabase
         .from("EURUSD_trades_state")
-        .select("*, ticker, side, entry, stop, tp, timestamp, type")
+        .select("*")
         .eq("id", EURUSD_TRADE_ROW_ID)
         .single();
 
       if (!mounted || error || !data) return;
 
+      const d = data as any;
+
       const t: Trade = {
-        ticker: data.ticker,
-        side: data.side,
-        entry: data.entry ?? 0,
-        stop: data.stop ?? 0,
-        tp: data.tp ?? 0,
-        timestamp: data.timestamp,
-        type: data.type,
+        ticker: d.ticker,
+        side: d.side,
+        entry: d.entry ?? 0,
+        stop: d.stop ?? 0,
+        tp: d.tp ?? 0,
+        timestamp: d.timestamp,
+        type: d.type,
       };
 
       if (isSameTrade(lastTradeRef.current, t)) return;
@@ -250,10 +252,10 @@ export default function EURUSD_TradeOutputCard() {
           table: "EURUSD_trades_state",
           filter: `id=eq.${EURUSD_TRADE_ROW_ID}`,
         },
-        (payload: { new: Record<string, any> }) => {
+        (payload: { new: any }) => {
           if (!mounted || !payload.new) return;
 
-          const d = payload.new;
+          const d = payload.new as any;
 
           const t: Trade = {
             ticker: d.ticker,

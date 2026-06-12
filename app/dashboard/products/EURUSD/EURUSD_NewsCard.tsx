@@ -150,12 +150,14 @@ export default function EURUSD_NewsCard() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("*, timezone")
+        .select("*")
         .eq("id", user.id)
         .single();
 
-      if (profile?.timezone) {
-        setUserTimezone(profile.timezone);
+      const p = profile as any;
+
+      if (p?.timezone) {
+        setUserTimezone(p.timezone);
       }
     };
 
@@ -219,18 +221,18 @@ export default function EURUSD_NewsCard() {
     const fetchInitial = async () => {
       const { data, error } = await supabase
         .from("EURUSD_news_state")
-        .select(
-          "next_news_time, news_today, news_window_active, news_countdown"
-        )
+        .select("*")
         .eq("id", EURUSD_NEWS_ROW_ID)
         .single();
 
       if (!mounted || error || !data) return;
 
-      setNextNewsTime(convertTime(data.next_news_time));
-      setNewsToday(Boolean(data.news_today));
-      setWindowActive(Boolean(data.news_window_active));
-      setCountdown(Number(data.news_countdown ?? 0));
+      const d = data as any;
+
+      setNextNewsTime(convertTime(d.next_news_time));
+      setNewsToday(Boolean(d.news_today));
+      setWindowActive(Boolean(d.news_window_active));
+      setCountdown(Number(d.news_countdown ?? 0));
     };
 
     fetchInitial();
@@ -245,10 +247,10 @@ export default function EURUSD_NewsCard() {
           table: "EURUSD_news_state",
           filter: `id=eq.${EURUSD_NEWS_ROW_ID}`,
         },
-        (payload: { new: Record<string, any> }) => {
+        (payload: { new: any }) => {
           if (!mounted || !payload.new) return;
 
-          const d = payload.new;
+          const d = payload.new as any;
 
           setNextNewsTime(convertTime(d.next_news_time));
           setNewsToday(Boolean(d.news_today));

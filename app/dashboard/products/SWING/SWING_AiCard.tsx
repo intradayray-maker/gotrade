@@ -158,18 +158,20 @@ export default function SWING_AiCard() {
         .from("SWING_trades_state")
         .select("*")
         .eq("id", SWING_TRADE_ROW_ID)
-        .single<SwingTradeRow>();
+        .single();
 
       if (!mounted || !data) return;
 
+      const d = data as any;
+
       const t: Trade = {
-        type: data.type ?? undefined,
-        ticker: data.ticker ?? "",
-        side: data.side ?? "",
-        entry: data.entry ?? 0,
-        stop: data.stop ?? 0,
-        tp: data.tp ?? 0,
-        timestamp: data.timestamp ?? undefined,
+        type: d.type ?? undefined,
+        ticker: d.ticker ?? "",
+        side: d.side ?? "",
+        entry: d.entry ?? 0,
+        stop: d.stop ?? 0,
+        tp: d.tp ?? 0,
+        timestamp: d.timestamp ?? undefined,
       };
 
       setLatestTradeState(t);
@@ -187,10 +189,10 @@ export default function SWING_AiCard() {
           table: "SWING_trades_state",
           filter: `id=eq.${SWING_TRADE_ROW_ID}`,
         },
-        (payload: { new: SwingTradeRow }) => {
+        (payload: { new: any }) => {
           if (!mounted || !payload.new) return;
 
-          const d = payload.new;
+          const d = payload.new as any;
 
           const t: Trade = {
             type: d.type ?? undefined,
@@ -224,14 +226,16 @@ export default function SWING_AiCard() {
         .from("SWING_bar_state")
         .select("*")
         .eq("id", SWING_BAR_ROW_ID)
-        .single<SwingBarRow>();
+        .single();
 
       if (!mounted || error || !data) return;
 
+      const bar = data as any;
+
       setBarState({
-        high: Number(data.high) || 0,
-        low: Number(data.low) || 0,
-        timestamp: data.timestamp ?? undefined,
+        high: Number(bar.high) || 0,
+        low: Number(bar.low) || 0,
+        timestamp: bar.timestamp ?? undefined,
       });
     };
 
@@ -247,10 +251,10 @@ export default function SWING_AiCard() {
           table: "SWING_bar_state",
           filter: `id=eq.${SWING_BAR_ROW_ID}`,
         },
-        (payload: { new: SwingBarRow }) => {
+        (payload: { new: any }) => {
           if (!mounted || !payload.new) return;
 
-          const bar = payload.new;
+          const bar = payload.new as any;
 
           setBarState({
             high: Number(bar.high) || 0,

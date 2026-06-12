@@ -99,12 +99,14 @@ export default function ETHUSDT_AiCard() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("timezone")
+        .select("*")
         .eq("id", user.id)
-        .single<{ timezone: string | null }>();
+        .single();
 
-      if (profile?.timezone) {
-        setUserTimezone(profile.timezone);
+      const p = profile as any;
+
+      if (p?.timezone) {
+        setUserTimezone(p.timezone);
       }
     };
 
@@ -190,20 +192,22 @@ export default function ETHUSDT_AiCard() {
         .from("ETHUSDT_trades_state")
         .select("*")
         .eq("id", ETH_TRADE_ROW_ID)
-        .single<EthTradeRow>();
+        .single();
 
       if (!mounted || !data) return;
 
+      const d = data as any;
+
       setLatestTradeState({
-        type: data.type ?? undefined,
-        ticker: data.ticker ?? "",
-        side: data.side ?? "",
-        entry: data.entry ?? 0,
-        stop: data.stop ?? 0,
-        tp: data.tp ?? 0,
-        timestamp: data.timestamp
+        type: d.type ?? undefined,
+        ticker: d.ticker ?? "",
+        side: d.side ?? "",
+        entry: d.entry ?? 0,
+        stop: d.stop ?? 0,
+        tp: d.tp ?? 0,
+        timestamp: d.timestamp
           ? formatInTimeZone(
-              new Date(data.timestamp),
+              new Date(d.timestamp),
               userTimezone,
               "yyyy-MM-dd HH:mm:ss"
             )
@@ -223,10 +227,10 @@ export default function ETHUSDT_AiCard() {
           table: "ETHUSDT_trades_state",
           filter: `id=eq.${ETH_TRADE_ROW_ID}`,
         },
-        (payload: { new: EthTradeRow }) => {
+        (payload: { new: any }) => {
           if (!mounted || !payload.new) return;
 
-          const d = payload.new;
+          const d = payload.new as any;
 
           setLatestTradeState({
             type: d.type ?? undefined,
@@ -299,16 +303,18 @@ export default function ETHUSDT_AiCard() {
         .from("ETHUSDT_bar_state")
         .select("*")
         .eq("id", ETH_BAR_ROW_ID)
-        .single<EthBarRow>();
+        .single();
 
       if (!mounted || error || !data) return;
 
+      const bar = data as any;
+
       setBarState({
-        high: Number(data.high ?? 0),
-        low: Number(data.low ?? 0),
-        timestamp: data.timestamp
+        high: Number(bar.high ?? 0),
+        low: Number(bar.low ?? 0),
+        timestamp: bar.timestamp
           ? formatInTimeZone(
-              new Date(data.timestamp),
+              new Date(bar.timestamp),
               userTimezone,
               "yyyy-MM-dd HH:mm:ss"
             )
@@ -328,10 +334,10 @@ export default function ETHUSDT_AiCard() {
           table: "ETHUSDT_bar_state",
           filter: `id=eq.${ETH_BAR_ROW_ID}`,
         },
-        (payload: { new: EthBarRow }) => {
+        (payload: { new: any }) => {
           if (!mounted || !payload.new) return;
 
-          const bar = payload.new;
+          const bar = payload.new as any;
 
           setBarState({
             high: Number(bar.high ?? 0),

@@ -81,12 +81,14 @@ export default function ETHUSDT_AiCard() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("timezone")
+        .select("*")
         .eq("id", user.id)
-        .single<{ timezone: string | null }>();
+        .single();
 
-      if (profile?.timezone) {
-        setUserTimezone(profile.timezone);
+      const p = profile as any;
+
+      if (p?.timezone) {
+        setUserTimezone(p.timezone);
       }
     };
 

@@ -88,12 +88,14 @@ export default function EURUSD_AiCard() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("*, timezone")
+        .select("*")
         .eq("id", user.id)
         .single();
 
-      if (profile?.timezone) {
-        setUserTimezone(profile.timezone);
+      const p = profile as any;
+
+      if (p?.timezone) {
+        setUserTimezone(p.timezone);
       }
     };
 
@@ -175,21 +177,23 @@ export default function EURUSD_AiCard() {
     const fetchInitial = async () => {
       const { data } = await supabase
         .from("EURUSD_trades_state")
-        .select("*, type, ticker, side, entry, stop, tp, timestamp")
+        .select("*")
         .eq("id", EURUSD_TRADE_ROW_ID)
         .single();
 
       if (!mounted || !data) return;
 
+      const d = data as any;
+
       const t: Trade = {
-        type: data.type,
-        ticker: data.ticker,
-        side: data.side,
-        entry: data.entry ?? 0,
-        stop: data.stop ?? 0,
-        tp: data.tp ?? 0,
-        timestamp: data.timestamp
-          ? formatInTimeZone(new Date(data.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
+        type: d.type,
+        ticker: d.ticker,
+        side: d.side,
+        entry: d.entry ?? 0,
+        stop: d.stop ?? 0,
+        tp: d.tp ?? 0,
+        timestamp: d.timestamp
+          ? formatInTimeZone(new Date(d.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
           : undefined,
       };
 
@@ -208,10 +212,10 @@ export default function EURUSD_AiCard() {
           table: "EURUSD_trades_state",
           filter: `id=eq.${EURUSD_TRADE_ROW_ID}`,
         },
-        (payload: { new: Record<string, any> }) => {
+        (payload: { new: any }) => {
           if (!mounted || !payload.new) return;
 
-          const d = payload.new;
+          const d = payload.new as any;
 
           const t: Trade = {
             type: d.type,
@@ -280,17 +284,19 @@ export default function EURUSD_AiCard() {
     const fetchBarState = async () => {
       const { data, error } = await supabase
         .from("EURUSD_bar_state")
-        .select("*, high, low, timestamp")
+        .select("*")
         .eq("id", EURUSD_BAR_ROW_ID)
         .single();
 
       if (!mounted || error || !data) return;
 
+      const bar = data as any;
+
       setBarState({
-        high: Number(data.high) || 0,
-        low: Number(data.low) || 0,
-        timestamp: data.timestamp
-          ? formatInTimeZone(new Date(data.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
+        high: Number(bar.high) || 0,
+        low: Number(bar.low) || 0,
+        timestamp: bar.timestamp
+          ? formatInTimeZone(new Date(bar.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
           : undefined,
       });
     };
@@ -307,10 +313,10 @@ export default function EURUSD_AiCard() {
           table: "EURUSD_bar_state",
           filter: `id=eq.${EURUSD_BAR_ROW_ID}`,
         },
-        (payload: { new: Record<string, any> }) => {
+        (payload: { new: any }) => {
           if (!mounted || !payload.new) return;
 
-          const bar = payload.new;
+          const bar = payload.new as any;
 
           setBarState({
             high: Number(bar.high) || 0,
