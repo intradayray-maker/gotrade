@@ -32,14 +32,16 @@ export default function SettingsClient() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("*, timezone, email_notifications")
+        .select("*")
         .eq("id", user.id)
         .single();
 
-      if (profile) {
-        setTimezone(profile.timezone || "America/New_York");
+      const p = profile as any;
+
+      if (p) {
+        setTimezone(p.timezone || "America/New_York");
         setEmailNotifications(
-          profile.email_notifications ?? true
+          p.email_notifications ?? true
         );
       }
 
@@ -62,7 +64,7 @@ export default function SettingsClient() {
 
     if (!user) return;
 
-    await supabase
+    await (supabase as any)
       .from("profiles")
       .update({
         timezone,
