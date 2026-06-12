@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
 // ------------------------------------------------------------
-// SAFE RESEND CLIENT (prevents crashes)
+// SAFE RESEND CLIENT
 // ------------------------------------------------------------
 let resend: Resend | null = null;
 
@@ -171,19 +171,29 @@ export async function POST(req: Request) {
       }
 
       // ------------------------------------------------------------
-      // EMAIL ONLY FOR RELAX BOT
+      // EMAIL ONLY FOR RELAX BOT — using stored user_id
       // ------------------------------------------------------------
       const botUpper = String(botKey).toUpperCase();
       const isRelax = botUpper === "RELAX" || botUpper === "SWING";
 
       if (isRelax) {
-        const { data: users } = await supabase.auth.admin.listUsers();
-        const userEmail = users?.users?.[0]?.email;
+        const { data: relaxRow } = await supabase
+          .from(tables.tradeTable)
+          .select("user_id")
+          .eq("id", tables.tradeRow)
+          .single();
 
-        if (userEmail) {
-          await sendSimpleAlertEmail(userEmail);
+        if (relaxRow?.user_id) {
+          const { data: user } = await supabase.auth.admin.getUserById(relaxRow.user_id);
+          const userEmail = user?.user?.email;
+
+          if (userEmail) {
+            await sendSimpleAlertEmail(userEmail);
+          } else {
+            console.warn("RELAX user has no email");
+          }
         } else {
-          console.warn("NO USER EMAIL FOUND");
+          console.warn("RELAX trade row has no user_id");
         }
       }
 
