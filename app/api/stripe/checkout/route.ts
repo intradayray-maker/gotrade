@@ -5,79 +5,39 @@ import { createRouteHandlerClient } from "@/utils/supabase/route"
 
 export const runtime = "nodejs"
 
-// ❗ No apiVersion override — Stripe v12+ enforces its own version
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export async function POST(req: NextRequest) {
   console.log("🔥 CHECKOUT ROUTE HIT")
 
+  // ⭐ FIX: your helper must be awaited
   const supabase = await createRouteHandlerClient()
 
-  // -----------------------------
-  // AUTH CHECK
-  // -----------------------------
   const {
     data: { user }
   } = await supabase.auth.getUser()
 
   if (!user) {
     console.error("❌ No authenticated user")
-    return NextResponse.json(
-      { error: "Not authenticated" },
-      { status: 401 }
-    )
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
   }
 
-  // -----------------------------
-  // READ BODY
-  // -----------------------------
   const { priceId, coupon } = await req.json()
 
   if (!priceId) {
     console.error("❌ Missing priceId")
-    return NextResponse.json(
-      { error: "Missing priceId" },
-      { status: 400 }
-    )
-  }
-
-  const trimmedCoupon = coupon?.trim() ?? ""
-  let promotionCodeId: string | undefined
-
-  if (trimmedCoupon) {
-    // If the frontend passes the raw promo code string (e.g. PRELAUNCH10), resolve it to a Stripe promotion code ID.
-    if (trimmedCoupon.startsWith("promo_") || trimmedCoupon.startsWith("pc_")) {
-      promotionCodeId = trimmedCoupon
-    } else {
-      const promoList = await stripe.promotionCodes.list({
-        code: trimmedCoupon,
-        active: true,
-        limit: 1
-      })
-      promotionCodeId = promoList.data?.[0]?.id
-    }
-
-    if (!promotionCodeId) {
-      console.error("❌ Invalid promotion code:", trimmedCoupon)
-      return NextResponse.json(
-        { error: "Invalid promotion code" },
-        { status: 400 }
-      )
-    }
+    return NextResponse.json({ error: "Missing priceId" }, { status: 400 })
   }
 
   console.log("➡️ Price ID:", priceId)
   console.log("➡️ Coupon:", coupon)
-  console.log("➡️ Promotion Code ID:", promotionCodeId)
 
   const origin =
     req.headers.get("origin") ||
     process.env.NEXT_PUBLIC_SITE_URL ||
     "http://localhost:3000"
 
-  // -----------------------------
-  // GET OR CREATE STRIPE CUSTOMER
-  // -----------------------------
+  // ⭐ Get or create Stripe customer
   const { data: profile } = await supabase
     .from("profiles")
     .select("stripe_customer_id")
@@ -102,9 +62,27 @@ export async function POST(req: NextRequest) {
       .eq("id", user.id)
   }
 
-  // -----------------------------
-  // CREATE CHECKOUT SESSION
-  // -----------------------------
+  // ⭐ Resolve promotion code
+  let promotionCodeId: string | undefined = undefined
+
+  if (coupon && coupon.trim() !== "") {
+    const trimmed = coupon.trim()
+
+    if (trimmed.startsWith("promo_") || trimmed.startsWith("pc_")) {
+      promotionCodeId = trimmed
+    } else {
+      const promo = await stripe.promotionCodes.list({
+        code: trimmed,
+        active: true,
+        limit: 1
+      })
+
+      if (promo.data.length > 0) {
+        promotionCodeId = promo.data[0].id
+      }
+    }
+  }
+
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -117,18 +95,10 @@ export async function POST(req: NextRequest) {
         }
       ],
 
-      // ⭐ TS-SAFE PROMOTION CODE SUPPORT
-      ...(promotionCodeId ? { promotion_code: promotionCodeId } : {}),
+      ...(promotionCodeId ? ({ promotion_code: promotionCodeId } as any) : {}),
 
-      metadata: {
-        user_id: user.id
-      },
-
-      subscription_data: {
-        metadata: {
-          user_id: user.id
-        }
-      },
+      metadata: { user_id: user.id },
+      subscription_data: { metadata: { user_id: user.id } },
 
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/pricing?checkout=cancelled`
@@ -139,9 +109,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: session.url })
   } catch (err: any) {
     console.error("❌ Stripe Checkout Error:", err)
-    return NextResponse.json(
-      { error: err.message },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
