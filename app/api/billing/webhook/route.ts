@@ -11,7 +11,11 @@ async function storeEvent(eventId: string) {
   const supabase = await createRouteHandlerClient();
   const table = supabase.from("stripe_events" as never) as any;
 
-  const { data, error } = await table.select("*")id").eq("id", eventId).maybeSingle();
+  // ✅ FIXED: correct select syntax
+  const { data, error } = await table
+    .select("*")
+    .eq("id", eventId)
+    .maybeSingle();
 
   if (error) throw new Error(error.message);
   if (data) return false;
@@ -23,7 +27,12 @@ async function storeEvent(eventId: string) {
 }
 
 // Create a notification for the user
-async function createNotification(userId: string, title: string, message: string, type: string) {
+async function createNotification(
+  userId: string,
+  title: string,
+  message: string,
+  type: string
+) {
   const supabase = await createRouteHandlerClient();
   const { error } = await supabase.from("notifications").insert({
     user_id: userId,
@@ -41,8 +50,9 @@ async function findUserIdByCustomerId(customerId: string) {
   const supabase = await createRouteHandlerClient();
   const query = supabase.from("profiles") as any;
 
+  // ✅ FIXED: correct select syntax
   const { data, error } = await query
-    .select("*")id")
+    .select("*")
     .eq("stripe_customer_id", customerId)
     .maybeSingle();
 
@@ -66,24 +76,30 @@ export async function POST(request: Request) {
   const signature = request.headers.get("stripe-signature");
 
   if (!signature) {
-    return NextResponse.json({ error: "Missing stripe-signature header" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing stripe-signature header" },
+      { status: 400 }
+    );
   }
 
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   if (!webhookSecret) {
-    return NextResponse.json({ error: "Missing STRIPE_WEBHOOK_SECRET" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Missing STRIPE_WEBHOOK_SECRET" },
+      { status: 500 }
+    );
   }
 
   const payload = await request.text();
 
-  // Stripe v12+ — event type is no longer Stripe.Event
   let event: any;
 
   try {
     event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Invalid webhook signature";
+    const message =
+      error instanceof Error ? error.message : "Invalid webhook signature";
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
@@ -94,9 +110,11 @@ export async function POST(request: Request) {
   }
 
   // Handle invoice events
-  if (event.type === "invoice.paid" || event.type === "invoice.payment_failed") {
+  if (
+    event.type === "invoice.paid" ||
+    event.type === "invoice.payment_failed"
+  ) {
     const invoice = event.data.object as any;
-
 
     const customerId =
       typeof invoice.customer === "string"
