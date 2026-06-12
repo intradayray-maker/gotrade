@@ -83,7 +83,7 @@ export default function ETHUSDT_AiCard() {
         .from("profiles")
         .select("*, timezone")
         .eq("id", user.id)
-        .single();
+        .single<{ timezone: string | null }>();
 
       if (profile?.timezone) {
         setUserTimezone(profile.timezone);
