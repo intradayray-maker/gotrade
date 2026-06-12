@@ -2,6 +2,32 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
+
+// ------------------------------------------------------------
+// RESEND CLIENT
+// ------------------------------------------------------------
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// ------------------------------------------------------------
+// SIMPLE EMAIL ALERT
+// ------------------------------------------------------------
+async function sendSimpleAlertEmail(to: string) {
+  try {
+    await resend.emails.send({
+    from: "GoTrade Alerts <alerts@gotrade.one>",
+    to,
+    subject: "New Trade Alert",
+    html: `
+      <p>A new trade signal has been detected.</p>
+      <p>Please check your dashboard for details.</p>
+    `,
+    });
+    console.log("EMAIL SENT to:", to);
+  } catch (err) {
+    console.error("EMAIL SEND ERROR:", err);
+  }
+}
 
 // -----------------------------
 // EURUSD — row IDs
@@ -40,10 +66,10 @@ const RELAX = {
 };
 
 // -----------------------------
-// BOT ROUTER (case-insensitive)
+// BOT ROUTER
 // -----------------------------
 function getBotTables(bot: string | null | undefined) {
-  if (!bot) return RELAX; // default to RELAX when bot missing
+  if (!bot) return RELAX;
   const b = String(bot).trim().toUpperCase();
   if (b === "EURUSD") return EURUSD;
   if (b === "ETH" || b === "ETHUSDT") return ETH;
@@ -57,10 +83,7 @@ function getBotTables(bot: string | null | undefined) {
 function sanitizeString(v: unknown) {
   if (v === null || v === undefined) return null;
   const s = String(v);
-  // remove control chars (0x00-0x1F and 0x7F), keep printable characters
-  const cleaned = s.replace(/[\u0000-\u001F\u007F]/g, "");
-  // trim and return
-  return cleaned.trim();
+  return s.replace(/[\u0000-\u001F\u007F]/g, "").trim();
 }
 
 function normalizeSide(s: unknown) {
@@ -81,13 +104,11 @@ function isFiniteNumber(v: unknown) {
 // Handler
 // -----------------------------
 export async function POST(req: Request) {
-  // create supabase client inside handler (server-side only)
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // Read raw body and log it for debugging
   const raw = await req.text();
   console.log("RAW WEBHOOK BODY:", raw);
 
@@ -95,8 +116,8 @@ export async function POST(req: Request) {
   try {
     body = JSON.parse(raw);
   } catch (err) {
-    console.error("JSON PARSE ERROR:", err, "RAW_BODY:", raw);
-    return NextResponse.json({ ok: false, error: "invalid JSON", detail: String(err) }, { status: 400 });
+    console.error("JSON PARSE ERROR:", err);
+    return NextResponse.json({ ok: false, error: "invalid JSON" }, { status: 400 });
   }
 
   console.log("WEBHOOK BODY (parsed):", JSON.stringify(body));
@@ -111,13 +132,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "unknown bot" }, { status: 400 });
     }
 
-    // -----------------------------
-    // TRADE UPDATE
-    // -----------------------------
+    // ------------------------------------------------------------
+    // TRADE UPDATE (email only for RELAX)
+    // ------------------------------------------------------------
     if (["entry_long", "entry_short", "sl", "tp"].includes(type)) {
-      // strict numeric validation
       if (!isFiniteNumber(body.entry) || !isFiniteNumber(body.stop) || !isFiniteNumber(body.tp)) {
-        console.error("TRADE VALIDATION FAILED:", { entry: body.entry, stop: body.stop, tp: body.tp });
         return NextResponse.json({ ok: false, error: "invalid numeric values" }, { status: 400 });
       }
 
@@ -131,31 +150,39 @@ export async function POST(req: Request) {
         timestamp: new Date().toISOString()
       };
 
-      console.log("TRADE UPDATE payload:", payload);
-
       const { data, error } = await supabase
         .from(tables.tradeTable)
         .update(payload)
         .eq("id", tables.tradeRow)
         .select();
 
-      console.log("TRADE UPDATE response:", { data, error });
-
       if (error) {
-        console.error("TRADE UPDATE ERROR:", error);
         return NextResponse.json({ ok: false, error }, { status: 500 });
       }
-      if (!data || data.length === 0) {
-        console.warn("TRADE UPDATE: no rows matched id", tables.tradeRow);
-        return NextResponse.json({ ok: false, error: "no row matched" }, { status: 404 });
+
+      // ------------------------------------------------------------
+      // EMAIL ONLY FOR RELAX BOT
+      // ------------------------------------------------------------
+      const botUpper = String(botKey).toUpperCase();
+      const isRelax = botUpper === "RELAX" || botUpper === "SWING";
+
+      if (isRelax) {
+        const { data: users } = await supabase.auth.admin.listUsers();
+        const userEmail = users?.users?.[0]?.email;
+
+        if (userEmail) {
+          sendSimpleAlertEmail(userEmail);
+        } else {
+          console.warn("NO USER EMAIL FOUND");
+        }
       }
 
       return NextResponse.json({ ok: true, status: "trade updated", data });
     }
 
-    // -----------------------------
+    // ------------------------------------------------------------
     // BAR UPDATE
-    // -----------------------------
+    // ------------------------------------------------------------
     if (type === "bar") {
       const payload = {
         ticker: sanitizeString(body.ticker),
@@ -164,47 +191,37 @@ export async function POST(req: Request) {
         timestamp: new Date().toISOString()
       };
 
-      console.log("BAR UPDATE payload:", payload);
-
       const { data, error } = await supabase
         .from(tables.barTable)
         .update(payload)
         .eq("id", tables.barRow)
         .select();
 
-      console.log("BAR UPDATE response:", { data, error });
-
       if (error) {
-        console.error("BAR UPDATE ERROR:", error);
         return NextResponse.json({ ok: false, error }, { status: 500 });
-      }
-      if (!data || data.length === 0) {
-        console.warn("BAR UPDATE: no rows matched id", tables.barRow);
-        return NextResponse.json({ ok: false, error: "no row matched" }, { status: 404 });
       }
 
       return NextResponse.json({ ok: true, status: "bar updated", data });
     }
 
-    // -----------------------------
+    // ------------------------------------------------------------
     // NEWS / SWING META UPDATE
-    // -----------------------------
+    // ------------------------------------------------------------
     if (type === "news" || type === "swing_news" || type === "swing_meta") {
-      // base payload
       const payload: any = {
         timestamp: new Date().toISOString()
       };
 
-      // EURUSD + ETH format
       if (type === "news") {
         payload.news_today = Boolean(body.news_today);
         payload.news_message = sanitizeString(body.news_message);
         payload.next_news_time = sanitizeString(body.next_news_time);
         payload.news_window_active = Boolean(body.news_window_active);
-        payload.news_countdown = isFiniteNumber(body.news_countdown) ? Number(body.news_countdown) : null;
+        payload.news_countdown = isFiniteNumber(body.news_countdown)
+          ? Number(body.news_countdown)
+          : null;
       }
 
-      // RELAX format (swing_meta / swing_news)
       if (type === "swing_news" || type === "swing_meta") {
         payload.ticker = sanitizeString(body.ticker);
         payload.entry_window_text = sanitizeString(body.entry_window_text);
@@ -215,34 +232,23 @@ export async function POST(req: Request) {
         payload.risk_window_note = sanitizeString(body.risk_window_note);
       }
 
-      console.log("NEWS/SWING payload:", payload);
-
       const { data, error } = await supabase
         .from(tables.newsTable)
         .update(payload)
         .eq("id", tables.newsRow)
         .select();
 
-      console.log("NEWS UPDATE response:", { data, error });
-
       if (error) {
-        console.error("NEWS UPDATE ERROR:", error);
         return NextResponse.json({ ok: false, error }, { status: 500 });
-      }
-      if (!data || data.length === 0) {
-        console.warn("NEWS UPDATE: no rows matched id", tables.newsRow);
-        return NextResponse.json({ ok: false, error: "no row matched" }, { status: 404 });
       }
 
       return NextResponse.json({ ok: true, status: "news updated", data });
     }
 
-    // Unknown type
-    console.warn("UNKNOWN ALERT TYPE:", type);
     return NextResponse.json({ ok: false, error: "unknown alert type" }, { status: 400 });
 
   } catch (err) {
-    console.error("BUNDLED webhook error:", err);
-    return NextResponse.json({ ok: false, error: "server error", detail: String(err) }, { status: 500 });
+    console.error("WEBHOOK ERROR:", err);
+    return NextResponse.json({ ok: false, error: "server error" }, { status: 500 });
   }
 }
