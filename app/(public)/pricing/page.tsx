@@ -1,5 +1,3 @@
-// app/(public)/pricing/page.tsx
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -94,6 +92,16 @@ export default function PricingPage() {
   const [loading, setLoading] = useState(false);
   const pathname = usePathname();
 
+  // Coupon states (one per plan)
+  const [forexCoupon, setForexCoupon] = useState("");
+  const [cryptoCoupon, setCryptoCoupon] = useState("");
+  const [relaxCoupon, setRelaxCoupon] = useState("");
+
+  // Toggle visibility
+  const [showForexCoupon, setShowForexCoupon] = useState(false);
+  const [showCryptoCoupon, setShowCryptoCoupon] = useState(false);
+  const [showRelaxCoupon, setShowRelaxCoupon] = useState(false);
+
   useEffect(() => {
     const btn = document.getElementById("backToTop");
     if (!btn) return;
@@ -107,14 +115,14 @@ export default function PricingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleCheckout = async (priceId: string) => {
+  const handleCheckout = async (priceId: string, coupon: string | null) => {
     try {
       setLoading(true);
 
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ priceId }),
+        body: JSON.stringify({ priceId, coupon }),
       });
 
       if (!res.ok) {
@@ -228,28 +236,26 @@ export default function PricingPage() {
           </nav>
         </header>
 
-{/* LIFESTYLE CHOOSER */}
-<section className="space-y-8">
-  
-  <div className="text-center space-y-3">
-    <h1
-      className="
-        text-3xl font-extrabold tracking-tight
-        bg-gradient-to-r from-emerald-300 via-blue-400 to-purple-400
-        text-transparent bg-clip-text
-        drop-shadow-[0_0_12px_rgba(0,200,255,0.35)]
-      "
-    >
-      Choose the plan that fits your real life
-    </h1>
+        {/* LIFESTYLE CHOOSER */}
+        <section className="space-y-8">
+          <div className="text-center space-y-3">
+            <h1
+              className="
+                text-3xl font-extrabold tracking-tight
+                bg-gradient-to-r from-emerald-300 via-blue-400 to-purple-400
+                text-transparent bg-clip-text
+                drop-shadow-[0_0_12px_rgba(0,200,255,0.35)]
+              "
+            >
+              Choose the plan that fits your real life
+            </h1>
 
-    <p className="text-sm text-white/60 max-w-xl mx-auto leading-relaxed">
-      Your schedule determines your trading style.  
-      Pick the plan that matches when you’re actually available —  
-      not just the features you think you need.
-    </p>
-  </div>
-
+            <p className="text-sm text-white/60 max-w-xl mx-auto leading-relaxed">
+              Your schedule determines your trading style.  
+              Pick the plan that matches when you’re actually available —  
+              not just the features you think you need.
+            </p>
+          </div>
 
           <div className="grid md:grid-cols-3 gap-4">
             {/* Forex lifestyle */}
@@ -441,8 +447,9 @@ export default function PricingPage() {
               </li>
             </ul>
 
+            {/* CHECKOUT BUTTON */}
             <button
-              onClick={() => handleCheckout("price_1TgEcFKLveVAZ0tjNyB2gm66")}
+              onClick={() => handleCheckout("price_1TgEcFKLveVAZ0tjNyB2gm66", forexCoupon)}
               disabled={loading}
               className="
                 mt-auto
@@ -460,6 +467,53 @@ export default function PricingPage() {
             >
               {loading ? "Redirecting..." : "Get Forex Signals"}
             </button>
+
+            {/* COUPON TOGGLE */}
+            <button
+              onClick={() => setShowForexCoupon(!showForexCoupon)}
+              className="text-xs text-emerald-300 hover:text-emerald-200 transition mt-2"
+            >
+              Have a coupon?
+            </button>
+
+            {/* COUPON INPUT */}
+            {showForexCoupon && (
+              <div className="space-y-2 mt-2">
+                <input
+                  value={forexCoupon}
+                  onChange={(e) => setForexCoupon(e.target.value)}
+                  placeholder="Enter coupon code"
+                  className="
+                    w-full
+                    px-3 py-2
+                    rounded-md
+                    bg-black/20
+                    border border-emerald-500/30
+                    text-sm
+                    text-white
+                    placeholder-white/40
+                    focus:outline-none
+                    focus:border-emerald-400
+                  "
+                />
+
+                <button
+                  onClick={() => handleCheckout("price_1TgEcFKLveVAZ0tjNyB2gm66", forexCoupon)}
+                  className="
+                    w-full
+                    rounded-md
+                    px-3 py-2
+                    text-sm font-semibold
+                    bg-emerald-600
+                    text-white
+                    hover:bg-emerald-700
+                    transition
+                  "
+                >
+                  Apply Coupon
+                </button>
+              </div>
+            )}
           </div>
 
           {/* CRYPTO SIGNALS */}
@@ -471,290 +525,354 @@ export default function PricingPage() {
               bg-white/5
               p-8
               shadow-[0_0_40px_rgba(16,185,129,0.35)]
-              space-y-6
-            "
-          >
-            <div className="flex items-center gap-3">
-              <PlanIcon />
-              <div>
-                <h2 className="text-lg font-semibold">Crypto Signals</h2>
-                <p className="text-xs text-white/60">
-                  Mornings, Nights, or weekends
-                </p>
-              </div>
-            </div>
+    space-y-6
+  "
+>
+  <div className="flex items-center gap-3">
+    <PlanIcon />
+    <div>
+      <h2 className="text-lg font-semibold">Crypto Signals</h2>
+      <p className="text-xs text-white/60">
+        Mornings, Nights, or weekends
+      </p>
+    </div>
+  </div>
 
+  <div className="h-px bg-white/10 w-full" />
 
-            <div className="h-px bg-white/10 w-full" />
+  <div>
+    <span className="text-4xl font-semibold">$29.99</span>
+    <span className="ml-1 text-sm text-white/40">/month</span>
+  </div>
 
-            <div>
-              <span className="text-4xl font-semibold">$29.99</span>
-              <span className="ml-1 text-sm text-white/40">/month</span>
-            </div>
+  <ul className="space-y-3 text-sm">
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      Day + night + weekend signals
+    </li>
 
-            <ul className="space-y-3 text-sm">
-              {/* Included */}
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                Day + night + weekend signals
-              </li>
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      AI trading companion
+    </li>
 
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                AI trading companion
-              </li>
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      Built‑in position sizing
+    </li>
 
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                Built‑in position sizing
-              </li>
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      Smart leverage guidance
+    </li>
 
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                Smart leverage guidance
-              </li>
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      Real‑time Crypto signals
+    </li>
 
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                Real‑time Crypto signals
-              </li>
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      Entry • Stop • Targets
+    </li>
 
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                Entry • Stop • Targets
-              </li>
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      AI volatility meter
+    </li>
 
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                AI volatility meter
-              </li>
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      Volatility pulse insights
+    </li>
 
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                Volatility pulse insights
-              </li>
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      Trade execution details
+    </li>
 
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                Trade execution details
-              </li>
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconIndigo />
+      Growth strategy (personalized)
+    </li>
 
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconIndigo />
-                Growth strategy (personalized)
-              </li>
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconIndigo />
+      Email notifications
+    </li>
 
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconIndigo />
-                Email notifications
-              </li>
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconIndigo />
+      (2) Zoom calls per week
+    </li>
 
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconIndigo />
-                (2) Zoom calls per week
-              </li>
+    {/* Missing */}
+    <li className="flex items-start gap-2 text-white/40">
+      <XIcon />
+      Forex signals
+    </li>
 
-              {/* Missing (Upsell) */}
-              <li className="flex items-start gap-2 text-white/40">
-                <XIcon />
-                Forex signals
-              </li>
+    <li className="flex items-start gap-2 text-white/40">
+      <XIcon />
+      Priority 1‑on‑1 support
+    </li>
 
-              <li className="flex items-start gap-2 text-white/40">
-                <XIcon />
-                Priority 1‑on‑1 support
-              </li>
+    <li className="flex items-start gap-2 text-white/40">
+      <XIcon />
+      Scheduled Zoom calls
+    </li>
 
-              <li className="flex items-start gap-2 text-white/40">
-                <XIcon />
-                Scheduled Zoom calls
-              </li>
+    <li className="flex items-start gap-2 text-white/40">
+      <XIcon />
+      Relaxed signals
+    </li>
+  </ul>
 
-              <li className="flex items-start gap-2 text-white/40">
-                <XIcon />
-                Relaxed signals
-              </li>
-            </ul>
+  {/* CHECKOUT BUTTON */}
+  <button
+    onClick={() => handleCheckout("price_1TgEe8KLveVAZ0tjTzrAeN9Y", cryptoCoupon)}
+    disabled={loading}
+    className="
+      mt-auto
+      rounded-[6px]
+      px-6 py-3
+      text-sm font-semibold
+      bg-[rgb(3,82,65)]
+      text-[rgb(225,254,234)]
+      border border-[rgb(3,82,65)]
+      shadow-[0_0_18px_rgba(3,82,65,0.45)]
+      hover:bg-[rgb(5,100,80)]
+      hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
+      transition
+    "
+  >
+    {loading ? "Redirecting..." : "Get Crypto Signals"}
+  </button>
 
-            <button
-              onClick={() => handleCheckout("price_1TgEe8KLveVAZ0tjTzrAeN9Y")}
-              disabled={loading}
-              className="
-                mt-auto
-                rounded-[6px]
-                px-6 py-3
-                text-sm font-semibold
-                bg-[rgb(3,82,65)]
-                text-[rgb(225,254,234)]
-                border border-[rgb(3,82,65)]
-                shadow-[0_0_18px_rgba(3,82,65,0.45)]
-                hover:bg-[rgb(5,100,80)]
-                hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
-                transition
-              "
-            >
-              {loading ? "Redirecting..." : "Get Crypto Signals"}
-            </button>
-          </div>
+  {/* COUPON TOGGLE */}
+  <button
+    onClick={() => setShowCryptoCoupon(!showCryptoCoupon)}
+    className="text-xs text-emerald-300 hover:text-emerald-200 transition mt-2"
+  >
+    Have a coupon?
+  </button>
 
-          {/* RELAXED PLAN */}
-          <div
-            className="
-              flex flex-col
-              rounded-2xl
-              border border-white/10
-              bg-white/5
-              p-8
-              shadow-[0_0_25px_rgba(0,0,0,0.35)]
-              space-y-6
-            "
-          >
-            <div className="flex items-center gap-3">
-              <PlanIcon />
-              <div>
-                <h2 className="text-lg font-semibold">Relaxed Plan</h2>
-                <p className="text-xs text-white/60">
-                  Flexibility with ZERO time pressure
-                </p>
-              </div>
-            </div>
-
-            <div className="h-px bg-white/10 w-full" />
-
-            <div>
-              <span className="text-4xl font-semibold">$39.99</span>
-              <span className="ml-1 text-sm text-white/40">/month</span>
-            </div>
-
-            <ul className="space-y-3 text-sm">
-              {/* Included */}
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                Weekly relaxed signals
-              </li>
-
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                Weekly SMS signals
-              </li>
-
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                Crypto &amp; Forex signals (weekly)
-              </li>
-
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                AI trading companion
-              </li>
-
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                Built‑in position sizing
-              </li>
-
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                Smart leverage guidance
-              </li>
-
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                Entry • Stop • Targets
-              </li>
-
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconGreen />
-                Trade execution details
-              </li>
-
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconIndigo />
-                Weekly market outlook
-              </li>
-
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconIndigo />
-                Scheduled Zoom calls
-              </li>
-
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconIndigo />
-                Priority 1‑on‑1 personal support
-              </li>
-
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconIndigo />
-                Email notifications
-              </li>
-
-              <li className="flex items-start gap-2 text-white/70">
-                <CheckIconIndigo />
-                Growth strategy (personalized)
-              </li>
-
-              {/* Missing (Upsell / lifestyle contrast) */}
-              <li className="flex items-start gap-2 text-white/40">
-                <XIcon />
-                Fast intraday Forex signals
-              </li>
-
-              <li className="flex items-start gap-2 text-white/40">
-                <XIcon />
-                Fast intraday Crypto signals
-              </li>
-
-            </ul>
-
-            <button
-              onClick={() => handleCheckout("price_1TgEhiKLveVAZ0tjlaVICsCk")}
-              disabled={loading}
-              className="
-                mt-auto
-                rounded-[6px]
-                px-6 py-3
-                text-sm font-semibold
-                bg-[rgb(3,82,65)]
-                text-[rgb(225,254,234)]
-                border border-[rgb(3,82,65)]
-                shadow-[0_0_18px_rgba(3,82,65,0.45)]
-                hover:bg-[rgb(5,100,80)]
-                hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
-                transition
-              "
-            >
-              {loading ? "Redirecting..." : "Get Relaxed Plan"}
-            </button>
-          </div>
-        </section>
-
-        {/* FOOTER */}
-        <p className="font-medium text-white/70" />
-        <p className="mt-1" />
-      </div>
-
-      {/* BACK TO TOP BUTTON */}
-      <button
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        id="backToTop"
+  {/* COUPON INPUT */}
+  {showCryptoCoupon && (
+    <div className="space-y-2 mt-2">
+      <input
+        value={cryptoCoupon}
+        onChange={(e) => setCryptoCoupon(e.target.value)}
+        placeholder="Enter coupon code"
         className="
-          fixed bottom-6 right-6 z-50
-          w-12 h-12
-          flex items-center justify-center
-          rounded-full
-          bg-[rgb(3,82,65)]
-          text-[rgb(225,254,234)]
-          shadow-[0_0_18px_rgba(3,82,65,0.45)]
-          transition duration-150
-          hover:bg-[rgb(5,100,80)]
-          hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
-          hover:-translate-y-[2px]
-          cursor-pointer
-          hidden
+          w-full
+          px-3 py-2
+          rounded-md
+          bg-black/20
+          border border-emerald-500/30
+          text-sm
+          text-white
+          placeholder-white/40
+          focus:outline-none
+          focus:border-emerald-400
+        "
+      />
+
+      <button
+        onClick={() => handleCheckout("price_1TgEe8KLveVAZ0tjTzrAeN9Y", cryptoCoupon)}
+        className="
+          w-full
+          rounded-md
+          px-3 py-2
+          text-sm font-semibold
+          bg-emerald-600
+          text-white
+          hover:bg-emerald-700
+          transition
         "
       >
-        ↑
+        Apply Coupon
       </button>
-    </main>
+    </div>
+  )}
+</div>
+
+{/* RELAXED PLAN */}
+<div
+  className="
+    flex flex-col
+    rounded-2xl
+    border border-white/10
+    bg-white/5
+    p-8
+    shadow-[0_0_25px_rgba(0,0,0,0.35)]
+    space-y-6
+  "
+>
+  <div className="flex items-center gap-3">
+    <PlanIcon />
+    <div>
+      <h2 className="text-lg font-semibold">Relaxed Plan</h2>
+      <p className="text-xs text-white/60">
+        Flexibility with ZERO time pressure
+      </p>
+    </div>
+  </div>
+
+  <div className="h-px bg-white/10 w-full" />
+
+  <div>
+    <span className="text-4xl font-semibold">$39.99</span>
+    <span className="ml-1 text-sm text-white/40">/month</span>
+  </div>
+
+  <ul className="space-y-3 text-sm">
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      Weekly relaxed signals
+    </li>
+
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      Weekly SMS signals
+    </li>
+
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      Crypto &amp; Forex signals (weekly)
+    </li>
+
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      AI trading companion
+    </li>
+
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      Built‑in position sizing
+    </li>
+
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      Smart leverage guidance
+    </li>
+
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      Entry • Stop • Targets
+    </li>
+
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconGreen />
+      Trade execution details
+    </li>
+
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconIndigo />
+      Weekly market outlook
+    </li>
+
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconIndigo />
+      Scheduled Zoom calls
+    </li>
+
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconIndigo />
+      Priority 1‑on‑1 personal support
+    </li>
+
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconIndigo />
+      Email notifications
+    </li>
+
+    <li className="flex items-start gap-2 text-white/70">
+      <CheckIconIndigo />
+      Growth strategy (personalized)
+    </li>
+
+    {/* Missing */}
+    <li className="flex items-start gap-2 text-white/40">
+      <XIcon />
+      Fast intraday Forex signals
+    </li>
+
+    <li className="flex items-start gap-2 text-white/40">
+      <XIcon />
+      Fast intraday Crypto signals
+    </li>
+  </ul>
+
+  {/* CHECKOUT BUTTON */}
+  <button
+    onClick={() => handleCheckout("price_1TgEhiKLveVAZ0tjlaVICsCk", relaxCoupon)}
+    disabled={loading}
+    className="
+      mt-auto
+      rounded-[6px]
+      px-6 py-3
+      text-sm font-semibold
+      bg-[rgb(3,82,65)]
+      text-[rgb(225,254,234)]
+      border border-[rgb(3,82,65)]
+      shadow-[0_0_18px_rgba(3,82,65,0.45)]
+      hover:bg-[rgb(5,100,80)]
+      hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
+      transition
+    "
+  >
+    {loading ? "Redirecting..." : "Get Relaxed Plan"}
+  </button>
+
+  {/* COUPON TOGGLE */}
+  <button
+    onClick={() => setShowRelaxCoupon(!showRelaxCoupon)}
+    className="text-xs text-emerald-300 hover:text-emerald-200 transition mt-2"
+  >
+    Have a coupon?
+  </button>
+
+  {/* COUPON INPUT */}
+  {showRelaxCoupon && (
+    <div className="space-y-2 mt-2">
+      <input
+        value={relaxCoupon}
+        onChange={(e) => setRelaxCoupon(e.target.value)}
+        placeholder="Enter coupon code"
+        className="
+          w-full
+          px-3 py-2
+          rounded-md
+          bg-black/20
+          border border-emerald-500/30
+          text-sm
+          text-white
+          placeholder-white/40
+          focus:outline-none
+          focus:border-emerald-400
+        "
+      />
+
+      <button
+        onClick={() => handleCheckout("price_1TgEhiKLveVAZ0tjlaVICsCk", relaxCoupon)}
+        className="
+          w-full
+          rounded-md
+          px-3 py-2
+          text-sm font-semibold
+          bg-emerald-600
+          text-white
+          hover:bg-emerald-700
+          transition
+        "
+      >
+        Apply Coupon
+      </button>
+    </div>
+  )}
+</div>  </section>
+</div>
+</main>
   );
 }
