@@ -8,7 +8,7 @@ export const runtime = "nodejs"
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export async function POST(req: NextRequest) {
-  console.log("🔥 USING PATCHED CHECKOUT ROUTE")
+  console.log("🔥 USING PATCHED CHECKOUT ROUTE (TS SAFE)")
 
   const supabase = await createRouteHandlerClient()
 
@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
   }
 
-  const { priceId } = await req.json()
+  // ⭐ Extract coupon from body
+  const { priceId, coupon } = await req.json()
 
   if (!priceId) {
     console.error("❌ Missing priceId")
@@ -29,6 +30,7 @@ export async function POST(req: NextRequest) {
   }
 
   console.log("➡️ Creating checkout session with price:", priceId)
+  console.log("➡️ Coupon received:", coupon)
 
   const origin =
     req.headers.get("origin") ||
@@ -71,6 +73,11 @@ export async function POST(req: NextRequest) {
           quantity: 1
         }
       ],
+
+      // ⭐ TS-SAFE PROMOTION CODE INJECTION
+      ...(coupon && coupon.trim() !== ""
+        ? ({ promotion_code: coupon.trim() } as any)
+        : {}),
 
       metadata: {
         user_id: user.id
