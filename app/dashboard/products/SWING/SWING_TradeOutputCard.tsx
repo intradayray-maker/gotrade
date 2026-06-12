@@ -228,9 +228,9 @@ export default function SWING_TradeOutputCard() {
     const fetchInitial = async () => {
       const { data, error } = await supabase
         .from("SWING_trades_state")
-        .select("*")ticker, side, entry, stop, tp, timestamp, type")
+        .select("*")
         .eq("id", SWING_TRADE_ROW_ID)
-        .single();
+        .single<Trade>();
 
       if (!mounted || error || !data) return;
 
@@ -268,7 +268,7 @@ export default function SWING_TradeOutputCard() {
           table: "SWING_trades_state",
           filter: `id=eq.${SWING_TRADE_ROW_ID}`,
         },
-        (payload: { new: Record<string, any> }) => {
+        (payload: { new: Trade }) => {
           if (!mounted || !payload.new) return;
 
           const d = payload.new;

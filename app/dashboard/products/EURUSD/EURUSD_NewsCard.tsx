@@ -150,7 +150,7 @@ export default function EURUSD_NewsCard() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("*")timezone")
+        .select("*, timezone")
         .eq("id", user.id)
         .single();
 

@@ -18,7 +18,7 @@ export async function GET() {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("*")stripe_customer_id, stripe_default_payment_method")
+    .select("*, stripe_customer_id, stripe_default_payment_method")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -50,7 +50,7 @@ export async function POST() {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("*")stripe_default_payment_method")
+    .select("*, stripe_default_payment_method")
     .eq("id", user.id)
     .maybeSingle();
 

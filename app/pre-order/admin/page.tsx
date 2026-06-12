@@ -39,7 +39,7 @@ async function getProfile(userId: string) {
 
   const { data } = await supabase
     .from("profiles")
-    .select("*")is_admin")
+    .select("*, is_admin")
     .eq("id", userId)
     .single()
 
@@ -57,7 +57,7 @@ async function getPreorders() {
 
   const { data } = await supabase
     .from("gotrade_preorders")
-    .select("*")*")
+    .select("*")
     .order("created_at", { ascending: false })
 
   return data || []

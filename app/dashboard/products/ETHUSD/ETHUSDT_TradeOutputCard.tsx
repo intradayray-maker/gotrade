@@ -215,7 +215,7 @@ export default function ETHUSDT_TradeOutputCard() {
     const fetchInitial = async () => {
       const { data, error } = await supabase
         .from("ETHUSDT_trades_state")
-        .select("*")ticker, side, entry, stop, tp, timestamp, type")
+        .select("*, ticker, side, entry, stop, tp, timestamp, type")
         .eq("id", ETH_TRADE_ROW_ID)
         .single();
 

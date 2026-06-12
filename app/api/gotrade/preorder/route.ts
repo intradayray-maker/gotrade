@@ -18,7 +18,7 @@ export async function GET(req: Request) {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("*")is_admin")
+      .select("*, is_admin")
       .eq("id", userData.user.id)
       .single()
 
@@ -28,7 +28,7 @@ export async function GET(req: Request) {
 
     const { data: preorders, error: preordersError } = await supabase
       .from("gotrade_preorders")
-      .select("*")*")
+      .select("*")
       .order("created_at", { ascending: false })
 
     if (preordersError) {

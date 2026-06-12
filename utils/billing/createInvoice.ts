@@ -19,7 +19,7 @@ export async function createInvoiceForFee({
     // 1. Load Stripe customer ID
     const { data: profile, error: profileErr } = await supabase
       .from("profiles")
-      .select("*")stripe_customer_id")
+      .select("*, stripe_customer_id"))
       .eq("id", userId)
       .single();
 
