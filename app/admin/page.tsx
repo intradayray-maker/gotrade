@@ -9,9 +9,7 @@ import { AdminIncomePlannerGold } from "@/app/admin/UserPlannerAdminCard/AdminIn
 import EquityCurveChart from "@/app/admin/equity-curve/EquityCurveChart";
 import YTMarketingTool from "@/app/admin/YTMarketing/YTMarketingTool";
 import LoanTool from "@/app/admin/Loan/LoanTool";
-import PreOrderAdminPanel from "./PreOrderAdminPanel";
 import { BeakerIcon } from "@heroicons/react/24/outline";
-
 
 import {
   Squares2X2Icon,
@@ -104,31 +102,24 @@ export default function AdminToolsPage() {
         >
           <HomeIcon className="h-6 w-6" />
         </Link>
-<Link
-  href="/admin/demo"
-  title="Demo Cockpit"
-  className="
-    w-12 h-12
-    flex items-center justify-center
-    rounded-full
-    bg-[rgb(3,3,3)]
-    text-[rgb(225,254,234)]
-    transition duration-150
-    hover:bg-[rgb(5,100,80)]
-    hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
-    hover:-translate-y-[2px]
-  "
->
-  <BeakerIcon className="h-6 w-6" />
-</Link>
 
-
-
-
-
-
-
-
+        <Link
+          href="/admin/demo"
+          title="Demo Cockpit"
+          className="
+            w-12 h-12
+            flex items-center justify-center
+            rounded-full
+            bg-[rgb(3,3,3)]
+            text-[rgb(225,254,234)]
+            transition duration-150
+            hover:bg-[rgb(5,100,80)]
+            hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
+            hover:-translate-y-[2px]
+          "
+        >
+          <BeakerIcon className="h-6 w-6" />
+        </Link>
       </div>
 
       {/* Main Content */}
@@ -158,8 +149,12 @@ export default function AdminToolsPage() {
           <LoanTool />
         </CollapsibleSection>
 
+        {/* Pre‑Order Admin View (iframe embed) */}
         <CollapsibleSection title="Pre‑Order Admin View">
-          <PreOrderAdminPanel />
+          <iframe
+            src="/admin/preorders"
+            className="w-full h-[900px] rounded-lg border border-slate-800 bg-black"
+          />
         </CollapsibleSection>
 
       </div>

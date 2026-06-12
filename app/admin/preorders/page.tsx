@@ -156,7 +156,10 @@ export default async function AdminPreorders({ searchParams }: any) {
   }
 
   return (
-    <div className="py-20 max-w-6xl mx-auto px-6 text-white">
+<div className="py-20 max-w-6xl mx-auto px-6 text-white">
+
+
+
 
       {/* HEADER */}
 <h1 className="
@@ -194,11 +197,8 @@ export default async function AdminPreorders({ searchParams }: any) {
       </form>
 
       {/* FILTER BUTTONS */}
-      <div className="
-        mb-10 p-[2px] rounded-xl
-        bg-gradient-to-br from-emerald-600/40 via-teal-500/40 to-emerald-700/40
-        shadow-[0_0_25px_rgba(0,0,0,0.5)]
-      ">
+<div className="overflow-x-auto bg-transparent border-none">
+
         <div className="rounded-xl bg-[#0b0b12] p-4 flex flex-wrap justify-center gap-3">
 
           {[
@@ -237,11 +237,8 @@ export default async function AdminPreorders({ searchParams }: any) {
       </div>
 
       {/* TABLE */}
-      <div className="
-        overflow-x-auto rounded-xl p-[2px]
-        bg-gradient-to-br from-emerald-600/40 via-teal-500/40 to-emerald-700/40
-        shadow-[0_0_25px_rgba(0,0,0,0.4)]
-      ">
+<div className="overflow-x-auto bg-transparent border-none">
+
         <div className="rounded-xl bg-[#0b0b12]">
           <table className="w-full text-left text-white/80">
             <thead className="bg-[#0f0f17] border-b border-slate-800/40">
