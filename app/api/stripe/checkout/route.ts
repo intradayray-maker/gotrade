@@ -16,11 +16,6 @@ export async function POST(req: NextRequest) {
     data: { user }
   } = await supabase.auth.getUser()
 
-  if (!user) {
-    console.error("❌ No authenticated user")
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
-  }
-
   const { priceId, coupon } = await req.json()
 
   if (!priceId) {
@@ -40,28 +35,36 @@ export async function POST(req: NextRequest) {
   console.log("🌐 Checkout origin:", origin)
 
   // ⭐ STEP 1: Get or create Stripe customer
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("stripe_customer_id")
-    .eq("id", user.id)
-    .single()
+  let customerId: string | null = null
 
-  let customerId = profile?.stripe_customer_id
-
-  if (!customerId) {
-    console.log("➡️ Creating new Stripe customer")
-
-    const customer = await stripe.customers.create({
-      email: user.email,
-      metadata: { user_id: user.id }
-    })
-
-    customerId = customer.id
-
-    await supabase
+  if (user) {
+    const { data: profile } = await supabase
       .from("profiles")
-      .update({ stripe_customer_id: customerId })
+      .select("stripe_customer_id")
       .eq("id", user.id)
+      .single()
+
+    customerId = profile?.stripe_customer_id ?? null
+
+    if (!customerId) {
+      console.log("➡️ Creating new Stripe customer for authenticated user")
+
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: { user_id: user.id }
+      })
+
+      customerId = customer.id
+
+      await supabase
+        .from("profiles")
+        .update({ stripe_customer_id: customerId })
+        .eq("id", user.id)
+    }
+  } else {
+    console.log("➡️ No authenticated user; creating anonymous Stripe customer")
+    const customer = await stripe.customers.create({})
+    customerId = customer.id
   }
 
   // ------------------------------------------------------------
@@ -73,7 +76,7 @@ export async function POST(req: NextRequest) {
 
   const isRelaxPlan = RELAX_PRICE_IDS.includes(priceId)
 
-  if (isRelaxPlan) {
+  if (isRelaxPlan && user) {
     console.log("🧘 PRO/RELAX PLAN DETECTED — storing user_id:", user.id)
 
     await (supabase as any)
@@ -123,13 +126,13 @@ export async function POST(req: NextRequest) {
         : undefined,
 
       metadata: {
-        user_id: user.id,
+        user_id: user?.id ?? "anonymous",
         coupon: coupon || "none"
       },
 
       subscription_data: {
         metadata: {
-          user_id: user.id,
+          user_id: user?.id ?? "anonymous",
           coupon: coupon || "none"
         }
       },
