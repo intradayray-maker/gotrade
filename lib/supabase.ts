@@ -1,4 +1,3 @@
 // lib/supabase.ts
-import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 
-export const supabase = getBrowserSupabase();
+export { createClient as supabase } from "@/utils/supabase/client";

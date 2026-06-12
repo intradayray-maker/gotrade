@@ -179,8 +179,10 @@ export default function SWING_AiCard() {
 
     fetchInitial();
 
+    const channelName = `swing-ai-trade-realtime-${Math.random().toString(36).slice(2,8)}`;
+
     const channel = supabase
-      .channel("swing-ai-trade-realtime")
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
@@ -241,8 +243,10 @@ export default function SWING_AiCard() {
 
     fetchBarState();
 
+    const channelName = `swing-bar-realtime-${Math.random().toString(36).slice(2,8)}`;
+
     const channel = supabase
-      .channel("swing-bar-realtime")
+      .channel(channelName)
       .on(
         "postgres_changes",
         {

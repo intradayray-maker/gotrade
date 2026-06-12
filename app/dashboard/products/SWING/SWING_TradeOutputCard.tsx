@@ -260,8 +260,10 @@ export default function SWING_TradeOutputCard() {
 
     fetchInitial();
 
+    const channelName = `swing-trade-state-output-realtime-${Math.random().toString(36).slice(2,8)}`;
+
     channel = supabase
-      .channel("swing-trade-state-output-realtime")
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
