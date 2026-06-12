@@ -8,13 +8,19 @@ export const runtime = "nodejs"
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export async function POST(req: NextRequest) {
-  console.log("🔥 USING COUPON‑ENABLED CHECKOUT ROUTE")
+  console.log("🔥 USING AUTH‑REQUIRED COUPON CHECKOUT ROUTE")
 
   const supabase = await createRouteHandlerClient()
 
   const {
     data: { user }
   } = await supabase.auth.getUser()
+
+  // ❗ AUTH REQUIRED — this is the correct behavior
+  if (!user) {
+    console.error("❌ No authenticated user")
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+  }
 
   const { priceId, coupon } = await req.json()
 
@@ -34,41 +40,35 @@ export async function POST(req: NextRequest) {
 
   console.log("🌐 Checkout origin:", origin)
 
-  // ⭐ STEP 1: Get or create Stripe customer
-  let customerId: string | null = null
+  // ------------------------------------------------------------
+  // ⭐ STEP 1: Get or create Stripe customer for authenticated user
+  // ------------------------------------------------------------
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("stripe_customer_id")
+    .eq("id", user.id)
+    .single()
 
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("stripe_customer_id")
-      .eq("id", user.id)
-      .single()
+  let customerId = profile?.stripe_customer_id ?? null
 
-    customerId = profile?.stripe_customer_id ?? null
+  if (!customerId) {
+    console.log("➡️ Creating new Stripe customer for authenticated user")
 
-    if (!customerId) {
-      console.log("➡️ Creating new Stripe customer for authenticated user")
+    const customer = await stripe.customers.create({
+      email: user.email,
+      metadata: { user_id: user.id }
+    })
 
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: { user_id: user.id }
-      })
-
-      customerId = customer.id
-
-      await supabase
-        .from("profiles")
-        .update({ stripe_customer_id: customerId })
-        .eq("id", user.id)
-    }
-  } else {
-    console.log("➡️ No authenticated user; creating anonymous Stripe customer")
-    const customer = await stripe.customers.create({})
     customerId = customer.id
+
+    await supabase
+      .from("profiles")
+      .update({ stripe_customer_id: customerId })
+      .eq("id", user.id)
   }
 
   // ------------------------------------------------------------
-  // ⭐ DETECT PRO PLAN (RELAX) AND STORE user_id IMMEDIATELY
+  // ⭐ DETECT PRO/RELAX PLAN AND STORE user_id IMMEDIATELY
   // ------------------------------------------------------------
   const RELAX_PRICE_IDS = [
     process.env.NEXT_PUBLIC_PRICE_PRO,
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
   const isRelaxPlan = RELAX_PRICE_IDS.includes(priceId)
 
-  if (isRelaxPlan && user) {
+  if (isRelaxPlan) {
     console.log("🧘 PRO/RELAX PLAN DETECTED — storing user_id:", user.id)
 
     await (supabase as any)
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
   }
 
   // ------------------------------------------------------------
-  // ⭐ OPTIONAL: Validate coupon before sending to Stripe
+  // ⭐ Validate coupon (optional)
   // ------------------------------------------------------------
   let validCoupon = null
 
@@ -109,6 +109,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ------------------------------------------------------------
+  // ⭐ Create Stripe Checkout Session
+  // ------------------------------------------------------------
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -126,13 +129,13 @@ export async function POST(req: NextRequest) {
         : undefined,
 
       metadata: {
-        user_id: user?.id ?? "anonymous",
+        user_id: user.id,
         coupon: coupon || "none"
       },
 
       subscription_data: {
         metadata: {
-          user_id: user?.id ?? "anonymous",
+          user_id: user.id,
           coupon: coupon || "none"
         }
       },
