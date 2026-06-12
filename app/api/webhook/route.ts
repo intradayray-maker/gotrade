@@ -5,23 +5,34 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
 // ------------------------------------------------------------
-// RESEND CLIENT
+// SAFE RESEND CLIENT (prevents crashes)
 // ------------------------------------------------------------
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend: Resend | null = null;
+
+if (process.env.RESEND_API_KEY) {
+  resend = new Resend(process.env.RESEND_API_KEY);
+} else {
+  console.warn("⚠️ RESEND_API_KEY missing — email sending disabled");
+}
 
 // ------------------------------------------------------------
 // SIMPLE EMAIL ALERT
 // ------------------------------------------------------------
 async function sendSimpleAlertEmail(to: string) {
+  if (!resend) {
+    console.warn("Email skipped — no RESEND_API_KEY");
+    return;
+  }
+
   try {
     await resend.emails.send({
-    from: "GoTrade Alerts <alerts@gotrade.one>",
-    to,
-    subject: "New Trade Alert",
-    html: `
-      <p>A new trade signal has been detected.</p>
-      <p>Please check your dashboard for details.</p>
-    `,
+      from: "GoTrade Alerts <alerts@gotrade.one>",
+      to,
+      subject: "New Trade Alert",
+      html: `
+        <p>A new trade signal has been detected.</p>
+        <p>Please check your dashboard for details.</p>
+      `,
     });
     console.log("EMAIL SENT to:", to);
   } catch (err) {
