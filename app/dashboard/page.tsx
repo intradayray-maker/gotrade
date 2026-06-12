@@ -27,7 +27,7 @@ export default async function DashboardPage() {
   // Explicitly select only the fields needed for gating
   const { data: profile } = await supabase
     .from("profiles")
-    .select("is_admin, plan_EURUSD, plan_ETHUSDT, plan_PRO_BUNDLE")
+    .select("*")is_admin, plan_EURUSD, plan_ETHUSDT, plan_PRO_BUNDLE")
     .eq("id", user.id)
     .single();
 

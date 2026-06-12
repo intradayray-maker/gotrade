@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
     data: { user }
   } = await supabase.auth.getUser()
 
-  // ❗ AUTH REQUIRED — this is the correct behavior
   if (!user) {
     console.error("❌ No authenticated user")
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
@@ -45,7 +44,7 @@ export async function POST(req: NextRequest) {
   // ------------------------------------------------------------
   const { data: profile } = await supabase
     .from("profiles")
-    .select("stripe_customer_id")
+    .select("*")
     .eq("id", user.id)
     .single()
 

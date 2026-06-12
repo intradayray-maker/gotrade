@@ -23,7 +23,7 @@ export default async function ProfilePage() {
   // Fetch profile INCLUDING id
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("id, planname, nextbillingdate, billing_status")
+    .select("*")id, planname, nextbillingdate, billing_status")
     .eq("id", user.id)
     .maybeSingle()
 

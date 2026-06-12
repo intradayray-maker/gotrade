@@ -2,28 +2,24 @@
 
 import { useState, useEffect, useMemo } from "react";
 import GTSlider from "@/app/components/ui/GTSlider";
-import { getBrowserSupabase } from "@/lib/supabase/browserClient";
-import { formatInTimeZone } from "date-fns-tz";
 
-const supabase = getBrowserSupabase();
-
-/* ==========================
-   Local Time (Timezone-Aware)
-   ========================== */
-function useLocalTime(userTimezone: string) {
+function useLocalTime() {
   const [time, setTime] = useState("");
 
   useEffect(() => {
     const update = () => {
       const now = new Date();
-      const formatted = formatInTimeZone(now, userTimezone, "h:mm a");
+      const formatted = now.toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+      });
       setTime(formatted);
     };
 
     update();
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
-  }, [userTimezone]);
+  }, []);
 
   return time;
 }
@@ -62,33 +58,9 @@ function AnimatedNumber({ value }: { value: number }) {
    ========================== */
 export function BabyBotProjection() {
   // --------------------------
-  // USER TIMEZONE
+  // LOCAL TIME ONLY
   // --------------------------
-  const [userTimezone, setUserTimezone] = useState("America/New_York");
-
-  useEffect(() => {
-    const loadTZ = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("timezone")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.timezone) {
-        setUserTimezone(profile.timezone);
-      }
-    };
-
-    loadTZ();
-  }, []);
-
-  const localTime = useLocalTime(userTimezone);
+  const localTime = useLocalTime();
 
   // --------------------------
   // CORE INPUTS
@@ -246,78 +218,83 @@ export function BabyBotProjection() {
             Required Account Balance: ${fmtCompact(requiredBalance)}
           </span>
 
+        </div>
+      </div>
+
+      {/* ==========================
+          MODE TOGGLE
+         ========================== */}
+      <div className="flex justify-center mt-0 mb-2 p-0">
+        <div
+          className="
+            flex
+            items-center
+            cursor-pointer
+            select-none
+            px-4
+            py-1.5
+            rounded-full
+            bg-slate-900/40
+            border border-slate-600/40
+            shadow-[0_0_12px_rgba(0,0,0,0.45)]
+            backdrop-blur-sm
+          "
+          onClick={() => setIsSmallCap(!isSmallCap)}
+        >
+
+          <span
+            className={`
+              text-xs
+              mr-3
+              tracking-wide
+              ${isSmallCap ? "text-emerald-300" : "text-slate-500"}
+            `}
+          >
+            Small Cap
+          </span>
+
           <div
-            className="
+            className={`
+              w-12
+              h-6
               flex
               items-center
-              cursor-pointer
-              select-none
-              px-4
-              py-1.5
               rounded-full
-              bg-slate-900/40
-              border border-slate-600/40
-              shadow-[0_0_12px_rgba(0,0,0,0.45)]
-              backdrop-blur-sm
-            "
-            onClick={() => setIsSmallCap(!isSmallCap)}
+              p-1
+              transition-all
+              duration-300
+              ${
+                isSmallCap
+                  ? "bg-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.45)]"
+                  : "bg-red-500/40 shadow-[0_0_8px_rgba(239,68,68,0.45)]"
+              }
+            `}
           >
-
-            <span
-              className={`
-                text-xs
-                mr-3
-                tracking-wide
-                ${isSmallCap ? "text-emerald-300" : "text-slate-500"}
-              `}
-            >
-              Small Cap
-            </span>
-
             <div
               className={`
-                w-12
-                h-6
-                flex
-                items-center
+                w-5
+                h-5
                 rounded-full
-                p-1
+                bg-white
+                shadow-[0_0_6px_rgba(255,255,255,0.6)]
+                transform
                 transition-all
                 duration-300
-                ${
-                  isSmallCap
-                    ? "bg-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.45)]"
-                    : "bg-red-500/40 shadow-[0_0_8px_rgba(239,68,68,0.45)]"
-                }
+                ${isSmallCap ? "translate-x-0" : "translate-x-6"}
               `}
-            >
-              <div
-                className={`
-                  w-5
-                  h-5
-                  rounded-full
-                  bg-white
-                  shadow-[0_0_6px_rgba(255,255,255,0.6)]
-                  transform
-                  transition-all
-                  duration-300
-                  ${isSmallCap ? "translate-x-0" : "translate-x-6"}
-                `}
-              />
-            </div>
-
-            <span
-              className={`
-                text-xs
-                ml-3
-                tracking-wide
-                ${!isSmallCap ? "text-red-300" : "text-slate-500"}
-              `}
-            >
-              Large Cap
-            </span>
-
+            />
           </div>
+
+          <span
+            className={`
+              text-xs
+              ml-3
+              tracking-wide
+              ${!isSmallCap ? "text-red-300" : "text-slate-500"}
+            `}
+          >
+            Large Cap
+          </span>
 
         </div>
       </div>
@@ -520,7 +497,7 @@ export function BabyBotProjection() {
 
       </div>
 
-       {/* ==========================
+      {/* ==========================
           SUMMARY GRID
          ========================== */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
@@ -549,6 +526,7 @@ export function BabyBotProjection() {
               </span>
             </div>
 
+            {/* SIDE‑BY‑SIDE GRID
             {/* SIDE‑BY‑SIDE GRID — EXACTLY LIKE RISK PROJECTION */}
             <div className="grid grid-cols-2 gap-3">
 

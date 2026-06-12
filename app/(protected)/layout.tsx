@@ -39,7 +39,7 @@ export default async function ProtectedLayout({
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("is_admin")
+      .select("*")is_admin")
       .eq("id", user.id)
       .single();
 

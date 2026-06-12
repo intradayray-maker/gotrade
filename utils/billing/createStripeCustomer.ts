@@ -8,7 +8,7 @@ export async function createStripeCustomer(userId: string, email?: string | null
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("stripe_customer_id")
+    .select("*")stripe_customer_id")
     .eq("id", userId)
     .maybeSingle();
 

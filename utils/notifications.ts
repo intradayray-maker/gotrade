@@ -31,7 +31,7 @@ export async function sendNotification(options: {
         message: options.message,
       },
     ] as any)
-    .select("*")
+    .select("*")*")
     .single();
 
   if (error) {

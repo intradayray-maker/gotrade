@@ -32,7 +32,7 @@ export default function SettingsClient() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("timezone, email_notifications")
+        .select("*")timezone, email_notifications")
         .eq("id", user.id)
         .single();
 

@@ -11,7 +11,7 @@ async function storeEvent(eventId: string) {
   const supabase = await createRouteHandlerClient();
   const table = supabase.from("stripe_events" as never) as any;
 
-  const { data, error } = await table.select("id").eq("id", eventId).maybeSingle();
+  const { data, error } = await table.select("*")id").eq("id", eventId).maybeSingle();
 
   if (error) throw new Error(error.message);
   if (data) return false;
@@ -42,7 +42,7 @@ async function findUserIdByCustomerId(customerId: string) {
   const query = supabase.from("profiles") as any;
 
   const { data, error } = await query
-    .select("id")
+    .select("*")id")
     .eq("stripe_customer_id", customerId)
     .maybeSingle();
 

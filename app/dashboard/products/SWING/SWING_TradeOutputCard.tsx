@@ -228,7 +228,7 @@ export default function SWING_TradeOutputCard() {
     const fetchInitial = async () => {
       const { data, error } = await supabase
         .from("SWING_trades_state")
-        .select("ticker, side, entry, stop, tp, timestamp, type")
+        .select("*")ticker, side, entry, stop, tp, timestamp, type")
         .eq("id", SWING_TRADE_ROW_ID)
         .single();
 

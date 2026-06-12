@@ -81,7 +81,7 @@ export default function ETHUSDT_AiCard() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("timezone")
+        .select("*")timezone")
         .eq("id", user.id)
         .single();
 
@@ -170,7 +170,7 @@ export default function ETHUSDT_AiCard() {
     const fetchInitial = async () => {
       const { data } = await supabase
         .from("ETHUSDT_trades_state")
-        .select("type, ticker, side, entry, stop, tp, timestamp")
+        .select("*")type, ticker, side, entry, stop, tp, timestamp")
         .eq("id", ETH_TRADE_ROW_ID)
         .single();
 
@@ -271,7 +271,7 @@ export default function ETHUSDT_AiCard() {
     const fetchBarState = async () => {
       const { data, error } = await supabase
         .from("ETHUSDT_bar_state")
-        .select("high, low, timestamp")
+        .select("*")high, low, timestamp")
         .eq("id", ETH_BAR_ROW_ID)
         .single();
 

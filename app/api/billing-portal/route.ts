@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
     const { data: subscription, error: subError } = await supabase
       .from("subscriptions")
-      .select("stripe_customer_id, stripe_subscription_id, current_period_end, status")
+      .select("*")stripe_customer_id, stripe_subscription_id, current_period_end, status")
       .eq("user_id", user.id)
       .eq("status", "active")
       .not("stripe_customer_id", "is", null)

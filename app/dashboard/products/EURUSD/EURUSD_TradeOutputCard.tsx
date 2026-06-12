@@ -216,7 +216,7 @@ export default function EURUSD_TradeOutputCard() {
     const fetchInitial = async () => {
       const { data, error } = await supabase
         .from("EURUSD_trades_state")
-        .select("ticker, side, entry, stop, tp, timestamp, type")
+        .select("*")ticker, side, entry, stop, tp, timestamp, type")
         .eq("id", EURUSD_TRADE_ROW_ID)
         .single();
 

@@ -191,7 +191,7 @@ export async function POST(req: Request) {
     if (planColumn) {
       const { data: users } = await supabase
         .from("profiles")
-        .select("email")
+        .select("*")email")
         .eq(planColumn, true);
 
       if (users && users.length > 0) {

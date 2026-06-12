@@ -15,7 +15,6 @@ import {
 import { getVoiceClip } from "app/dashboard/products/TOOLS/Ai_LocalVoice";
 
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
-import { formatInTimeZone } from "date-fns-tz";
 
 const supabase = getBrowserSupabase();
 
@@ -30,6 +29,22 @@ type Trade = {
   stop: number;
   tp: number;
   timestamp?: string;
+};
+
+type SwingTradeRow = {
+  type?: string | null;
+  ticker: string | null;
+  side: string | null;
+  entry: number | null;
+  stop: number | null;
+  tp: number | null;
+  timestamp?: string | null;
+};
+
+type SwingBarRow = {
+  high: number | null;
+  low: number | null;
+  timestamp?: string | null;
 };
 
 const isSameTrade = (a: Trade | null, b: Trade) =>
@@ -72,52 +87,20 @@ export default function SWING_AiCard() {
   const [status, setStatus] = useState("Monitoring swing structure…");
 
   // ------------------------------------------------------------
-  // USER TIMEZONE
-  // ------------------------------------------------------------
-  const [userTimezone, setUserTimezone] = useState("America/New_York");
-
-  useEffect(() => {
-    const loadTimezone = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("timezone")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.timezone) {
-        setUserTimezone(profile.timezone);
-      }
-    };
-
-    loadTimezone();
-  }, []);
-
-  // ------------------------------------------------------------
-  // LIVE CLOCK (timezone-aware)
+  // LOCAL CLOCK ONLY (no timezone)
   // ------------------------------------------------------------
   const [now, setNow] = useState("");
 
   useEffect(() => {
     const tick = () => {
       const local = new Date();
-      const formatted = formatInTimeZone(
-        local,
-        userTimezone,
-        "yyyy-MM-dd HH:mm:ss"
-      );
-      setNow(formatted);
+      setNow(local.toISOString());
     };
 
     tick();
     const t = setInterval(tick, 1000);
     return () => clearInterval(t);
-  }, [userTimezone]);
+  }, []);
 
   // ------------------------------------------------------------
   // AUDIO UNLOCK + LOAD SETTINGS
@@ -165,7 +148,7 @@ export default function SWING_AiCard() {
   }, [musicEnabledState, musicVolumeState]);
 
   // ------------------------------------------------------------
-  // SUPABASE: TRADE STATE (timezone-aware)
+  // SUPABASE: TRADE STATE
   // ------------------------------------------------------------
   useEffect(() => {
     let mounted = true;
@@ -173,22 +156,20 @@ export default function SWING_AiCard() {
     const fetchInitial = async () => {
       const { data } = await supabase
         .from("SWING_trades_state")
-        .select("type, ticker, side, entry, stop, tp, timestamp")
+        .select("*")
         .eq("id", SWING_TRADE_ROW_ID)
-        .single();
+        .single<SwingTradeRow>();
 
       if (!mounted || !data) return;
 
       const t: Trade = {
-        type: data.type,
-        ticker: data.ticker,
-        side: data.side,
+        type: data.type ?? undefined,
+        ticker: data.ticker ?? "",
+        side: data.side ?? "",
         entry: data.entry ?? 0,
         stop: data.stop ?? 0,
         tp: data.tp ?? 0,
-        timestamp: data.timestamp
-          ? formatInTimeZone(new Date(data.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
-          : undefined,
+        timestamp: data.timestamp ?? undefined,
       };
 
       setLatestTradeState(t);
@@ -206,21 +187,19 @@ export default function SWING_AiCard() {
           table: "SWING_trades_state",
           filter: `id=eq.${SWING_TRADE_ROW_ID}`,
         },
-        (payload: { new: Record<string, any> }) => {
+        (payload: { new: SwingTradeRow }) => {
           if (!mounted || !payload.new) return;
 
           const d = payload.new;
 
           const t: Trade = {
-            type: d.type,
-            ticker: d.ticker,
-            side: d.side,
+            type: d.type ?? undefined,
+            ticker: d.ticker ?? "",
+            side: d.side ?? "",
             entry: d.entry ?? 0,
             stop: d.stop ?? 0,
             tp: d.tp ?? 0,
-            timestamp: d.timestamp
-              ? formatInTimeZone(new Date(d.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
-              : undefined,
+            timestamp: d.timestamp ?? undefined,
           };
 
           setLatestTradeState(t);
@@ -232,45 +211,10 @@ export default function SWING_AiCard() {
       mounted = false;
       supabase.removeChannel(channel);
     };
-  }, [userTimezone]);
+  }, []);
 
   // ------------------------------------------------------------
-  // AI VOICE LOGIC
-  // ------------------------------------------------------------
-  const prevEventRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!latestTradeState || !enabled) return;
-
-    const eventType = latestTradeState.type;
-    if (!eventType) return;
-
-    if (prevEventRef.current === eventType) return;
-    prevEventRef.current = eventType;
-
-    if (eventType === "entry_long") {
-      enqueueAudio(getVoiceClip("long"));
-      return;
-    }
-
-    if (eventType === "entry_short") {
-      enqueueAudio(getVoiceClip("short"));
-      return;
-    }
-
-    if (eventType === "tp") {
-      enqueueAudio(getVoiceClip("tp"));
-      return;
-    }
-
-    if (eventType === "sl") {
-      enqueueAudio(getVoiceClip("sl"));
-      return;
-    }
-  }, [latestTradeState, enabled]);
-
-  // ------------------------------------------------------------
-  // BAR STATE (timezone-aware)
+  // BAR STATE
   // ------------------------------------------------------------
   useEffect(() => {
     let mounted = true;
@@ -278,18 +222,16 @@ export default function SWING_AiCard() {
     const fetchBarState = async () => {
       const { data, error } = await supabase
         .from("SWING_bar_state")
-        .select("high, low, timestamp")
+        .select("*")
         .eq("id", SWING_BAR_ROW_ID)
-        .single();
+        .single<SwingBarRow>();
 
       if (!mounted || error || !data) return;
 
       setBarState({
         high: Number(data.high) || 0,
         low: Number(data.low) || 0,
-        timestamp: data.timestamp
-          ? formatInTimeZone(new Date(data.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
-          : undefined,
+        timestamp: data.timestamp ?? undefined,
       });
     };
 
@@ -305,7 +247,7 @@ export default function SWING_AiCard() {
           table: "SWING_bar_state",
           filter: `id=eq.${SWING_BAR_ROW_ID}`,
         },
-        (payload: { new: Record<string, any> }) => {
+        (payload: { new: SwingBarRow }) => {
           if (!mounted || !payload.new) return;
 
           const bar = payload.new;
@@ -313,9 +255,7 @@ export default function SWING_AiCard() {
           setBarState({
             high: Number(bar.high) || 0,
             low: Number(bar.low) || 0,
-            timestamp: bar.timestamp
-              ? formatInTimeZone(new Date(bar.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
-              : undefined,
+            timestamp: bar.timestamp ?? undefined,
           });
         }
       )
@@ -325,10 +265,10 @@ export default function SWING_AiCard() {
       mounted = false;
       supabase.removeChannel(channel);
     };
-  }, [userTimezone]);
+  }, []);
 
   // ------------------------------------------------------------
-  // MARGIN CALCULATION (same formula as Forex)
+  // MARGIN CALCULATION
   // ------------------------------------------------------------
   const isTradeOngoing = (trade: Trade | null) =>
     trade?.type === "entry_long" || trade?.type === "entry_short";

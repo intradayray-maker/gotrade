@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     // Fetch user profile
     const { data: profile } = await supabase
       .from("profiles")
-      .select("email, stripe_customer_id")
+      .select("*")email, stripe_customer_id")
       .eq("id", userId)
       .maybeSingle();
 
