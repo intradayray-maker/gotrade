@@ -81,7 +81,7 @@ export default function ETHUSDT_AiCard() {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("*, timezone")
+        .select("timezone")
         .eq("id", user.id)
         .single<{ timezone: string | null }>();
 
@@ -170,21 +170,27 @@ export default function ETHUSDT_AiCard() {
     const fetchInitial = async () => {
       const { data } = await supabase
         .from("ETHUSDT_trades_state")
-        .select("*, type, ticker, side, entry, stop, tp, timestamp")
+        .select("*")
         .eq("id", ETH_TRADE_ROW_ID)
         .single();
 
       if (!mounted || !data) return;
 
+      const d = data as any;
+
       setLatestTradeState({
-        type: data.type,
-        ticker: data.ticker,
-        side: data.side,
-        entry: data.entry ?? 0,
-        stop: data.stop ?? 0,
-        tp: data.tp ?? 0,
-        timestamp: data.timestamp
-          ? formatInTimeZone(new Date(data.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
+        type: d.type ?? undefined,
+        ticker: d.ticker ?? "",
+        side: d.side ?? "",
+        entry: d.entry ?? 0,
+        stop: d.stop ?? 0,
+        tp: d.tp ?? 0,
+        timestamp: d.timestamp
+          ? formatInTimeZone(
+              new Date(d.timestamp),
+              userTimezone,
+              "yyyy-MM-dd HH:mm:ss"
+            )
           : undefined,
       });
     };
@@ -201,20 +207,24 @@ export default function ETHUSDT_AiCard() {
           table: "ETHUSDT_trades_state",
           filter: `id=eq.${ETH_TRADE_ROW_ID}`,
         },
-        (payload: { new: Record<string, any> }) => {
+        (payload: { new: any }) => {
           if (!mounted || !payload.new) return;
 
-          const d = payload.new;
+          const d = payload.new as any;
 
           setLatestTradeState({
-            type: d.type,
-            ticker: d.ticker,
-            side: d.side,
+            type: d.type ?? undefined,
+            ticker: d.ticker ?? "",
+            side: d.side ?? "",
             entry: d.entry ?? 0,
             stop: d.stop ?? 0,
             tp: d.tp ?? 0,
             timestamp: d.timestamp
-              ? formatInTimeZone(new Date(d.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
+              ? formatInTimeZone(
+                  new Date(d.timestamp),
+                  userTimezone,
+                  "yyyy-MM-dd HH:mm:ss"
+                )
               : undefined,
           });
         }
@@ -271,17 +281,23 @@ export default function ETHUSDT_AiCard() {
     const fetchBarState = async () => {
       const { data, error } = await supabase
         .from("ETHUSDT_bar_state")
-        .select("*, high, low, timestamp")
+        .select("*")
         .eq("id", ETH_BAR_ROW_ID)
         .single();
 
       if (!mounted || error || !data) return;
 
+      const bar = data as any;
+
       setBarState({
-        high: Number(data.high) || 0,
-        low: Number(data.low) || 0,
-        timestamp: data.timestamp
-          ? formatInTimeZone(new Date(data.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
+        high: Number(bar.high ?? 0),
+        low: Number(bar.low ?? 0),
+        timestamp: bar.timestamp
+          ? formatInTimeZone(
+              new Date(bar.timestamp),
+              userTimezone,
+              "yyyy-MM-dd HH:mm:ss"
+            )
           : undefined,
       });
     };
@@ -298,16 +314,20 @@ export default function ETHUSDT_AiCard() {
           table: "ETHUSDT_bar_state",
           filter: `id=eq.${ETH_BAR_ROW_ID}`,
         },
-        (payload: { new: Record<string, any> }) => {
+        (payload: { new: any }) => {
           if (!mounted || !payload.new) return;
 
-          const bar = payload.new;
+          const bar = payload.new as any;
 
           setBarState({
-            high: Number(bar.high) || 0,
-            low: Number(bar.low) || 0,
+            high: Number(bar.high ?? 0),
+            low: Number(bar.low ?? 0),
             timestamp: bar.timestamp
-              ? formatInTimeZone(new Date(bar.timestamp), userTimezone, "yyyy-MM-dd HH:mm:ss")
+              ? formatInTimeZone(
+                  new Date(bar.timestamp),
+                  userTimezone,
+                  "yyyy-MM-dd HH:mm:ss"
+                )
               : undefined,
           });
         }
@@ -383,7 +403,6 @@ export default function ETHUSDT_AiCard() {
   // ------------------------------------------------------------
   return (
     <GTCard className="flex h-full flex-col gap-4">
-
       {/* DATE + TIME */}
       <div className="grid grid-cols-2 gap-2 text-center">
         <div className="flex flex-col">
