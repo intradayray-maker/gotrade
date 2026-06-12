@@ -61,17 +61,16 @@ export async function POST(req: NextRequest) {
   }
 
   // ------------------------------------------------------------
-  // ⭐ NEW: Detect RELAX plan and store user_id immediately
+  // ⭐ DETECT PRO PLAN (RELAX) AND STORE user_id IMMEDIATELY
   // ------------------------------------------------------------
   const RELAX_PRICE_IDS = [
-    process.env.NEXT_PUBLIC_RELAX_PRICE_ID,
-    "price_relax_123",
+    process.env.NEXT_PUBLIC_PRICE_PRO,   // ⭐ your real RELAX/PRO plan
   ].filter(Boolean)
 
   const isRelaxPlan = RELAX_PRICE_IDS.includes(priceId)
 
   if (isRelaxPlan) {
-    console.log("🧘 RELAX PLAN DETECTED — storing user_id:", user.id)
+    console.log("🧘 PRO/RELAX PLAN DETECTED — storing user_id:", user.id)
 
     // ⭐ FIX: Bypass TS because this client uses a different Database type
     await (supabase as any)
