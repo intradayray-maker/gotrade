@@ -5,39 +5,53 @@ import { createRouteHandlerClient } from "@/utils/supabase/route"
 
 export const runtime = "nodejs"
 
+// ❗ No apiVersion override — Stripe v12+ enforces its own version
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export async function POST(req: NextRequest) {
-  console.log("🔥 USING PATCHED CHECKOUT ROUTE (TS SAFE)")
+  console.log("🔥 CHECKOUT ROUTE HIT")
 
   const supabase = await createRouteHandlerClient()
 
+  // -----------------------------
+  // AUTH CHECK
+  // -----------------------------
   const {
     data: { user }
   } = await supabase.auth.getUser()
 
   if (!user) {
     console.error("❌ No authenticated user")
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+    return NextResponse.json(
+      { error: "Not authenticated" },
+      { status: 401 }
+    )
   }
 
-  // ⭐ Extract coupon from body
+  // -----------------------------
+  // READ BODY
+  // -----------------------------
   const { priceId, coupon } = await req.json()
 
   if (!priceId) {
     console.error("❌ Missing priceId")
-    return NextResponse.json({ error: "Missing priceId" }, { status: 400 })
+    return NextResponse.json(
+      { error: "Missing priceId" },
+      { status: 400 }
+    )
   }
 
-  console.log("➡️ Creating checkout session with price:", priceId)
-  console.log("➡️ Coupon received:", coupon)
+  console.log("➡️ Price ID:", priceId)
+  console.log("➡️ Coupon:", coupon)
 
   const origin =
     req.headers.get("origin") ||
     process.env.NEXT_PUBLIC_SITE_URL ||
     "http://localhost:3000"
 
-  // ⭐ STEP 1: Get or create Stripe customer
+  // -----------------------------
+  // GET OR CREATE STRIPE CUSTOMER
+  // -----------------------------
   const { data: profile } = await supabase
     .from("profiles")
     .select("stripe_customer_id")
@@ -50,7 +64,7 @@ export async function POST(req: NextRequest) {
     console.log("➡️ Creating new Stripe customer")
 
     const customer = await stripe.customers.create({
-      email: user.email,
+      email: user.email!,
       metadata: { user_id: user.id }
     })
 
@@ -62,6 +76,9 @@ export async function POST(req: NextRequest) {
       .eq("id", user.id)
   }
 
+  // -----------------------------
+  // CREATE CHECKOUT SESSION
+  // -----------------------------
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -74,7 +91,7 @@ export async function POST(req: NextRequest) {
         }
       ],
 
-      // ⭐ TS-SAFE PROMOTION CODE INJECTION
+      // ⭐ TS-SAFE PROMOTION CODE SUPPORT
       ...(coupon && coupon.trim() !== ""
         ? ({ promotion_code: coupon.trim() } as any)
         : {}),
@@ -98,6 +115,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: session.url })
   } catch (err: any) {
     console.error("❌ Stripe Checkout Error:", err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    return NextResponse.json(
+      { error: err.message },
+      { status: 500 }
+    )
   }
 }
