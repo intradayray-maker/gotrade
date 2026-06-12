@@ -199,8 +199,9 @@ export default function ETHUSDT_AiCard() {
 
     fetchInitial();
 
+    const channelName = `ethusdt-ai-trade-realtime-${Math.random().toString(36).slice(2)}`;
     const channel = supabase
-      .channel("ethusdt-ai-trade-realtime")
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
@@ -306,8 +307,9 @@ export default function ETHUSDT_AiCard() {
 
     fetchBarState();
 
+    const barChannelName = `ethusdt-bar-realtime-${Math.random().toString(36).slice(2)}`;
     const channel = supabase
-      .channel("ethusdt-bar-realtime")
+      .channel(barChannelName)
       .on(
         "postgres_changes",
         {
