@@ -115,12 +115,14 @@ export default function PricingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // ⭐⭐⭐ FIXED VERSION — COOKIES NOW SENT TO SERVER ⭐⭐⭐
   const handleCheckout = async (priceId: string, coupon: string | null) => {
     try {
       setLoading(true);
 
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
+        credentials: "include", // ⭐ REQUIRED FOR SUPABASE AUTH
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ priceId, coupon }),
       });
@@ -359,7 +361,6 @@ export default function PricingPage() {
             </div>
 
             <ul className="space-y-3 text-sm">
-              {/* Included */}
               <li className="flex items-start gap-2 text-white/70">
                 <CheckIconGreen />
                 8am–11am weekday Signals
@@ -415,7 +416,6 @@ export default function PricingPage() {
                 (1) weekly Zoom call
               </li>
 
-              {/* Missing (Upsell) */}
               <li className="flex items-start gap-2 text-white/40">
                 <XIcon />
                 Crypto signals
@@ -525,354 +525,355 @@ export default function PricingPage() {
               bg-white/5
               p-8
               shadow-[0_0_40px_rgba(16,185,129,0.35)]
-    space-y-6
-  "
->
-  <div className="flex items-center gap-3">
-    <PlanIcon />
-    <div>
-      <h2 className="text-lg font-semibold">Crypto Signals</h2>
-      <p className="text-xs text-white/60">
-        Mornings, Nights, or weekends
-      </p>
-    </div>
-  </div>
+              space-y-6
+            "
+          >
+            <div className="flex items-center gap-3">
+              <PlanIcon />
+              <div>
+                <h2 className="text-lg font-semibold">Crypto Signals</h2>
+                <p className="text-xs text-white/60">
+                  Mornings, Nights, or weekends
+                </p>
+              </div>
+            </div>
 
-  <div className="h-px bg-white/10 w-full" />
+            <div className="h-px bg-white/10 w-full" />
 
-  <div>
-    <span className="text-4xl font-semibold">$29.99</span>
-    <span className="ml-1 text-sm text-white/40">/month</span>
-  </div>
+            <div>
+              <span className="text-4xl font-semibold">$29.99</span>
+              <span className="ml-1 text-sm text-white/40">/month</span>
+            </div>
 
-  <ul className="space-y-3 text-sm">
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      Day + night + weekend signals
-    </li>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                Day + night + weekend signals
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      AI trading companion
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                AI trading companion
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      Built‑in position sizing
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                Built‑in position sizing
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      Smart leverage guidance
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                Smart leverage guidance
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      Real‑time Crypto signals
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                Real‑time Crypto signals
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      Entry • Stop • Targets
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                Entry • Stop • Targets
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      AI volatility meter
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                AI volatility meter
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      Volatility pulse insights
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                Volatility pulse insights
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      Trade execution details
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                Trade execution details
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconIndigo />
-      Growth strategy (personalized)
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconIndigo />
+                Growth strategy (personalized)
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconIndigo />
-      Email notifications
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconIndigo />
+                Email notifications
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconIndigo />
-      (2) Zoom calls per week
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconIndigo />
+                (2) Zoom calls per week
+              </li>
 
-    {/* Missing */}
-    <li className="flex items-start gap-2 text-white/40">
-      <XIcon />
-      Forex signals
-    </li>
+              {/* Missing */}
+              <li className="flex items-start gap-2 text-white/40">
+                <XIcon />
+                Forex signals
+              </li>
 
-    <li className="flex items-start gap-2 text-white/40">
-      <XIcon />
-      Priority 1‑on‑1 support
-    </li>
+              <li className="flex items-start gap-2 text-white/40">
+                <XIcon />
+                Priority 1‑on‑1 support
+              </li>
 
-    <li className="flex items-start gap-2 text-white/40">
-      <XIcon />
-      Scheduled Zoom calls
-    </li>
+              <li className="flex items-start gap-2 text-white/40">
+                <XIcon />
+                Scheduled Zoom calls
+              </li>
 
-    <li className="flex items-start gap-2 text-white/40">
-      <XIcon />
-      Relaxed signals
-    </li>
-  </ul>
+              <li className="flex items-start gap-2 text-white/40">
+                <XIcon />
+                Relaxed signals
+              </li>
+            </ul>
 
-  {/* CHECKOUT BUTTON */}
-  <button
-    onClick={() => handleCheckout("price_1TgEe8KLveVAZ0tjTzrAeN9Y", cryptoCoupon)}
-    disabled={loading}
-    className="
-      mt-auto
-      rounded-[6px]
-      px-6 py-3
-      text-sm font-semibold
-      bg-[rgb(3,82,65)]
-      text-[rgb(225,254,234)]
-      border border-[rgb(3,82,65)]
-      shadow-[0_0_18px_rgba(3,82,65,0.45)]
-      hover:bg-[rgb(5,100,80)]
-      hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
-      transition
-    "
-  >
-    {loading ? "Redirecting..." : "Get Crypto Signals"}
-  </button>
+            {/* CHECKOUT BUTTON */}
+            <button
+              onClick={() => handleCheckout("price_1TgEe8KLveVAZ0tjTzrAeN9Y", cryptoCoupon)}
+              disabled={loading}
+              className="
+                mt-auto
+                rounded-[6px]
+                px-6 py-3
+                text-sm font-semibold
+                bg-[rgb(3,82,65)]
+                text-[rgb(225,254,234)]
+                border border-[rgb(3,82,65)]
+                shadow-[0_0_18px_rgba(3,82,65,0.45)]
+                hover:bg-[rgb(5,100,80)]
+                hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
+                transition
+              "
+            >
+              {loading ? "Redirecting..." : "Get Crypto Signals"}
+            </button>
 
-  {/* COUPON TOGGLE */}
-  <button
-    onClick={() => setShowCryptoCoupon(!showCryptoCoupon)}
-    className="text-xs text-emerald-300 hover:text-emerald-200 transition mt-2"
-  >
-    Have a coupon?
-  </button>
+            {/* COUPON TOGGLE */}
+            <button
+              onClick={() => setShowCryptoCoupon(!showCryptoCoupon)}
+              className="text-xs text-emerald-300 hover:text-emerald-200 transition mt-2"
+            >
+              Have a coupon?
+            </button>
 
-  {/* COUPON INPUT */}
-  {showCryptoCoupon && (
-    <div className="space-y-2 mt-2">
-      <input
-        value={cryptoCoupon}
-        onChange={(e) => setCryptoCoupon(e.target.value)}
-        placeholder="Enter coupon code"
-        className="
-          w-full
-          px-3 py-2
-          rounded-md
-          bg-black/20
-          border border-emerald-500/30
-          text-sm
-          text-white
-          placeholder-white/40
-          focus:outline-none
-          focus:border-emerald-400
-        "
-      />
+            {/* COUPON INPUT */}
+            {showCryptoCoupon && (
+              <div className="space-y-2 mt-2">
+                <input
+                  value={cryptoCoupon}
+                  onChange={(e) => setCryptoCoupon(e.target.value)}
+                  placeholder="Enter coupon code"
+                  className="
+                    w-full
+                    px-3 py-2
+                    rounded-md
+                    bg-black/20
+                    border border-emerald-500/30
+                    text-sm
+                    text-white
+                    placeholder-white/40
+                    focus:outline-none
+                    focus:border-emerald-400
+                  "
+                />
 
-      <button
-        onClick={() => handleCheckout("price_1TgEe8KLveVAZ0tjTzrAeN9Y", cryptoCoupon)}
-        className="
-          w-full
-          rounded-md
-          px-3 py-2
-          text-sm font-semibold
-          bg-emerald-600
-          text-white
-          hover:bg-emerald-700
-          transition
-        "
-      >
-        Apply Coupon
-      </button>
-    </div>
-  )}
-</div>
+                <button
+                  onClick={() => handleCheckout("price_1TgEe8KLveVAZ0tjTzrAeN9Y", cryptoCoupon)}
+                  className="
+                    w-full
+                    rounded-md
+                    px-3 py-2
+                    text-sm font-semibold
+                    bg-emerald-600
+                    text-white
+                    hover:bg-emerald-700
+                    transition
+                  "
+                >
+                  Apply Coupon
+                </button>
+              </div>
+            )}
+          </div>
 
-{/* RELAXED PLAN */}
-<div
-  className="
-    flex flex-col
-    rounded-2xl
-    border border-white/10
-    bg-white/5
-    p-8
-    shadow-[0_0_25px_rgba(0,0,0,0.35)]
-    space-y-6
-  "
->
-  <div className="flex items-center gap-3">
-    <PlanIcon />
-    <div>
-      <h2 className="text-lg font-semibold">Relaxed Plan</h2>
-      <p className="text-xs text-white/60">
-        Flexibility with ZERO time pressure
-      </p>
-    </div>
-  </div>
+          {/* RELAXED PLAN */}
+          <div
+            className="
+              flex flex-col
+              rounded-2xl
+              border border-white/10
+              bg-white/5
+              p-8
+              shadow-[0_0_25px_rgba(0,0,0,0.35)]
+              space-y-6
+            "
+          >
+            <div className="flex items-center gap-3">
+              <PlanIcon />
+              <div>
+                <h2 className="text-lg font-semibold">Relaxed Plan</h2>
+                <p className="text-xs text-white/60">
+                  Flexibility with ZERO time pressure
+                </p>
+              </div>
+            </div>
 
-  <div className="h-px bg-white/10 w-full" />
+            <div className="h-px bg-white/10 w-full" />
 
-  <div>
-    <span className="text-4xl font-semibold">$39.99</span>
-    <span className="ml-1 text-sm text-white/40">/month</span>
-  </div>
+            <div>
+              <span className="text-4xl font-semibold">$39.99</span>
+              <span className="ml-1 text-sm text-white/40">/month</span>
+            </div>
 
-  <ul className="space-y-3 text-sm">
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      Weekly relaxed signals
-    </li>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                Weekly relaxed signals
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      Weekly SMS signals
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                Weekly SMS signals
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      Crypto &amp; Forex signals (weekly)
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                Crypto &amp; Forex signals (weekly)
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      AI trading companion
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                AI trading companion
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      Built‑in position sizing
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                Built‑in position sizing
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      Smart leverage guidance
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                Smart leverage guidance
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      Entry • Stop • Targets
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                Entry • Stop • Targets
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconGreen />
-      Trade execution details
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconGreen />
+                Trade execution details
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconIndigo />
-      Weekly market outlook
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconIndigo />
+                Weekly market outlook
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconIndigo />
-      Scheduled Zoom calls
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconIndigo />
+                Scheduled Zoom calls
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconIndigo />
-      Priority 1‑on‑1 personal support
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconIndigo />
+                Priority 1‑on‑1 personal support
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconIndigo />
-      Email notifications
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconIndigo />
+                Email notifications
+              </li>
 
-    <li className="flex items-start gap-2 text-white/70">
-      <CheckIconIndigo />
-      Growth strategy (personalized)
-    </li>
+              <li className="flex items-start gap-2 text-white/70">
+                <CheckIconIndigo />
+                Growth strategy (personalized)
+              </li>
 
-    {/* Missing */}
-    <li className="flex items-start gap-2 text-white/40">
-      <XIcon />
-      Fast intraday Forex signals
-    </li>
+              {/* Missing */}
+              <li className="flex items-start gap-2 text-white/40">
+                <XIcon />
+                Fast intraday Forex signals
+              </li>
 
-    <li className="flex items-start gap-2 text-white/40">
-      <XIcon />
-      Fast intraday Crypto signals
-    </li>
-  </ul>
+              <li className="flex items-start gap-2 text-white/40">
+                <XIcon />
+                Fast intraday Crypto signals
+              </li>
+            </ul>
 
-  {/* CHECKOUT BUTTON */}
-  <button
-    onClick={() => handleCheckout("price_1TgEhiKLveVAZ0tjlaVICsCk", relaxCoupon)}
-    disabled={loading}
-    className="
-      mt-auto
-      rounded-[6px]
-      px-6 py-3
-      text-sm font-semibold
-      bg-[rgb(3,82,65)]
-      text-[rgb(225,254,234)]
-      border border-[rgb(3,82,65)]
-      shadow-[0_0_18px_rgba(3,82,65,0.45)]
-      hover:bg-[rgb(5,100,80)]
-      hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
-      transition
-    "
-  >
-    {loading ? "Redirecting..." : "Get Relaxed Plan"}
-  </button>
+            {/* CHECKOUT BUTTON */}
+            <button
+              onClick={() => handleCheckout("price_1TgEhiKLveVAZ0tjlaVICsCk", relaxCoupon)}
+              disabled={loading}
+              className="
+                mt-auto
+                rounded-[6px]
+                px-6 py-3
+                text-sm font-semibold
+                bg-[rgb(3,82,65)]
+                text-[rgb(225,254,234)]
+                border border-[rgb(3,82,65)]
+                shadow-[0_0_18px_rgba(3,82,65,0.45)]
+                hover:bg-[rgb(5,100,80)]
+                hover:shadow-[0_0_28px_rgba(3,82,65,0.75)]
+                transition
+              "
+            >
+              {loading ? "Redirecting..." : "Get Relaxed Plan"}
+            </button>
 
-  {/* COUPON TOGGLE */}
-  <button
-    onClick={() => setShowRelaxCoupon(!showRelaxCoupon)}
-    className="text-xs text-emerald-300 hover:text-emerald-200 transition mt-2"
-  >
-    Have a coupon?
-  </button>
+            {/* COUPON TOGGLE */}
+            <button
+              onClick={() => setShowRelaxCoupon(!showRelaxCoupon)}
+              className="text-xs text-emerald-300 hover:text-emerald-200 transition mt-2"
+            >
+              Have a coupon?
+            </button>
 
-  {/* COUPON INPUT */}
-  {showRelaxCoupon && (
-    <div className="space-y-2 mt-2">
-      <input
-        value={relaxCoupon}
-        onChange={(e) => setRelaxCoupon(e.target.value)}
-        placeholder="Enter coupon code"
-        className="
-          w-full
-          px-3 py-2
-          rounded-md
-          bg-black/20
-          border border-emerald-500/30
-          text-sm
-          text-white
-          placeholder-white/40
-          focus:outline-none
-          focus:border-emerald-400
-        "
-      />
+            {/* COUPON INPUT */}
+            {showRelaxCoupon && (
+              <div className="space-y-2 mt-2">
+                <input
+                  value={relaxCoupon}
+                  onChange={(e) => setRelaxCoupon(e.target.value)}
+                  placeholder="Enter coupon code"
+                  className="
+                    w-full
+                    px-3 py-2
+                    rounded-md
+                    bg-black/20
+                    border border-emerald-500/30
+                    text-sm
+                    text-white
+                    placeholder-white/40
+                    focus:outline-none
+                    focus:border-emerald-400
+                  "
+                />
 
-      <button
-        onClick={() => handleCheckout("price_1TgEhiKLveVAZ0tjlaVICsCk", relaxCoupon)}
-        className="
-          w-full
-          rounded-md
-          px-3 py-2
-          text-sm font-semibold
-          bg-emerald-600
-          text-white
-          hover:bg-emerald-700
-          transition
-        "
-      >
-        Apply Coupon
-      </button>
-    </div>
-  )}
-</div>  </section>
-</div>
-</main>
+                <button
+                  onClick={() => handleCheckout("price_1TgEhiKLveVAZ0tjlaVICsCk", relaxCoupon)}
+                  className="
+                    w-full
+                    rounded-md
+                    px-3 py-2
+                    text-sm font-semibold
+                    bg-emerald-600
+                    text-white
+                    hover:bg-emerald-700
+                    transition
+                  "
+                >
+                  Apply Coupon
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+    </main>
   );
 }
