@@ -16,7 +16,7 @@ if (process.env.RESEND_API_KEY) {
 }
 
 // ------------------------------------------------------------
-// SIMPLE EMAIL ALERT
+// SAFE EMAIL SENDER
 // ------------------------------------------------------------
 async function sendSimpleAlertEmail(to: string) {
   if (!resend) {
@@ -24,8 +24,13 @@ async function sendSimpleAlertEmail(to: string) {
     return;
   }
 
+  if (!to || !to.includes("@")) {
+    console.warn("Invalid email address:", to);
+    return;
+  }
+
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: "GoTrade Alerts <alerts@gotrade.one>",
       to,
       subject: "New Trade Alert",
@@ -34,14 +39,15 @@ async function sendSimpleAlertEmail(to: string) {
         <p>Please check your dashboard for details.</p>
       `,
     });
-    console.log("EMAIL SENT to:", to);
+
+    console.log("EMAIL SENT:", result);
   } catch (err) {
-    console.error("EMAIL SEND ERROR:", err);
+    console.error("EMAIL SEND ERROR:", JSON.stringify(err, null, 2));
   }
 }
 
 // -----------------------------
-// EURUSD — row IDs
+// BOT ROW IDs
 // -----------------------------
 const EURUSD = {
   tradeTable: "EURUSD_trades_state",
@@ -52,9 +58,6 @@ const EURUSD = {
   newsRow:  "d1c4f448-a9f9-4938-ac75-14398ee7aa40"
 };
 
-// -----------------------------
-// ETH BOT — row IDs
-// -----------------------------
 const ETH = {
   tradeTable: "ETHUSDT_trades_state",
   barTable:   "ETHUSDT_bar_state",
@@ -64,9 +67,6 @@ const ETH = {
   newsRow:  "40d28923-8f43-464f-8147-244d63141587"
 };
 
-// -----------------------------
-// RELAX BOT (SWING) — row IDs
-// -----------------------------
 const RELAX = {
   tradeTable: "SWING_trades_state",
   barTable:   "SWING_bar_state",
@@ -89,12 +89,11 @@ function getBotTables(bot: string | null | undefined) {
 }
 
 // -----------------------------
-// Helpers
+// HELPERS
 // -----------------------------
 function sanitizeString(v: unknown) {
   if (v === null || v === undefined) return null;
-  const s = String(v);
-  return s.replace(/[\u0000-\u001F\u007F]/g, "").trim();
+  return String(v).replace(/[\u0000-\u001F\u007F]/g, "").trim();
 }
 
 function normalizeSide(s: unknown) {
@@ -112,7 +111,7 @@ function isFiniteNumber(v: unknown) {
 }
 
 // -----------------------------
-// Handler
+// MAIN HANDLER
 // -----------------------------
 export async function POST(req: Request) {
   const supabase = createClient(
@@ -144,7 +143,7 @@ export async function POST(req: Request) {
     }
 
     // ------------------------------------------------------------
-    // TRADE UPDATE (email only for RELAX)
+    // TRADE UPDATE
     // ------------------------------------------------------------
     if (["entry_long", "entry_short", "sl", "tp"].includes(type)) {
       if (!isFiniteNumber(body.entry) || !isFiniteNumber(body.stop) || !isFiniteNumber(body.tp)) {
@@ -182,7 +181,7 @@ export async function POST(req: Request) {
         const userEmail = users?.users?.[0]?.email;
 
         if (userEmail) {
-          sendSimpleAlertEmail(userEmail);
+          await sendSimpleAlertEmail(userEmail);
         } else {
           console.warn("NO USER EMAIL FOUND");
         }
