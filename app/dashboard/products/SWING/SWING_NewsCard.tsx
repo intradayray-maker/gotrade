@@ -151,10 +151,10 @@ export default function SWING_NewsCard() {
     let mounted = true;
 
     const fetchInitial = async () => {
-      // 1. Swing Meta
+      // 1. Swing Meta (also fetch ticker as a fallback)
       const { data: meta } = await supabase
         .from("SWING_news_state")
-        .select("entry_window_text, hold_duration_text, risk_window_note")
+        .select("entry_window_text, hold_duration_text, risk_window_note, ticker")
         .eq("id", SWING_NEWS_ROW_ID)
         .single();
 
@@ -162,6 +162,9 @@ export default function SWING_NewsCard() {
         setEntryWindowText(meta.entry_window_text || "4h 0m");
         setHoldDurationText(meta.hold_duration_text || "1–3 days");
         setRiskWindowNote(meta.risk_window_note || "Good to enter anytime");
+        if (meta.ticker) {
+          setTicker(`${meta.ticker}`);
+        }
       }
 
       // 2. Latest trade (ticker + timestamp)

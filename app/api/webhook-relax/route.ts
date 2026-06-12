@@ -9,13 +9,13 @@ const supabase = createClient(
 // 🔥 RELAX bot writes ONLY to SWING tables
 const SWING = {
   barTable: "SWING_bar_state",
-  barRow: "<YOUR_BAR_ROW_ID>",
+  barRow: "f5d39010-88a3-4b9c-9e3d-eb3bc2c2ce71",
 
   tradeTable: "SWING_trades_state",
-  tradeRow: "<YOUR_TRADES_ROW_ID>",
+  tradeRow: "81587010-c8c1-4857-a1e8-f476aa04c439",
 
   newsTable: "SWING_news_state",
-  newsRow: "<YOUR_NEWS_ROW_ID>"
+  newsRow: "9d5488a8-fefb-4df3-96f7-6347cf1ade87"
 };
 
 // Normalize side field
@@ -92,8 +92,8 @@ export async function POST(req: Request) {
     // 🔥 SWING META UPDATE (RELAX ONLY)
     // =====================================================================
     if (type === "swing_meta") {
-      const payload = {
-        ticker: body.ticker ?? null,
+      // Build payload and only include `ticker` when a non-empty value is provided.
+      const payload: any = {
         bot: body.bot ?? null,
         entry_window_text: body.entry_window_text ?? null,
         entry_window_percent: Number(body.entry_window_percent) || null,
@@ -102,10 +102,14 @@ export async function POST(req: Request) {
         timestamp: new Date().toISOString()
       };
 
-      await supabase
-        .from(SWING.newsTable)
-        .update(payload)
-        .eq("id", SWING.newsRow);
+      if (body.ticker && String(body.ticker).trim() !== "") {
+        payload.ticker = String(body.ticker);
+      }
+
+      // Debug log for incoming ticker
+      console.log("RELAX swing_meta received ticker:", body.ticker);
+
+      await supabase.from(SWING.newsTable).update(payload).eq("id", SWING.newsRow);
 
       return NextResponse.json({ ok: true, status: "swing_meta updated" });
     }
