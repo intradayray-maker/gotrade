@@ -111,20 +111,19 @@ export default function ETHUSDT_TradeOutputCard() {
   const [leverage, setLeverage] = useState<number>(1);
   const [marginFromAi, setMarginFromAi] = useState<number>(0);
 
-  // ✅ Explicitly typed animation states
-  const [animTrade, setAnimTrade] = useState<Trade>(trade);
-  const [animDerived, setAnimDerived] = useState<Derived>(derived);
+  const [animTrade, setAnimTrade] = useState(trade);
+  const [animDerived, setAnimDerived] = useState(derived);
 
-  const prevTrade = useRef<Trade>(trade);
-  const prevDerived = useRef<Derived>(derived);
+  const prevTrade = useRef(trade);
+  const prevDerived = useRef(derived);
 
-  const [flash, setFlash] = useState<string>("");
+  const [flash, setFlash] = useState("");
 
   const lastTimestampRef = useRef<string | null>(null);
   const lastTradeRef = useRef<Trade | null>(null);
 
   const isSameTrade = (a: Trade | null, b: Trade) =>
-    !!a &&
+    a &&
     a.ticker === b.ticker &&
     a.side === b.side &&
     a.entry === b.entry &&
@@ -208,227 +207,321 @@ export default function ETHUSDT_TradeOutputCard() {
   }, []);
 
   // ------------------------------------------------------------
-  // LOAD TRADE + DERIVED FROM SUPABASE
+  // SUPABASE: INITIAL FETCH + REALTIME
   // ------------------------------------------------------------
   useEffect(() => {
-    const fetchTrade = async () => {
+    let mounted = true;
+
+    const fetchInitial = async () => {
       const { data, error } = await supabase
-        .from("ETHUSDT_trades")
-        .select("*")
+        .from("ETHUSDT_trades_state")
+        .select("*, ticker, side, entry, stop, tp, timestamp, type")
         .eq("id", ETH_TRADE_ROW_ID)
         .single();
 
-      if (error || !data) return;
+      if (!mounted || error || !data) return;
 
       const d = data as any;
 
-      const newTrade: Trade = {
+      const t: Trade = {
         ticker: d.ticker ?? "ETHUSDT",
         side: d.side ?? "",
         entry: d.entry ?? 0,
-        tp: d.tp ?? 0,
         stop: d.stop ?? 0,
+        tp: d.tp ?? 0,
         timestamp: d.timestamp ?? "",
         type: d.type ?? "",
       };
 
-      const newDerived: Derived = {
-        units: d.units ?? 0,
-        position_value: d.position_value ?? 0,
-        required_margin: d.required_margin ?? 0,
-      };
+      if (isSameTrade(lastTradeRef.current, t)) return;
 
-      // Only animate if trade actually changed
-      if (!isSameTrade(lastTradeRef.current, newTrade)) {
-        lastTradeRef.current = newTrade;
-        lastTimestampRef.current = newTrade.timestamp ?? null;
-
-        setTrade(newTrade);
-        setDerived(newDerived);
-
-        // Trigger flash class based on side
-        if (newTrade.side === "BUY") {
-          setFlash("ai-pulse-green");
-        } else if (newTrade.side === "SELL") {
-          setFlash("ai-pulse-red");
-        } else {
-          setFlash("ai-pulse-blue");
-        }
-
-        // Smooth animation from previous to new
-        const steps = 18;
-        const duration = 420;
-        const interval = duration / steps;
-
-        const startTrade = prevTrade.current;
-        const startDerived = prevDerived.current;
-
-        let currentStep = 0;
-
-        const animInterval = setInterval(() => {
-          currentStep += 1;
-          const t = currentStep / steps;
-
-          const lerp = (a: number, b: number) => a + (b - a) * t;
-
-          const nextAnimTrade: Trade = {
-            ticker: newTrade.ticker,
-            side: newTrade.side,
-            entry: lerp(startTrade.entry, newTrade.entry),
-            tp: lerp(startTrade.tp, newTrade.tp),
-            stop: lerp(startTrade.stop, newTrade.stop),
-            timestamp: newTrade.timestamp,
-            type: newTrade.type,
-          };
-
-          const nextAnimDerived: Derived = {
-            units: lerp(startDerived.units, newDerived.units),
-            position_value: lerp(
-              startDerived.position_value,
-              newDerived.position_value
-            ),
-            required_margin: lerp(
-              startDerived.required_margin,
-              newDerived.required_margin
-            ),
-          };
-
-          setAnimTrade(nextAnimTrade);
-          setAnimDerived(nextAnimDerived);
-
-          if (currentStep >= steps) {
-            clearInterval(animInterval);
-            prevTrade.current = newTrade;
-            prevDerived.current = newDerived;
-          }
-        }, interval);
-      }
+      lastTradeRef.current = t;
+      lastTimestampRef.current = t.timestamp ?? null;
+      setTrade(t);
     };
 
-    fetchTrade();
+    fetchInitial();
 
-    const interval = setInterval(fetchTrade, 5000);
-    return () => clearInterval(interval);
+    const channel = supabase
+      .channel("ethusdt-trade-output-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "ETHUSDT_trades_state",
+          filter: `id=eq.${ETH_TRADE_ROW_ID}`,
+        },
+        (payload: { new: Record<string, any> }) => {
+          if (!mounted || !payload.new) return;
+
+          const d = payload.new;
+
+          const t: Trade = {
+            ticker: d.ticker,
+            side: d.side,
+            entry: d.entry ?? 0,
+            stop: d.stop ?? 0,
+            tp: d.tp ?? 0,
+            timestamp: d.timestamp,
+            type: d.type,
+          };
+
+          if (isSameTrade(lastTradeRef.current, t)) return;
+
+          lastTradeRef.current = t;
+          lastTimestampRef.current = t.timestamp ?? null;
+          setTrade(t);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  // ------------------------------------------------------------
+  // DERIVED CALCULATION (CRYPTO VERSION)
+  // ------------------------------------------------------------
+  const computeDerived = () => {
+    if (!trade.entry || marginFromAi <= 0 || leverage <= 0) {
+      return {
+        units: 0,
+        position_value: 0,
+        required_margin: marginFromAi,
+      };
+    }
+
+    const units = (marginFromAi * leverage) / trade.entry;
+    const positionValue = units * trade.entry;
+
+    return {
+      units,
+      position_value: positionValue,
+      required_margin: marginFromAi,
+    };
+  };
+
+  useEffect(() => {
+    setDerived(computeDerived());
+  }, [trade, marginFromAi, leverage]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDerived(computeDerived());
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [trade, marginFromAi, leverage]);
+
+  // ------------------------------------------------------------
+  // EVENT → PULSE + FLASH
+  // ------------------------------------------------------------
+  const getPulseClass = () => {
+    switch (animTrade.type) {
+      case "entry_long":
+        return "ai-pulse-blue";
+      case "entry_short":
+        return "ai-pulse-orange";
+      case "sl":
+        return "ai-pulse-red";
+      case "tp":
+        return "ai-pulse-green";
+      default:
+        return "";
+    }
+  };
+
+  const getFlashClass = () => {
+    switch (animTrade.type) {
+      case "entry_long":
+        return "bg-blue-950/30";
+      case "entry_short":
+        return "bg-orange-950/30";
+      case "sl":
+        return "bg-red-950/30";
+      case "tp":
+        return "bg-emerald-950/30";
+      default:
+        return "";
+    }
+  };
+
+  // ------------------------------------------------------------
+  // ANIMATION
+  // ------------------------------------------------------------
+  useEffect(() => {
+    const oldT = prevTrade.current;
+    const newT = trade;
+    const oldD = prevDerived.current;
+    const newD = derived;
+
+    if (newT.timestamp !== oldT.timestamp || newT.type !== oldT.type) {
+      if (newT.type !== "bar") {
+        setFlash(getFlashClass());
+        setTimeout(() => setFlash(""), 300);
+      }
+
+      const duration = 300;
+      const start = performance.now();
+
+      const animate = (time: number) => {
+        const progress = Math.min((time - start) / duration, 1);
+        const eased = progress * (2 - progress);
+
+        setAnimTrade({
+          ticker: newT.ticker,
+          side: newT.side,
+          entry: oldT.entry + (newT.entry - oldT.entry) * eased,
+          tp: oldT.tp + (newT.tp - oldT.tp) * eased,
+          stop: oldT.stop + (newT.stop - oldT.stop) * eased,
+          timestamp: newT.timestamp,
+          type: newT.type,
+        });
+
+        setAnimDerived({
+          units: oldD.units + (newD.units - oldD.units) * eased,
+          position_value:
+            oldD.position_value +
+            (newD.position_value - oldD.position_value) * eased,
+          required_margin:
+            oldD.required_margin +
+            (newD.required_margin - oldD.required_margin) * eased,
+        });
+
+        if (progress < 1) requestAnimationFrame(animate);
+      };
+
+      requestAnimationFrame(animate);
+
+      prevTrade.current = newT;
+      prevDerived.current = newD;
+    }
+  }, [trade, derived]);
+
+  // ------------------------------------------------------------
+  // SIDE COLOR
+  // ------------------------------------------------------------
+  const getSideGlow = () => {
+    if (animTrade.side === "long")
+      return "text-[#4da3ff] drop-shadow-[0_0_6px_rgba(0,150,255,0.55)] uppercase";
+    if (animTrade.side === "short")
+      return "text-orange-400 drop-shadow-[0_0_6px_rgba(255,140,0,0.55)] uppercase";
+    return "text-slate-500 uppercase";
+  };
+
+  // ------------------------------------------------------------
+  // ENTRY BORDER GLOW
+  // ------------------------------------------------------------
+  const getEntryBorderGlow = () => {
+    if (animTrade.side === "long")
+      return "border-blue-500/40 shadow-[0_0_8px_rgba(0,150,255,0.45)]";
+    if (animTrade.side === "short")
+      return "border-orange-500/40 shadow-[0_0_8px_rgba(255,140,0,0.45)]";
+    return "border-slate-600/20";
+  };
 
   // ------------------------------------------------------------
   // RENDER
   // ------------------------------------------------------------
   return (
     <GTCard
-      title="ETHUSDT Trade Output"
-      className={`border-2 ${flash} transition-all duration-500`}
+      className={`
+        flex h-full flex-col gap-4 border-2 rounded-xl transition-all
+        ${getPulseClass()}
+      `}
     >
-      <div className="space-y-4 text-sm text-slate-100">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-xs uppercase tracking-wide text-slate-400">
-              Latest AI Trade
-            </div>
-            <div className="mt-1 text-lg font-semibold">
-              {animTrade.ticker || "ETHUSDT"}{" "}
-              <span
-                className={
-                  animTrade.side === "BUY"
-                    ? "text-emerald-400"
-                    : animTrade.side === "SELL"
-                    ? "text-red-400"
-                    : "text-slate-300"
-                }
-              >
-                {animTrade.side || "WAITING"}
-              </span>
-            </div>
-          </div>
-          <div className="text-right text-xs text-slate-400">
-            <div>{animTrade.timestamp || "No timestamp"}</div>
-            <div className="mt-1">
-              Type:{" "}
-              <span className="font-medium text-slate-200">
-                {animTrade.type || "N/A"}
-              </span>
-            </div>
-          </div>
+      <p className="text-center text-xs uppercase tracking-wide text-slate-400">
+        Trade Execution Details
+      </p>
+
+      <div className="space-y-3">
+        {/* POSITION */}
+        <div
+          className={`
+            flex items-center justify-between rounded-xl border border-slate-600/20 p-3 transition-all
+            ${flash}
+          `}
+        >
+          <span className="text-slate-400">Position:</span>
+          <span className={`text-xl font-semibold tabular-nums ${getSideGlow()}`}>
+            {animTrade.side || "--"}
+          </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2 rounded-md bg-slate-900/40 p-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Core Levels
-            </div>
-            <div className="space-y-1 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-300">Entry</span>
-                <span className="font-semibold text-emerald-300">
-                  {fmtPrice(animTrade.entry)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-300">Stop Loss</span>
-                <span className="font-semibold text-red-300">
-                  {fmtPrice(animTrade.stop)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-300">Take Profit</span>
-                <span className="font-semibold text-amber-300">
-                  {fmtPrice(animTrade.tp)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2 rounded-md bg-slate-900/40 p-3">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Position Metrics
-            </div>
-            <div className="space-y-1 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-slate-300">Units</span>
-                <span className="font-semibold text-slate-100">
-                  {fmtInt(animDerived.units)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-300">Position Value</span>
-                <span className="font-semibold text-slate-100">
-                  ${fmtInt(animDerived.position_value)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-300">Required Margin</span>
-                <span className="font-semibold text-emerald-300">
-                  ${fmtInt(animDerived.required_margin)}
-                </span>
-              </div>
-            </div>
-          </div>
+        {/* TICKER */}
+        <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
+          <span className="text-slate-400">Ticker:</span>
+          <span className="text-xl font-semibold tabular-nums text-white">
+            {animTrade.ticker || "--"}
+          </span>
         </div>
 
-        <div className="space-y-2 rounded-md bg-slate-900/40 p-3">
-          <div className="flex items-center justify-between">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Leverage & Margin Sync
-            </div>
-            <div className="text-xs text-slate-400">
-              From ETH AI Card (localStorage)
-            </div>
-          </div>
-          <div className="space-y-1 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-300">Leverage</span>
-              <span className="font-semibold text-slate-100">
-                {leverage}x
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-300">Required Margin (AI)</span>
-              <span className="font-semibold text-emerald-300">
-                ${fmtInt(marginFromAi)}
-              </span>
-              <CopyBtn val={marginFromAi} />
-            </div>
-          </div>
+        {/* ETH SIZE */}
+        <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
+          <span className="text-slate-400">ETH Size:</span>
+          <span className="text-xl font-semibold tabular-nums text-white flex items-center">
+            {animDerived.units ? fmtInt(animDerived.units) : "--"}
+            {animDerived.units > 0 && (
+              <CopyBtn val={Math.round(animDerived.units)} />
+            )}
+          </span>
+        </div>
+
+        {/* POSITION VALUE */}
+        <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
+          <span className="text-slate-400">Position Value:</span>
+          <span className="text-xl font-semibold tabular-nums text-white flex items-center">
+            {animDerived.position_value ? `$${fmtInt(animDerived.position_value)}` : "--"}
+            {animDerived.position_value > 0 && (
+              <CopyBtn val={Math.round(animDerived.position_value)} />
+            )}
+          </span>
+        </div>
+
+        {/* MARGIN USED */}
+        <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
+          <span className="text-slate-400">Margin Used:</span>
+          <span className="text-xl font-semibold tabular-nums text-white flex items-center">
+            {animDerived.required_margin ? `$${fmtInt(animDerived.required_margin)}` : "--"}
+            {animDerived.required_margin > 0 && (
+              <CopyBtn val={Math.round(animDerived.required_margin)} />
+            )}
+          </span>
+        </div>
+
+        {/* ENTRY PRICE */}
+        <div
+          className={`
+            flex items-center justify-between rounded-xl p-3 transition-all
+            ${getEntryBorderGlow()}
+          `}
+        >
+          <span className="text-slate-400">Entry Price:</span>
+          <span className="text-xl font-semibold tabular-nums text-white flex items-center">
+            {animTrade.entry ? fmtPrice(animTrade.entry) : "--"}
+            {animTrade.entry > 0 && <CopyBtn val={animTrade.entry} />}
+          </span>
+        </div>
+
+        {/* STOP LOSS */}
+        <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
+          <span className="text-slate-400">Stop Loss:</span>
+          <span className="text-xl font-semibold tabular-nums text-red-400 flex items-center">
+            {animTrade.stop ? fmtPrice(animTrade.stop) : "--"}
+            {animTrade.stop > 0 && <CopyBtn val={animTrade.stop} />}
+          </span>
+        </div>
+
+        {/* TAKE PROFIT */}
+        <div className="flex items-center justify-between rounded-xl border border-slate-600/20 p-3">
+          <span className="text-slate-400">Take Profit:</span>
+          <span className="text-xl font-semibold tabular-nums text-emerald-400 flex items-center">
+            {animTrade.tp ? fmtPrice(animTrade.tp) : "--"}
+            {animTrade.tp > 0 && <CopyBtn val={animTrade.tp} />}
+          </span>
         </div>
       </div>
     </GTCard>
