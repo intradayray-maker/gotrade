@@ -3,9 +3,6 @@
 import { useEffect, useState } from "react";
 import GTCard from "@/components/ui/GTCard";
 import { getRandomMessage } from "app/dashboard/products/TOOLS/Ai_Text";
-import { getBrowserSupabase } from "@/lib/supabase/browserClient";
-
-const supabase = getBrowserSupabase();
 
 // ------------------------------------------------------------
 // TYPING EFFECT
@@ -17,7 +14,6 @@ function useTypingEffect(text: string, speed = 35, delay = 600) {
   useEffect(() => {
     setDisplayed("");
     setDone(false);
-
     let i = 0;
 
     const start = setTimeout(() => {
@@ -40,7 +36,7 @@ function useTypingEffect(text: string, speed = 35, delay = 600) {
 }
 
 // ------------------------------------------------------------
-// COLOR GRADIENT LOGIC (green → orange → red)
+// COLOR GRADIENT
 // ------------------------------------------------------------
 function getGradientColor(percent: number) {
   const clamp = (v: number) => Math.min(100, Math.max(0, v));
@@ -70,23 +66,37 @@ function getGradientColor(percent: number) {
 }
 
 // ------------------------------------------------------------
-// DONUT COUNTDOWN
+// STOPWATCH DONUT (B1 + H1)
 // ------------------------------------------------------------
-function DonutCountdown({ percent }: { percent: number }) {
+function StopwatchDonut({
+  percent,
+  timeLeftText,
+}: {
+  percent: number;
+  timeLeftText: string;
+}) {
   const radius = 70;
   const strokeWidth = 14;
   const size = radius * 2 + strokeWidth * 2;
   const center = size / 2;
 
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (percent / 100) * circumference;
+  const arcOffset = circumference - (percent / 100) * circumference;
 
   const strokeColor = getGradientColor(percent);
   const glow = `0 0 12px ${strokeColor}`;
 
+  // needle rotation (0–360 degrees)
+  const rotation = (1 - percent / 100) * 360;
+
   return (
     <div className="flex justify-center py-4">
-      <svg width={size} height={size} style={{ filter: `drop-shadow(${glow})` }}>
+      <svg
+        width={size}
+        height={size}
+        style={{ filter: `drop-shadow(${glow})` }}
+      >
+        {/* Background ring */}
         <circle
           cx={center}
           cy={center}
@@ -96,6 +106,7 @@ function DonutCountdown({ percent }: { percent: number }) {
           fill="none"
         />
 
+        {/* Remaining arc */}
         <circle
           cx={center}
           cy={center}
@@ -104,19 +115,32 @@ function DonutCountdown({ percent }: { percent: number }) {
           strokeWidth={strokeWidth}
           fill="none"
           strokeDasharray={circumference}
-          strokeDashoffset={offset}
+          strokeDashoffset={arcOffset}
           strokeLinecap="round"
           className="transition-all duration-700"
         />
 
+        {/* Stopwatch needle */}
+        <line
+          x1={center}
+          y1={center}
+          x2={center}
+          y2={center - radius + 6}
+          stroke={strokeColor}
+          strokeWidth={3}
+          strokeLinecap="round"
+          transform={`rotate(${rotation} ${center} ${center})`}
+        />
+
+        {/* TIME LEFT INSIDE DONUT */}
         <text
           x="50%"
           y="50%"
           textAnchor="middle"
-          dy="0.3em"
-          className="fill-slate-200 text-3xl font-bold"
+          dy="1.8em"
+          className="fill-slate-200 text-lg font-semibold"
         >
-          {Math.round(percent)}%
+          {timeLeftText}
         </text>
       </svg>
     </div>
@@ -124,93 +148,118 @@ function DonutCountdown({ percent }: { percent: number }) {
 }
 
 // ------------------------------------------------------------
-// CONSTANTS
-// ------------------------------------------------------------
-const SWING_NEWS_ROW_ID = "9d5488a8-fefb-4df3-96f7-6347cf1ade87";
-
-// ------------------------------------------------------------
 // COMPONENT
 // ------------------------------------------------------------
 export default function SWING_NewsCard() {
-  const [ticker, setTicker] = useState("ETHUSDT");
-
+  const [ticker, setTicker] = useState("Waiting...");
   const [entryWindowText, setEntryWindowText] = useState("4h 0m");
-  const [holdDurationText, setHoldDurationText] = useState("1–3 days");
+  const [holdDurationText, setHoldDurationText] = useState("12h 0m");
   const [riskWindowNote, setRiskWindowNote] = useState("Good to enter anytime");
 
   const [entryPercent, setEntryPercent] = useState(100);
   const [entryTimestamp, setEntryTimestamp] = useState<number | null>(null);
+  const [position, setPosition] = useState<"flat" | "long" | "short">("flat");
+
+  const [timeLeftText, setTimeLeftText] = useState("4h 0m");
 
   const [aiMessage] = useState(getRandomMessage());
   const { displayed, done } = useTypingEffect(aiMessage, 28, 600);
 
   // ------------------------------------------------------------
-  // SUPABASE FETCH
+  // READ LOCAL SNAPSHOT
+  // ------------------------------------------------------------
+  function readLocalTradeState() {
+    try {
+      const raw = localStorage.getItem("SWING_trade_state");
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+
+  function formatHM(ms: number) {
+    if (ms <= 0) return "0m";
+    const totalMinutes = Math.floor(ms / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  }
+
+  // ------------------------------------------------------------
+  // INITIAL + STORAGE SUBSCRIBE
   // ------------------------------------------------------------
   useEffect(() => {
     let mounted = true;
 
-    const fetchInitial = async () => {
-      // 1. Swing Meta (also fetch ticker as a fallback)
-      const { data: meta } = await supabase
-        .from("SWING_news_state")
-        .select("entry_window_text, hold_duration_text, risk_window_note, ticker")
-        .eq("id", SWING_NEWS_ROW_ID)
-        .single();
+    const applyState = (s: any | null) => {
+      if (!s || !mounted) return;
 
-      if (mounted && meta) {
-        setEntryWindowText(meta.entry_window_text || "4h 0m");
-        setHoldDurationText(meta.hold_duration_text || "1–3 days");
-        setRiskWindowNote(meta.risk_window_note || "Good to enter anytime");
-        if (meta.ticker) {
-          setTicker(`${meta.ticker}`);
-        }
-      }
+      const posRaw = (s.position ?? "flat").toLowerCase();
+      const pos =
+        posRaw === "long" ? "long" : posRaw === "short" ? "short" : "flat";
 
-      // 2. Latest trade (ticker + timestamp)
-      const { data: trade } = await supabase
-        .from("SWING_trades_state")
-        .select("timestamp, ticker")
-        .order("timestamp", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (mounted && trade) {
-        if (trade.ticker) {
-          setTicker(`${trade.ticker}`);
-        }
-        if (trade.timestamp) {
-          setEntryTimestamp(Date.parse(trade.timestamp));
-        }
-      }
+      setPosition(pos);
+      setTicker(pos === "flat" ? "Waiting..." : s.ticker ?? "Waiting...");
+      setEntryTimestamp(
+        s.entryTimestamp ? Date.parse(s.entryTimestamp) : null
+      );
     };
 
-    fetchInitial();
+    applyState(readLocalTradeState());
+
+    const onStorage = () => applyState(readLocalTradeState());
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("focus", onStorage);
 
     return () => {
       mounted = false;
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("focus", onStorage);
     };
   }, []);
 
   // ------------------------------------------------------------
-  // COUNTDOWN LOGIC
+  // COUNTDOWN + STOPWATCH LOGIC
   // ------------------------------------------------------------
   useEffect(() => {
-    if (!entryTimestamp) return;
+    const FOUR_H = 4 * 60 * 60 * 1000;
+    const TWELVE_H = 12 * 60 * 60 * 1000;
 
-    const interval = setInterval(() => {
+    const tick = () => {
+      if (!entryTimestamp) {
+        setEntryPercent(100);
+        setTimeLeftText("4h 0m");
+        setHoldDurationText("12h 0m");
+        return;
+      }
+
       const now = Date.now();
       const elapsed = now - entryTimestamp;
-      const total = 240 * 60 * 1000;
 
-      let percent = 100 - (elapsed / total) * 100;
-      if (percent < 0) percent = 0;
-      if (percent > 100) percent = 100;
-
+      // ENTRY WINDOW
+      const remainingEntryMs = Math.max(0, FOUR_H - elapsed);
+      const percent = Math.max(
+        0,
+        Math.min(100, (remainingEntryMs / FOUR_H) * 100)
+      );
       setEntryPercent(percent);
-    }, 1000);
 
-    return () => clearInterval(interval);
+      setTimeLeftText(
+        remainingEntryMs > 0 ? formatHM(remainingEntryMs) : "Expired"
+      );
+
+      // HOLD DURATION
+      const remainingHoldMs = Math.max(0, TWELVE_H - elapsed);
+      setHoldDurationText(
+        remainingHoldMs > 0 ? formatHM(remainingHoldMs) : "Completed"
+      );
+    };
+
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
   }, [entryTimestamp]);
 
   // ------------------------------------------------------------
@@ -223,12 +272,9 @@ export default function SWING_NewsCard() {
       </p>
 
       <div className="flex flex-1 flex-col space-y-3">
-
         {/* TICKER */}
         <div className="rounded-xl border border-emerald-500/20 p-3 text-center">
-          <span className="text-lg font-semibold text-slate-50">
-            {ticker}
-          </span>
+          <span className="text-lg font-semibold text-slate-50">{ticker}</span>
         </div>
 
         {/* ENTRY WINDOW */}
@@ -237,7 +283,7 @@ export default function SWING_NewsCard() {
             Entry Window
           </span>
           <span className="block text-lg font-semibold text-slate-50">
-            Valid for {entryWindowText}
+            {entryTimestamp ? `Valid for ${timeLeftText}` : "Valid for 4h 0m"}
           </span>
         </div>
 
@@ -248,12 +294,10 @@ export default function SWING_NewsCard() {
           </span>
         </div>
 
-        {/* DONUT */}
+        {/* STOPWATCH DONUT */}
         <div className="rounded-xl border border-emerald-500/20 p-4 bg-[#050509]">
-          <DonutCountdown percent={entryPercent} />
-          <p className="mt-2 text-xs text-slate-400 text-center">
-            Entry window closes as the ring empties.
-          </p>
+          <StopwatchDonut percent={entryPercent} timeLeftText={timeLeftText} />
+
         </div>
 
         {/* RISK WINDOW NOTE */}
@@ -265,9 +309,7 @@ export default function SWING_NewsCard() {
             {riskWindowNote}
           </span>
         </div>
-
       </div>
     </GTCard>
   );
 }
-// test

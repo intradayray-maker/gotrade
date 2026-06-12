@@ -1,5 +1,3 @@
-// app/dashboard/products/SWING/SWING_TradeOutputCard.tsx
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -175,7 +173,21 @@ export default function SWING_TradeOutputCard() {
     });
 
   // ------------------------------------------------------------
-  // LOAD LEVERAGE + MARGIN FROM AI CARD (Swing keys)
+  // LOCAL SNAPSHOT WRITER (feeds SWING_NewsCard)
+  // ------------------------------------------------------------
+  function writeSwingTradeState(payload: {
+    ticker?: string | null;
+    position?: "long" | "short" | "flat" | string | null;
+    entryTimestamp?: string | null;
+  }) {
+    try {
+      localStorage.setItem("SWING_trade_state", JSON.stringify(payload));
+      localStorage.setItem("SWING_trade_state_updated_at", String(Date.now()));
+    } catch {}
+  }
+
+  // ------------------------------------------------------------
+  // LOAD LEVERAGE + MARGIN FROM AI CARD
   // ------------------------------------------------------------
   useEffect(() => {
     try {
@@ -207,7 +219,7 @@ export default function SWING_TradeOutputCard() {
   }, []);
 
   // ------------------------------------------------------------
-  // INITIAL FETCH + REALTIME SUBSCRIPTION (Swing table)
+  // INITIAL FETCH + REALTIME SUBSCRIPTION
   // ------------------------------------------------------------
   useEffect(() => {
     let mounted = true;
@@ -236,6 +248,12 @@ export default function SWING_TradeOutputCard() {
 
       lastTradeRef.current = t;
       setTrade(t);
+
+      writeSwingTradeState({
+        ticker: t.ticker || null,
+        position: t.side || "flat",
+        entryTimestamp: t.timestamp || null,
+      });
     };
 
     fetchInitial();
@@ -269,6 +287,12 @@ export default function SWING_TradeOutputCard() {
 
           lastTradeRef.current = t;
           setTrade(t);
+
+          writeSwingTradeState({
+            ticker: t.ticker || null,
+            position: t.side || "flat",
+            entryTimestamp: t.timestamp || null,
+          });
         }
       )
       .subscribe();
@@ -280,7 +304,18 @@ export default function SWING_TradeOutputCard() {
   }, []);
 
   // ------------------------------------------------------------
-  // DERIVED CALCULATION (same formula as Forex)
+  // SAFETY: WRITE SNAPSHOT ON LOCAL CHANGES
+  // ------------------------------------------------------------
+  useEffect(() => {
+    writeSwingTradeState({
+      ticker: trade.ticker || null,
+      position: trade.side || "flat",
+      entryTimestamp: trade.timestamp || null,
+    });
+  }, [trade.ticker, trade.side, trade.timestamp]);
+
+  // ------------------------------------------------------------
+  // DERIVED CALCULATION
   // ------------------------------------------------------------
   const computeDerived = () => {
     if (!trade.entry || marginFromAi <= 0 || leverage <= 0) {
