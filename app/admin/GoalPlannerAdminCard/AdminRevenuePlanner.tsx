@@ -10,11 +10,10 @@ function useLocalTime() {
     const update = () => {
       const now = new Date();
       setTime(
-now.toLocaleTimeString([], {
-  hour: "numeric",
-  minute: "2-digit"
-})
-
+        now.toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit"
+        })
       );
     };
 
@@ -25,8 +24,6 @@ now.toLocaleTimeString([], {
 
   return time;
 }
-
-
 
 function useAnimatedNumber(value: number, duration = 400) {
   const [display, setDisplay] = useState(value);
@@ -55,7 +52,6 @@ function AnimatedNumber({ value }: { value: number }) {
 }
 
 export function AdminRevenuePlanner() {
-
   const localTime = useLocalTime();
 
   // ==========================
@@ -64,8 +60,8 @@ export function AdminRevenuePlanner() {
   const [users, setUsers] = useState(100);
   const [avgAccount, setAvgAccount] = useState(5000);
   const [subFee, setSubFee] = useState(25);
-  const [perfFeePct, setPerfFeePct] = useState(0.00);
-  const [roiPct, setRoiPct] = useState(0.20);
+  const [perfFeePct, setPerfFeePct] = useState(0.0);
+  const [roiPct, setRoiPct] = useState(0.2);
   const [yourBalance, setYourBalance] = useState(10000);
 
   // ==========================
@@ -97,6 +93,8 @@ export function AdminRevenuePlanner() {
   // ==========================
   // AUTO-SCALE LOGIC
   // ==========================
+
+  // Supabase auto-scale
   let supabaseAuto = 0;
   if (autoScaleEnabled) {
     if (users > 10000) supabaseAuto = 100;
@@ -104,6 +102,7 @@ export function AdminRevenuePlanner() {
     else if (users > 500) supabaseAuto = 25;
   }
 
+  // Vercel auto-scale
   let vercelAuto = 0;
   if (autoScaleEnabled) {
     if (users > 20000) vercelAuto = 80;
@@ -111,9 +110,18 @@ export function AdminRevenuePlanner() {
     else if (users > 1000) vercelAuto = 20;
   }
 
+  // Stripe auto-scale
   let stripeAuto = 0;
   if (autoScaleEnabled) {
-    stripeAuto = users * subFee * 0.029 + users * 0.30;
+    stripeAuto = users * subFee * 0.029 + users * 0.3;
+  }
+
+  // ⭐ Resend Email Auto-Scale (NEW)
+  let emailAuto = 0;
+  if (autoScaleEnabled) {
+    const monthlyEmails = users * 60; // 2 per day * 30 days
+    const extraEmails = Math.max(0, monthlyEmails - 3000); // free tier
+    emailAuto = (extraEmails / 1000) * 0.9; // $0.90 per 1000
   }
 
   // ==========================
@@ -132,7 +140,8 @@ export function AdminRevenuePlanner() {
   const autoExpensesMonthly =
     supabaseAuto +
     vercelAuto +
-    stripeAuto;
+    stripeAuto +
+    emailAuto; // ⭐ added
 
   const totalExpensesMonthly =
     fixedExpensesMonthly + autoExpensesMonthly;
@@ -145,6 +154,7 @@ export function AdminRevenuePlanner() {
 
   const netAnnual =
     totalAnnual - totalExpensesAnnual;
+
   // ==========================
   // UI START
   // ==========================
@@ -155,25 +165,23 @@ export function AdminRevenuePlanner() {
           HEADER + AUTO-SCALE TOGGLE
          ========================== */}
       <div className="flex items-center justify-center mb-5">
-
         <button
           onClick={() => setAutoScaleEnabled(!autoScaleEnabled)}
           className={`
             px-4 py-1.5 text-xs font-semibold rounded-full border transition-all
-            ${autoScaleEnabled
-              ? "border-emerald-400 text-emerald-300 bg-emerald-500/10 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
-              : "border-slate-600 text-slate-300 bg-slate-800"}
+            ${
+              autoScaleEnabled
+                ? "border-emerald-400 text-emerald-300 bg-emerald-500/10 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+                : "border-slate-600 text-slate-300 bg-slate-800"
+            }
           `}
         >
-          Auto‑Scale: {autoScaleEnabled ? "On" : "Off"}  
+          Auto‑Scale: {autoScaleEnabled ? "On" : "Off"}
           <span className="ml-2 text-[12px] opacity-70">
-            ( Vercel ~ Stripe ~ Supabase )
+            ( Vercel ~ Stripe ~ Supabase ~ Resend )
           </span>
         </button>
-
       </div>
-
-
 
       {/* ==========================
           GREEN GRID — TOP 6 SLIDERS
@@ -262,22 +270,16 @@ export function AdminRevenuePlanner() {
             titleClassName="text-emerald-300"
           />
         </div>
-
       </div>
 
-
-
       {/* ==========================
-          RED GRID — EXPENSES (3 CELLS)
+          RED GRID — EXPENSES
          ========================== */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-4">
 
-        {/* Domain + Email (shared cell) */}
+        {/* Domain + Email */}
         <div className="rounded-lg border border-[rgb(84,33,33)] bg-black/20 p-3 shadow-[0_0_5px_rgba(84,33,33,0.35)]">
-
-
           <div className="grid grid-cols-2 gap-3">
-
             <GTSlider
               title="Domain (.com)"
               value={domainCost}
@@ -299,7 +301,6 @@ export function AdminRevenuePlanner() {
               dollars
               titleClassName="text-red-300"
             />
-
           </div>
         </div>
 
@@ -317,11 +318,9 @@ export function AdminRevenuePlanner() {
           />
         </div>
 
-        {/* CHART Basic + Live Data (shared cell) */}
+        {/* Chart Basic + Live Data */}
         <div className="rounded-lg border border-[rgb(84,33,33)] bg-black/20 p-3 shadow-[0_0_5px_rgba(84,33,33,0.35)]">
-
           <div className="grid grid-cols-2 gap-3">
-
             <GTSlider
               title="TV Chart Basic"
               value={tvBasicCost}
@@ -343,19 +342,16 @@ export function AdminRevenuePlanner() {
               dollars
               titleClassName="text-red-300"
             />
-
           </div>
         </div>
-
       </div>
+
       {/* ==========================
-          RESULTS GRID (SLATE → GREEN → SLATE)
+          RESULTS GRID
          ========================== */}
       <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
 
-        {/* ==========================
-            COLUMN 1 — Monthly Breakdown (SLATE)
-           ========================== */}
+        {/* Monthly Breakdown */}
         <div className="rounded-xl border border-slate-700/60 bg-[#0f0f17] p-4">
           <p className="text-xs uppercase tracking-wide text-slate-400 text-center">
             Monthly Breakdown
@@ -401,11 +397,7 @@ export function AdminRevenuePlanner() {
           </div>
         </div>
 
-
-
-        {/* ==========================
-            COLUMN 2 — Summary (GREEN)
-           ========================== */}
+        {/* Summary */}
         <div
           className="
             rounded-xl
@@ -462,11 +454,7 @@ export function AdminRevenuePlanner() {
           </div>
         </div>
 
-
-
-        {/* ==========================
-            COLUMN 3 — Annual Breakdown (SLATE)
-           ========================== */}
+        {/* Annual Breakdown */}
         <div className="rounded-xl border border-slate-700/60 bg-[#0f0f17] p-4">
           <p className="text-xs uppercase tracking-wide text-slate-400 text-center">
             Annual Breakdown
@@ -511,10 +499,8 @@ export function AdminRevenuePlanner() {
 
           </div>
         </div>
-
       </div>
     </section>
   );
 }
-
 
