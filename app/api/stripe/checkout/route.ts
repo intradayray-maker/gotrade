@@ -33,8 +33,11 @@ export async function POST(req: NextRequest) {
 
   const origin =
     req.headers.get("origin") ||
+    new URL(req.url).origin ||
     process.env.NEXT_PUBLIC_SITE_URL ||
     "http://localhost:3000"
+
+  console.log("🌐 Checkout origin:", origin)
 
   // ⭐ STEP 1: Get or create Stripe customer
   const { data: profile } = await supabase
