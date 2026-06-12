@@ -8,9 +8,8 @@ export const runtime = "nodejs"
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export async function POST(req: NextRequest) {
-  console.log("🔥 CHECKOUT ROUTE HIT")
+  console.log("🔥 USING ORIGINAL CHECKOUT ROUTE")
 
-  // ⭐ FIX: your helper must be awaited
   const supabase = await createRouteHandlerClient()
 
   const {
@@ -22,22 +21,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
   }
 
-  const { priceId, coupon } = await req.json()
+  const { priceId } = await req.json()
 
   if (!priceId) {
     console.error("❌ Missing priceId")
     return NextResponse.json({ error: "Missing priceId" }, { status: 400 })
   }
 
-  console.log("➡️ Price ID:", priceId)
-  console.log("➡️ Coupon:", coupon)
+  console.log("➡️ Creating checkout session with price:", priceId)
 
   const origin =
     req.headers.get("origin") ||
     process.env.NEXT_PUBLIC_SITE_URL ||
     "http://localhost:3000"
 
-  // ⭐ Get or create Stripe customer
+  // ⭐ STEP 1: Get or create Stripe customer
   const { data: profile } = await supabase
     .from("profiles")
     .select("stripe_customer_id")
@@ -50,7 +48,7 @@ export async function POST(req: NextRequest) {
     console.log("➡️ Creating new Stripe customer")
 
     const customer = await stripe.customers.create({
-      email: user.email!,
+      email: user.email,
       metadata: { user_id: user.id }
     })
 
@@ -60,27 +58,6 @@ export async function POST(req: NextRequest) {
       .from("profiles")
       .update({ stripe_customer_id: customerId })
       .eq("id", user.id)
-  }
-
-  // ⭐ Resolve promotion code
-  let promotionCodeId: string | undefined = undefined
-
-  if (coupon && coupon.trim() !== "") {
-    const trimmed = coupon.trim()
-
-    if (trimmed.startsWith("promo_") || trimmed.startsWith("pc_")) {
-      promotionCodeId = trimmed
-    } else {
-      const promo = await stripe.promotionCodes.list({
-        code: trimmed,
-        active: true,
-        limit: 1
-      })
-
-      if (promo.data.length > 0) {
-        promotionCodeId = promo.data[0].id
-      }
-    }
   }
 
   try {
@@ -95,10 +72,15 @@ export async function POST(req: NextRequest) {
         }
       ],
 
-      ...(promotionCodeId ? ({ promotion_code: promotionCodeId } as any) : {}),
+      metadata: {
+        user_id: user.id
+      },
 
-      metadata: { user_id: user.id },
-      subscription_data: { metadata: { user_id: user.id } },
+      subscription_data: {
+        metadata: {
+          user_id: user.id
+        }
+      },
 
       success_url: `${origin}/dashboard?checkout=success`,
       cancel_url: `${origin}/pricing?checkout=cancelled`
