@@ -8,7 +8,7 @@ export const runtime = "nodejs"
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export async function POST(req: NextRequest) {
-  console.log("🔥 USING PATCHED CHECKOUT ROUTE")
+  console.log("🔥 USING COUPON‑ENABLED CHECKOUT ROUTE")
 
   const supabase = await createRouteHandlerClient()
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
   }
 
-  const { priceId } = await req.json()
+  const { priceId, coupon } = await req.json()
 
   if (!priceId) {
     console.error("❌ Missing priceId")
@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
   }
 
   console.log("➡️ Creating checkout session with price:", priceId)
+  if (coupon) console.log("🎟 Coupon received:", coupon)
 
   const origin =
     req.headers.get("origin") ||
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
   // ⭐ DETECT PRO PLAN (RELAX) AND STORE user_id IMMEDIATELY
   // ------------------------------------------------------------
   const RELAX_PRICE_IDS = [
-    process.env.NEXT_PUBLIC_PRICE_PRO,   // ⭐ your real RELAX/PRO plan
+    process.env.NEXT_PUBLIC_PRICE_PRO,
   ].filter(Boolean)
 
   const isRelaxPlan = RELAX_PRICE_IDS.includes(priceId)
@@ -72,11 +73,34 @@ export async function POST(req: NextRequest) {
   if (isRelaxPlan) {
     console.log("🧘 PRO/RELAX PLAN DETECTED — storing user_id:", user.id)
 
-    // ⭐ FIX: Bypass TS because this client uses a different Database type
     await (supabase as any)
       .from("SWING_trades_state")
       .update({ user_id: user.id })
       .eq("id", "81587010-c8c1-4857-a1e8-f476aa04c439")
+  }
+
+  // ------------------------------------------------------------
+  // ⭐ OPTIONAL: Validate coupon before sending to Stripe
+  // ------------------------------------------------------------
+  let validCoupon = null
+
+  if (coupon && typeof coupon === "string") {
+    try {
+      const promo = await stripe.promotionCodes.list({
+        code: coupon,
+        active: true,
+        limit: 1
+      })
+
+      if (promo.data.length > 0) {
+        validCoupon = promo.data[0].id
+        console.log("🎉 Valid coupon applied:", coupon)
+      } else {
+        console.log("⚠️ Invalid coupon:", coupon)
+      }
+    } catch (err) {
+      console.log("⚠️ Coupon lookup failed:", err)
+    }
   }
 
   try {
@@ -91,13 +115,19 @@ export async function POST(req: NextRequest) {
         }
       ],
 
+      discounts: validCoupon
+        ? [{ promotion_code: validCoupon }]
+        : undefined,
+
       metadata: {
-        user_id: user.id
+        user_id: user.id,
+        coupon: coupon || "none"
       },
 
       subscription_data: {
         metadata: {
-          user_id: user.id
+          user_id: user.id,
+          coupon: coupon || "none"
         }
       },
 
