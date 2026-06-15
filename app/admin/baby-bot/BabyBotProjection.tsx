@@ -195,109 +195,107 @@ export function BabyBotProjection() {
   return (
     <section className="space-y-4">
 
-      {/* ==========================
-          HEADER BADGE
-         ========================== */}
-      <div className="flex justify-center mt-0 mb-2 p-0">
-        <div className="flex items-center gap-4">
+ {/* ==========================
+    HEADER BADGE + MODE TOGGLE (SIDE BY SIDE)
+   ========================== */}
+<div className="flex justify-center mt-0 mb-2 p-0">
+  <div className="flex items-center gap-6">
 
-          <span
-            className="
-              px-4
-              py-1.5
-              text-[16px]
-              font-semibold
-              rounded-full
-              bg-blue-500/10
-              text-blue-300
-              border border-blue-500/30
-              shadow-[0_0_12px_rgba(0,102,255,0.35)]
-              tracking-wide
-            "
-          >
-            Required Account Balance: ${fmtCompact(requiredBalance)}
-          </span>
+    {/* HEADER BADGE */}
+    <span
+      className="
+        px-4
+        py-1.5
+        text-[16px]
+        font-semibold
+        rounded-full
+        bg-blue-500/10
+        text-blue-300
+        border border-blue-500/30
+        shadow-[0_0_12px_rgba(0,102,255,0.35)]
+        tracking-wide
+      "
+    >
+      Required Account Balance: ${fmtCompact(requiredBalance)}
+    </span>
 
-        </div>
-      </div>
+    {/* MODE TOGGLE */}
+    <div
+      className="
+        flex
+        items-center
+        cursor-pointer
+        select-none
+        px-4
+        py-1.5
+        rounded-full
+        bg-slate-900/40
+        border border-slate-600/40
+        shadow-[0_0_12px_rgba(0,0,0,0.45)]
+        backdrop-blur-sm
+      "
+      onClick={() => setIsSmallCap(!isSmallCap)}
+    >
 
-      {/* ==========================
-          MODE TOGGLE
-         ========================== */}
-      <div className="flex justify-center mt-0 mb-2 p-0">
+      <span
+        className={`
+          text-xs
+          mr-3
+          tracking-wide
+          ${isSmallCap ? "text-emerald-300" : "text-slate-500"}
+        `}
+      >
+        Small Cap
+      </span>
+
+      <div
+        className={`
+          w-12
+          h-6
+          flex
+          items-center
+          rounded-full
+          p-1
+          transition-all
+          duration-300
+          ${
+            isSmallCap
+              ? "bg-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.45)]"
+              : "bg-red-500/40 shadow-[0_0_8px_rgba(239,68,68,0.45)]"
+          }
+        `}
+      >
         <div
-          className="
-            flex
-            items-center
-            cursor-pointer
-            select-none
-            px-4
-            py-1.5
+          className={`
+            w-5
+            h-5
             rounded-full
-            bg-slate-900/40
-            border border-slate-600/40
-            shadow-[0_0_12px_rgba(0,0,0,0.45)]
-            backdrop-blur-sm
-          "
-          onClick={() => setIsSmallCap(!isSmallCap)}
-        >
-
-          <span
-            className={`
-              text-xs
-              mr-3
-              tracking-wide
-              ${isSmallCap ? "text-emerald-300" : "text-slate-500"}
-            `}
-          >
-            Small Cap
-          </span>
-
-          <div
-            className={`
-              w-12
-              h-6
-              flex
-              items-center
-              rounded-full
-              p-1
-              transition-all
-              duration-300
-              ${
-                isSmallCap
-                  ? "bg-emerald-500/40 shadow-[0_0_8px_rgba(16,185,129,0.45)]"
-                  : "bg-red-500/40 shadow-[0_0_8px_rgba(239,68,68,0.45)]"
-              }
-            `}
-          >
-            <div
-              className={`
-                w-5
-                h-5
-                rounded-full
-                bg-white
-                shadow-[0_0_6px_rgba(255,255,255,0.6)]
-                transform
-                transition-all
-                duration-300
-                ${isSmallCap ? "translate-x-0" : "translate-x-6"}
-              `}
-            />
-          </div>
-
-          <span
-            className={`
-              text-xs
-              ml-3
-              tracking-wide
-              ${!isSmallCap ? "text-red-300" : "text-slate-500"}
-            `}
-          >
-            Large Cap
-          </span>
-
-        </div>
+            bg-white
+            shadow-[0_0_6px_rgba(255,255,255,0.6)]
+            transform
+            transition-all
+            duration-300
+            ${isSmallCap ? "translate-x-0" : "translate-x-6"}
+          `}
+        />
       </div>
+
+      <span
+        className={`
+          text-xs
+          ml-3
+          tracking-wide
+          ${!isSmallCap ? "text-red-300" : "text-slate-500"}
+        `}
+      >
+        Large Cap
+      </span>
+
+    </div>
+
+  </div>
+</div>
+
 
       {/* ==========================
           INPUT GRID

@@ -10,6 +10,8 @@ import EquityCurveChart from "@/app/admin/equity-curve/EquityCurveChart";
 import YTMarketingTool from "@/app/admin/YTMarketing/YTMarketingTool";
 import LoanTool from "@/app/admin/Loan/LoanTool";
 import { BeakerIcon } from "@heroicons/react/24/outline";
+import { GoProductCostPlanner } from "@/app/admin/GoProductCostPlanner/GoProductCostPlanner";
+
 
 import {
   Squares2X2Icon,
@@ -157,7 +159,13 @@ export default function AdminToolsPage() {
           />
         </CollapsibleSection>
 
+        {/* GoProduct ~ Admin Cost Planner */}
+        <CollapsibleSection title="GoProduct ~ Admin Cost Planner">
+          <GoProductCostPlanner />
+        </CollapsibleSection>
+
       </div>
     </main>
   );
 }
+
