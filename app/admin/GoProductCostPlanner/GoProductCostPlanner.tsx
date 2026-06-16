@@ -70,7 +70,7 @@ export function GoProductCostPlanner() {
   // ==========================
   // USER + USAGE INPUTS
   // ==========================
-  const [users, setUsers] = useState(500);
+  const [users, setUsers] = useState(200);
   const [analysesPerUser, setAnalysesPerUser] = useState(20);
   const [ugcPerUser, setUgcPerUser] = useState(10);
   const [anglesPerUser, setAnglesPerUser] = useState(8);
@@ -80,9 +80,9 @@ export function GoProductCostPlanner() {
   // ==========================
   // EXPENSE INPUTS
   // ==========================
-  const [domainCost, setDomainCost] = useState(10);
-  const [emailCost, setEmailCost] = useState(30);
-  const [marketingCost, setMarketingCost] = useState(500);
+  const [domainCost, setDomainCost] = useState(.33);
+  const [emailCost, setEmailCost] = useState(6);
+  const [marketingCost, setMarketingCost] = useState(70);
 
   // AI model
   const [modelChoice, setModelChoice] = useState(2);
@@ -206,7 +206,7 @@ export function GoProductCostPlanner() {
             title="Number of Users"
             value={users}
             min={10}
-            max={20000}
+            max={1000}
             step={10}
             onChange={setUsers}
             titleClassName="text-emerald-300"
@@ -285,8 +285,8 @@ export function GoProductCostPlanner() {
               title="Domain (.com)"
               value={domainCost}
               min={0}
-              max={50}
-              step={1}
+              max={20}
+              step={.5}
               onChange={setDomainCost}
               dollars
               titleClassName="text-red-300"
@@ -296,8 +296,8 @@ export function GoProductCostPlanner() {
               title="Pro Email"
               value={emailCost}
               min={0}
-              max={200}
-              step={5}
+              max={10}
+              step={1}
               onChange={setEmailCost}
               dollars
               titleClassName="text-red-300"
@@ -311,8 +311,8 @@ export function GoProductCostPlanner() {
             title="Marketing Budget"
             value={marketingCost}
             min={0}
-            max={5000}
-            step={50}
+            max={2000}
+            step={10}
             onChange={setMarketingCost}
             dollars
             titleClassName="text-red-300"
