@@ -1,3 +1,6 @@
+export const runtime = "nodejs";
+
+
 import EquityChart from "@/components/dashboard/EquityChart";
 import SummaryCards from "@/components/dashboard/SummaryCards";
 import FeeHistoryTable from "@/components/dashboard/FeeHistoryTable";
