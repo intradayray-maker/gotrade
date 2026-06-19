@@ -1,11 +1,13 @@
-// utils\supabase\server.ts
+// utils/supabase/server.ts
 
+// Force Node.js runtime (critical for Supabase SSR)
+export const runtime = "nodejs";
 
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
-export async function createSupabaseServerClient() {
-  const cookieStore = await cookies();
+export function createSupabaseServerClient() {
+  const cookieStore = cookies(); // <-- synchronous, do NOT await
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,14 +21,14 @@ export async function createSupabaseServerClient() {
           try {
             cookieStore.set({ name, value, ...options });
           } catch {
-            // ignore write errors
+            // ignore write errors (Next.js blocks writes in some contexts)
           }
         },
         remove(name: string, options: any) {
           try {
             cookieStore.set({ name, value: "", ...options });
           } catch {
-            // ignore
+            // ignore write errors
           }
         },
       },
