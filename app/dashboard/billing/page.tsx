@@ -12,15 +12,12 @@ import { syncInvoices } from "@/utils/billing/syncInvoices"
 
 export const dynamic = "force-dynamic"
 
-// ❗ FIXED: searchParams MUST NOT be a Promise
-type BillingPageProps = {
-  searchParams?: {
-    update?: string
-  }
-}
-
-export default async function BillingPage({ searchParams }: BillingPageProps) {
-  // ❗ FIXED: no await needed, searchParams is NOT a Promise anymore
+// ⭐ FIXED: No custom PageProps type. Inline signature only.
+export default async function BillingPage({
+  searchParams,
+}: {
+  searchParams?: { update?: string }
+}) {
   const params = searchParams ?? {}
 
   const supabase = await createSupabaseServerClient()
