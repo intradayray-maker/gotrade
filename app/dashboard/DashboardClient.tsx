@@ -19,9 +19,6 @@ import SWING_AiCard from "@/app/dashboard/products/SWING/SWING_AiCard";
 import SWING_NewsCard from "@/app/dashboard/products/SWING/SWING_NewsCard";
 import SWING_TradeOutputCard from "@/app/dashboard/products/SWING/SWING_TradeOutputCard";
 
-// NEW FINDER SYSTEM
-import DividendFinderClient from "@/app/dashboard/dividends/DividendFinderClient";
-
 interface DashboardClientProps {
   canEUR: boolean;
   canETH: boolean;
@@ -141,9 +138,6 @@ export default function DashboardClient({
           )}
         </div>
 
-        <GatedFeature allowed={effectiveDIV}>
-          <DividendFinderClient />
-        </GatedFeature>
       </div>
 
       {/* ============================
