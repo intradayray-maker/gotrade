@@ -20,36 +20,41 @@ export default async function DashboardPage() {
         canEUR={false}
         canETH={false}
         canSWING={false}
+        canDIV={false}
       />
     );
   }
 
-  // Explicitly select only the fields needed for gating
+  // Fetch only the fields needed for gating
   const { data: profile } = await supabase
     .from("profiles")
-    .select("*, is_admin, plan_EURUSD, plan_ETHUSDT, plan_PRO_BUNDLE")
+    .select("is_admin, plan_EURUSD, plan_ETHUSDT, plan_PRO_BUNDLE")
     .eq("id", user.id)
     .single();
 
   const isAdmin = profile?.is_admin === true;
 
-  // NEW: PRO plan now unlocks SWING, not EUR/ETH
+  // PRO bundle unlocks SWING only
   const hasSwing = profile?.plan_PRO_BUNDLE === true;
 
   // EURUSD day trading
   const canEUR = isAdmin || profile?.plan_EURUSD === true;
 
-  // ETHUSDT.P day trading
+  // ETHUSDT day trading
   const canETH = isAdmin || profile?.plan_ETHUSDT === true;
 
   // SWING (4H/Daily)
   const canSWING = isAdmin || hasSwing;
+
+  // DIVIDENDS — your old dashboard always unlocked them
+  const canDIV = true;
 
   return (
     <DashboardClient
       canEUR={canEUR}
       canETH={canETH}
       canSWING={canSWING}
+      canDIV={canDIV}
     />
   );
 }
