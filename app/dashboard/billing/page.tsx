@@ -1,33 +1,35 @@
-import { redirect } from "next/navigation";
-import Stripe from "stripe";
+import { redirect } from "next/navigation"
+import Stripe from "stripe"
 
 import BillingClient, {
   type BillingProfile,
   type InvoiceItem,
   type SavedCard,
-} from "./BillingClient";
+} from "./BillingClient"
 
-import { createSupabaseServerClient } from "@/utils/supabase/server";
-import { syncInvoices } from "@/utils/billing/syncInvoices";
+import { createSupabaseServerClient } from "@/utils/supabase/server"
+import { syncInvoices } from "@/utils/billing/syncInvoices"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
+// ❗ FIXED: searchParams MUST NOT be a Promise
 type BillingPageProps = {
   searchParams?: {
-    update?: string;
-  };
-};
-
+    update?: string
+  }
+}
 
 export default async function BillingPage({ searchParams }: BillingPageProps) {
-  const params = (await searchParams) ?? {};
-  const supabase = await createSupabaseServerClient();
+  // ❗ FIXED: no await needed, searchParams is NOT a Promise anymore
+  const params = searchParams ?? {}
+
+  const supabase = await createSupabaseServerClient()
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect("/login");
+    redirect("/login")
   }
 
   // -----------------------------
@@ -39,7 +41,7 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
       "stripe_default_payment_method, billing_status, planname, nextbillingdate"
     )
     .eq("id", user.id)
-    .single();
+    .single()
 
   // -----------------------------
   // 2. Fetch ALL active subscription rows
@@ -50,7 +52,7 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
       "stripe_subscription_id, stripe_price_id, current_period_end, stripe_customer_id"
     )
     .eq("user_id", user.id)
-    .eq("status", "active");
+    .eq("status", "active")
 
   // -----------------------------
   // 3. Pick the REAL subscription row
@@ -68,19 +70,18 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
         (a, b) =>
           new Date(b.current_period_end ?? 0).getTime() -
           new Date(a.current_period_end ?? 0).getTime()
-      )[0] ?? null;
-
+      )[0] ?? null
 
   // -----------------------------
   // 4. Fetch saved card from Stripe
   // -----------------------------
-  let savedCard: SavedCard | null = null;
+  let savedCard: SavedCard | null = null
 
   if (profile?.stripe_default_payment_method) {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
     const paymentMethod = await stripe.paymentMethods.retrieve(
       profile.stripe_default_payment_method
-    );
+    )
 
     if ("card" in paymentMethod && paymentMethod.card) {
       savedCard = {
@@ -88,7 +89,7 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
         last4: paymentMethod.card.last4,
         exp_month: paymentMethod.card.exp_month,
         exp_year: paymentMethod.card.exp_year,
-      };
+      }
     }
   }
 
@@ -100,12 +101,12 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
     billingStatus: profile?.billing_status ?? "inactive",
     planName: profile?.planname ?? null,
     nextBillingDate: profile?.nextbillingdate ?? null,
-  };
+  }
 
   // -----------------------------
   // 6. Fetch invoices from Stripe
   // -----------------------------
-  const invoices: InvoiceItem[] = await syncInvoices(user.id);
+  const invoices: InvoiceItem[] = await syncInvoices(user.id)
 
   // -----------------------------
   // 7. Render client component
@@ -118,5 +119,5 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
       invoices={invoices}
       showPaymentForm={!savedCard || params.update === "1"}
     />
-  );
+  )
 }
