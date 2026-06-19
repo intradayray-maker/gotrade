@@ -1,15 +1,6 @@
 // utils/massiveFlat.ts
 
-import { createClient } from "@supabase/supabase-js";
-
-////////////////////////////////////////////////////////////////////////////////
-// SUPABASE CLIENT
-////////////////////////////////////////////////////////////////////////////////
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 
 ////////////////////////////////////////////////////////////////////////////////
 // TYPES
@@ -30,14 +21,8 @@ export type Price = {
   [key: string]: any;
 };
 
-export type MassivePayload = {
-  fundamentals: Record<string, Fundamental>;
-  dividends: Record<string, Dividend>;
-  prices: Record<string, Price>;
-};
-
 ////////////////////////////////////////////////////////////////////////////////
-// MEMORY CACHE (prevents repeated Edge Function calls)
+// MEMORY CACHE
 ////////////////////////////////////////////////////////////////////////////////
 
 let CACHE: {
@@ -47,43 +32,35 @@ let CACHE: {
 } | null = null;
 
 ////////////////////////////////////////////////////////////////////////////////
-// HELPERS
-////////////////////////////////////////////////////////////////////////////////
-
-function normalize<T>(obj: Record<string, T>): T[] {
-  if (!obj || typeof obj !== "object") return [];
-  return Object.values(obj);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// FETCH FROM EDGE FUNCTION
+// LOAD FROM SUPABASE TABLES (LOCAL MODE)
 ////////////////////////////////////////////////////////////////////////////////
 
 async function loadMassiveData() {
   if (CACHE) return CACHE;
 
-  console.log("📡 [massiveFlat] Fetching data from Edge Function...");
+  console.log("📡 [massiveFlat] Loading data from Supabase tables...");
 
-  const { data, error } = await supabase.functions.invoke("update-dividends");
+  const supabase = await createSupabaseServerClient();
 
-  if (error) {
-    console.error("❌ [massiveFlat] Edge Function error:", error);
-    return {
-      fundamentals: [],
-      dividends: [],
-      prices: []
-    };
-  }
+  const { data: fundamentals } = await supabase
+    .from("fundamentals")
+    .select("*");
 
-  const payload = data as MassivePayload;
+  const { data: dividends } = await supabase
+    .from("dividends")
+    .select("*");
 
-  const fundamentals = normalize(payload.fundamentals);
-  const dividends = normalize(payload.dividends);
-  const prices = normalize(payload.prices);
+  const { data: prices } = await supabase
+    .from("prices")
+    .select("*");
 
-  CACHE = { fundamentals, dividends, prices };
+  CACHE = {
+    fundamentals: fundamentals ?? [],
+    dividends: dividends ?? [],
+    prices: prices ?? []
+  };
 
-  console.log("✅ [massiveFlat] Data loaded and normalized");
+  console.log("✅ [massiveFlat] Local data loaded");
 
   return CACHE;
 }
