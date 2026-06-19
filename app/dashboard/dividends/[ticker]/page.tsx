@@ -5,11 +5,11 @@ import DividendAiCard from "./DividendAiCard"
 import DividendMetricsCard from "./DividendMetricsCard"
 import DividendProjectionCard from "./DividendProjectionCard"
 
-type PageProps = {
+export default async function DividendPage({
+  params,
+}: {
   params: { ticker: string }
-}
-
-export default async function DividendPage({ params }: PageProps) {
+}) {
   const ticker = params.ticker.toUpperCase()
 
   const data = await getTickerData(ticker)
