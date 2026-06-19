@@ -1,9 +1,9 @@
 // lib/data-providers.ts
 
-import { createClient } from "@/utils/supabase/server";
+import { createSupabaseServerClient } from "@/utils/supabase/server";
 
 export async function getTickerData(ticker: string) {
-  const supabase = createClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data: fundamentals } = await supabase
     .from("fundamentals")
@@ -29,6 +29,6 @@ export async function getTickerData(ticker: string) {
     ticker,
     fundamentals,
     dividends,
-    prices
+    prices,
   };
 }
