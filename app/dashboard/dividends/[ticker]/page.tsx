@@ -5,7 +5,7 @@ import DividendAiCard from "./DividendAiCard"
 import DividendMetricsCard from "./DividendMetricsCard"
 import DividendProjectionCard from "./DividendProjectionCard"
 
-export default async function DividendPage({
+export default async function Page({
   params,
 }: {
   params: { ticker: string }
