@@ -1,3 +1,6 @@
+// ⭐ FORCE NODE RUNTIME — THIS FIXES THE BUILD
+export const runtime = "nodejs";
+
 import { redirect } from "next/navigation"
 import Stripe from "stripe"
 
@@ -12,7 +15,6 @@ import { syncInvoices } from "@/utils/billing/syncInvoices"
 
 export const dynamic = "force-dynamic"
 
-// ⭐ FIXED: No custom PageProps type. Inline signature only.
 export default async function BillingPage({
   searchParams,
 }: {
