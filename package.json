@@ -2,6 +2,7 @@
   "name": "gotrade",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -55,7 +56,6 @@
     "supabase": "^2.98.2",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5",
-    "type": "module"  
+    "typescript": "^5"
   }
 }
