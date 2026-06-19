@@ -13,10 +13,11 @@ import { syncInvoices } from "@/utils/billing/syncInvoices";
 export const dynamic = "force-dynamic";
 
 type BillingPageProps = {
-  searchParams?: Promise<{
+  searchParams?: {
     update?: string;
-  }>;
+  };
 };
+
 
 export default async function BillingPage({ searchParams }: BillingPageProps) {
   const params = (await searchParams) ?? {};
