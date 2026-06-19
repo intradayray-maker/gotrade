@@ -18,9 +18,9 @@ export const dynamic = "force-dynamic"
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams?: { update?: string }
+  searchParams?: Promise<{ update?: string }>
 }) {
-  const params = searchParams ?? {}
+  const params = (await searchParams) ?? {}
 
   const supabase = await createSupabaseServerClient()
   const {
