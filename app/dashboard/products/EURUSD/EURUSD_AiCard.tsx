@@ -518,4 +518,4 @@ export default function EURUSD_AiCard() {
 }
 
 
-// test 1
+// test 2
