@@ -1,0 +1,569 @@
+@import "tailwindcss";
+
+/* -------------------------
+   Keyframes (allowed at top-level)
+-------------------------- */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* -------------------------
+   Base Styles, Inputs, Scrollbar, Slider
+-------------------------- */
+@layer base {
+
+  /* Reset */
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+  }
+
+  body {
+    background-color: #0B0B0F;
+    color: white;
+  }
+
+  * {
+    @apply antialiased;
+    box-sizing: border-box;
+  }
+
+  /* Number Input Cleanup */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  /* Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.12);
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.18);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.2);
+  }
+
+  /* ============================================================
+     GOTRADE OFFICIAL SLIDER THEME — THICK TRACK (10px)
+     ============================================================ */
+
+  /* Base Track */
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 18px; /* THICK TRACK */
+    border-radius: 9999px;
+    background: linear-gradient(
+      to right,
+      rgb(8, 42, 77) var(--value, 50%),
+      rgb(51, 51, 51) var(--value, 50%)
+    );
+    cursor: pointer;
+  }
+
+  /* Thumb (WebKit) */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+  background: rgb(3,82,65);
+  border: 3px solid rgb(132, 135, 137);
+  box-shadow: 0 0 12px rgba(44,85,125,0.6);
+  cursor: pointer;
+  transition: 0.2s ease;
+
+  /* moved DOWN toward center */
+  margin-top: -2px;
+}
+
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.12);
+    box-shadow: 0 0 18px rgba(44,85,125,0.8);
+  }
+
+/* ============================================================
+   FIREFOX — MATCH CHROME EXACTLY
+   ============================================================ */
+
+/* Track */
+input[type="range"]::-moz-range-track {
+  height: 18px; /* match Chrome */
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    rgb(8, 42, 77) var(--value, 50%),
+    rgb(51, 51, 51) var(--value, 50%)
+  );
+}
+
+/* Thumb */
+input[type="range"]::-moz-range-thumb {
+  height: 30px; /* match Chrome */
+  width: 30px;
+  border-radius: 50%;
+  background: rgb(3,82,65); /* match Chrome */
+  border: 3px solid rgb(132, 135, 137); /* match Chrome */
+  box-shadow: 0 0 12px rgba(44,85,125,0.6); /* match Chrome */
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+/* Hover */
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 18px rgba(44,85,125,0.8);
+}
+
+}
+
+/* -------------------------
+   Utility Classes
+-------------------------- */
+@layer utilities {
+  .animate-slideDown {
+    animation: slideDown 0.2s ease-out forwards;
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.6s ease-out forwards;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Dark Modern Scrollbar */
+.dark-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 180, 0.35) #0b0b12;
+}
+
+.dark-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark-scroll::-webkit-scrollbar-track {
+  background: #0b0b12;
+  border-radius: 9999px;
+}
+
+.dark-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    to bottom,
+    rgba(16, 185, 129, 0.4),
+    rgba(5, 150, 105, 0.4)
+  );
+  border-radius: 9999px;
+  box-shadow: 0 0 10px rgba(0, 255, 180, 0.25);
+}
+
+.dark-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    to bottom,
+    rgba(16, 185, 129, 0.6),
+    rgba(5, 150, 105, 0.6)
+  );
+}
+
+
+
+/* ============================
+   PURPLE SLIDER TRACK + FILL
+   ============================ */
+
+/* Chrome / Edge / Safari */
+.purple-fill::-webkit-slider-runnable-track {
+  background: #3b0a57; /* deep purple track */
+  height: 17px;
+  border-radius: 8px;
+}
+
+.purple-fill::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #979797; /* purple thumb */
+  height: 22px;
+  width: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -3px; /* centers thumb on 17px track */
+}
+
+/* Firefox */
+.purple-fill::-moz-range-track {
+  background: #978e9d;
+  height: 17px;
+  border-radius: 8px;
+}
+
+.purple-fill::-moz-range-progress {
+  background: #a855f7; /* filled portion */
+  height: 17px;
+  border-radius: 8px;
+}
+
+.purple-fill::-moz-range-thumb {
+  background: #5156a7;
+  height: 22px;
+  width: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+
+:root {
+  color-scheme: dark;
+}
+
+
+
+
+
+/* ------------------------------------------------------------
+   FLOWTRADE STUDIO MIXER — HYBRID GLOW FADER (FULL REALISM)
+   ------------------------------------------------------------ */
+
+.mixer-strip {
+  width: 100%;
+  position: relative;
+  padding-top: 10px; /* spacing under power button */
+}
+
+/* ------------------------------------------------------------
+   POWER BUTTON (Surface Laptop Gen 7 style)
+   ------------------------------------------------------------ */
+.mixer-power-btn {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 15px;
+  font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #111;
+  color: #666;
+  border: 1px solid #222;
+
+  transition: all 0.25s ease;
+}
+
+.mixer-power-on {
+  color: #00c8ff;
+  border-color: #00aaff;
+  box-shadow: 0 0 14px rgba(0, 170, 255, 0.45);
+}
+
+.mixer-power-off {
+  color: #555;
+  border-color: #222;
+  box-shadow: none;
+}
+
+/* ------------------------------------------------------------
+   HYBRID GLOW FADER
+   ------------------------------------------------------------ */
+
+.mixer-fader-glow {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 60px;
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+/* ------------------------------------------------------------
+   RECESSED SLOT + SIDE RAILS + SCREWS + SLOT LIP
+   ------------------------------------------------------------ */
+
+.mixer-fader-glow::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 16px;
+  transform: translateY(-50%);
+  border-radius: 6px;
+
+  background: linear-gradient(
+    to bottom,
+    #0f0f0f,
+    #0a0a0a 40%,
+    #050505 60%,
+    #0a0a0a
+  );
+
+  box-shadow:
+    inset 0 2px 4px rgba(255,255,255,0.05),
+    inset 0 -3px 6px rgba(0,0,0,0.7),
+    0 1px 2px rgba(0,0,0,0.6);
+
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* SLOT LIP HIGHLIGHT */
+.mixer-fader-glow::after {
+  content: "";
+  position: absolute;
+  top: calc(50% - 9px);
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* SIDE RAILS */
+.mixer-rails {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.mixer-rails::before,
+.mixer-rails::after {
+  content: "";
+  position: absolute;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(to bottom, #222, #111);
+  border-radius: 2px;
+  box-shadow: inset 0 0 3px rgba(0,0,0,0.6);
+}
+
+.mixer-rails::before {
+  left: 6px;
+}
+
+.mixer-rails::after {
+  right: 6px;
+}
+
+/* SCREW HEADS */
+.mixer-screw-top,
+.mixer-screw-bottom {
+  position: absolute;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, #666, #333);
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,0.2),
+    inset 0 -1px 2px rgba(0,0,0,0.6);
+  z-index: 4;
+}
+
+.mixer-screw-top {
+  top: -6px;
+}
+
+.mixer-screw-bottom {
+  bottom: -6px;
+}
+
+/* ------------------------------------------------------------
+   TRACK — hybrid glow
+   ------------------------------------------------------------ */
+
+.mixer-fader-glow::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 4px;
+
+background:
+  linear-gradient(
+    to right,
+    rgb(8, 42, 77) 0%,
+    rgb(8, 42, 77) var(--fill),
+    rgb(51, 51, 51) var(--fill),
+    rgb(51, 51, 51) 100%
+  );
+
+
+  box-shadow:
+    inset 0 0 6px rgba(0,0,0,0.8),
+    0 0 10px rgba(0,153,255,0.25);
+
+  position: relative;
+  z-index: 2;
+}
+
+.mixer-fader-glow::-moz-range-track {
+  height: 8px;
+  border-radius: 4px;
+  background:
+    linear-gradient(
+      to right,
+      #00c8ff 0%,
+      #0099ff var(--fill),
+      #1a1a1a var(--fill),
+      #1a1a1a 100%
+    );
+  box-shadow:
+    inset 0 0 6px rgba(0,0,0,0.8),
+    0 0 10px rgba(0,153,255,0.25);
+  position: relative;
+  z-index: 2;
+}
+
+/* ------------------------------------------------------------
+   THUMB — dark graphite, hard-edge glossy bevel + dust shadow
+   ------------------------------------------------------------ */
+
+.mixer-fader-glow::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 25px;
+  height: 55px;
+  border-radius: 4px;
+
+  background: linear-gradient(
+    to bottom,
+    #3a3a3a,
+    #2a2a2a 40%,
+    #1f1f1f 60%,
+    #2a2a2a
+  );
+
+  border: 1px solid #555;
+
+  margin-top: -24px;
+
+  box-shadow:
+    0 3px 6px rgba(0,0,0,0.5),
+    inset 0 1px 2px rgba(255,255,255,0.15),
+    inset 0 -2px 3px rgba(0,0,0,0.4),
+    0 6px 8px rgba(0,0,0,0.35); /* dust shadow */
+}
+
+.mixer-fader-glow::-moz-range-thumb {
+  width: 20px;
+  height: 55px;
+  border-radius: 4px;
+
+  background: linear-gradient(
+    to bottom,
+    #3a3a3a,
+    #2a2a2a 40%,
+    #1f1f1f 60%,
+    #2a2a2a
+  );
+
+  border: 1px solid #555;
+
+  box-shadow:
+    0 3px 6px rgba(0,0,0,0.5),
+    inset 0 1px 2px rgba(255,255,255,0.15),
+    inset 0 -2px 3px rgba(0,0,0,0.4),
+    0 6px 8px rgba(0,0,0,0.35);
+}
+
+/* ------------------------------------------------------------
+   CENTER DETENT NOTCH
+   ------------------------------------------------------------ */
+
+.mixer-detent {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 2px;
+  background: #666;
+  border-radius: 1px;
+  transform: translate(-50%, -50%);
+  opacity: 0.4;
+  z-index: 5;
+}
+
+/* ------------------------------------------------------------
+   CROSSFADER-STYLE TICK LINES (replaces numbers)
+   ------------------------------------------------------------ */
+
+.mixer-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  padding: 0 4px;
+}
+
+.mixer-tick {
+  width: 2px;
+  height: 8px;
+  background: #444;
+  border-radius: 1px;
+  opacity: 0.5;
+}
+
+/* ------------------------------------------------------------
+   MIXER LABEL PLATE (hardware-style)
+   ------------------------------------------------------------ */
+
+.mixer-label {
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  text-align: left;
+
+  padding: 4px 6px;
+  width: fit-content;
+
+  color: #8a8a8a;
+
+  border-radius: 4px;
+
+  box-shadow:
+    inset 0 1px 2px rgba(255,255,255,0.06),
+    inset 0 -2px 3px rgba(0,0,0,0.7),
+    0 1px 2px rgba(0,0,0,0.4);
+
+  margin-bottom: 6px;
+  opacity: 0.9;
+}
