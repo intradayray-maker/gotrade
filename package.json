@@ -7,12 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-<<<<<<< HEAD
-    "supabase:types": "supabase gen types typescript --project-id wbatyyneaiwhwbmacmkz > lib/database.types.ts"
-=======
     "supabase:types": "supabase gen types typescript --project-id wbatyyneaiwhwbmacmkz > lib/database.types.ts",
     "build:stocks": "tsx scripts/buildStocks.ts"
->>>>>>> f8b5146b38fa55ecb4b35d4d62828ee629543d0f
   },
   "dependencies": {
     "@alpacahq/alpaca-trade-api": "^1.4.2",
@@ -23,20 +19,19 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
+    "@solana/spl-token": "^0.4.14",
+    "@solana/web3.js": "^1.98.4",
     "@stripe/react-stripe-js": "^6.3.0",
     "@stripe/stripe-js": "^9.4.0",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/ssr": "^0.10.2",
-<<<<<<< HEAD
-    "@supabase/supabase-js": "^2.104.1",
-=======
     "@supabase/supabase-js": "^2.108.2",
->>>>>>> f8b5146b38fa55ecb4b35d4d62828ee629543d0f
     "chart.js": "^4.5.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns-tz": "^3.2.0",
     "framer-motion": "^12.38.0",
+    "lightweight-charts": "^4.2.0",
     "lucide-react": "^1.11.0",
     "next": "^15.2.5",
     "react": "18.2.0",
@@ -48,23 +43,15 @@
     "stripe": "^22.1.0",
     "swr": "^2.4.1",
     "tailwind-merge": "^3.5.0",
-<<<<<<< HEAD
-=======
     "uuid": "^14.0.0",
->>>>>>> f8b5146b38fa55ecb4b35d4d62828ee629543d0f
     "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@supabase/postgrest-js": "^2.104.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20.19.39",
-<<<<<<< HEAD
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-=======
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
->>>>>>> f8b5146b38fa55ecb4b35d4d62828ee629543d0f
     "@types/uuid": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.2.5",
