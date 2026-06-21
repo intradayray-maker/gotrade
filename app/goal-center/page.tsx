@@ -50,3 +50,4 @@ export default function GoalHeatmap({ history }: GoalHeatmapProps) {
     </div>
   );
 }
+// test
