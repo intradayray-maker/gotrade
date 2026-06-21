@@ -516,9 +516,3 @@ export default function EURUSD_AiCard() {
     </GTCard>
   );
 }
-<<<<<<< HEAD
-=======
-
-
-// test 3
->>>>>>> f8b5146b38fa55ecb4b35d4d62828ee629543d0f

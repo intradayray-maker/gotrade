@@ -1,4 +1,4 @@
-// utils\supabase\server.ts (test)
+// utils\supabase\server.ts
 
 
 import { cookies } from "next/headers";
