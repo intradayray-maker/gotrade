@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Deno configuration schema",
+  "type": "object",
+  "properties": {
+    "compilerOptions": {
+      "type": "object",
+      "properties": {
+        "lib": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": true
+    },
+    "importMap": { "type": "string" }
+  },
+  "additionalProperties": true
+}
